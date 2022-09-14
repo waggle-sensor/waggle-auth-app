@@ -5,7 +5,7 @@ from .models import Node
 
 
 
-def profile_node_allow_list(request, username):
+def profile_access(request, username):
     user = get_object_or_404(User, username=username)
     profile = user.profile
 
@@ -22,11 +22,3 @@ def profile_node_allow_list(request, username):
 
     items = [{"vsn": vsn, "access": access} for vsn, access in access_by_vsn.items()]
     return JsonResponse({"items": items})
-
-
-
-# def list_develop_access(request, username):
-#     user = User.objects.get(username=username)
-#     projects = user.profile.projects.filter(profilemembership__can_develop=True)
-#     nodes = Node.objects.filter(projects__in=projects, nodemembership__can_develop=True).values_list("vsn", flat=True)
-#     return JsonResponse({"nodes": list(nodes)})

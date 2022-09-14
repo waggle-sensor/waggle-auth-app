@@ -19,7 +19,7 @@ class TestApp(TestCase):
             ],
         )
 
-        r = self.client.get("/app/profile-node-allow-list/ada")
+        r = self.client.get("/app/ada/access")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {
             "items": [
