@@ -8,14 +8,22 @@ class TestApp(TestCase):
     def testListAccess(self):
         self.setUpMembershipData(
             profile_membership=[
-                ("ada", "dawn", {"can_develop": True}),
                 ("ada", "sage", {"can_develop": True}),
-                ("jed", "sage", {"can_schedule": True}),
+                ("ada", "dawn", {"can_develop": True, "can_schedule": True}),
+
+                ("jed", "sage", {"can_schedule": True, "can_develop": True}),
+
+                ("tom", "sage", {"can_develop": True, "can_schedule": True}),
                 ("tom", "dawn", {"can_develop": True, "can_schedule": True}),
-                ("tom", "waggle", {"can_develop": True, "can_schedule": True}),
             ],
             node_membership = [
-                ("dawn", "W001", {"can_develop": True})
+                ("sage", "W000", {}),
+                ("sage", "W001", {"can_schedule": True}),
+                ("sage", "W002", {"can_develop": True}),
+                ("sage", "W003", {"can_schedule": True, "can_develop": True}),
+
+                ("dawn", "W000", {}),
+                ("dawn", "W001", {"can_schedule": True, "can_develop": True}),
             ],
         )
 
@@ -23,7 +31,29 @@ class TestApp(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {
             "items": [
-                {"vsn": "W001", "access": ["develop"]},
+                {"vsn": "W001", "access": ["develop", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop"]},
+            ]
+        })
+
+        r = self.client.get("/app/jed/access")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json(), {
+            "items": [
+                {"vsn": "W001", "access": ["schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
+            ]
+        })
+
+        r = self.client.get("/app/tom/access")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json(), {
+            "items": [
+                {"vsn": "W001", "access": ["develop", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
             ]
         })
 

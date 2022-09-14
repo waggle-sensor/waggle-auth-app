@@ -17,8 +17,8 @@ def profile_access(request, username):
 
         for vsn in nodes:
             if vsn not in access_by_vsn:
-                access_by_vsn[vsn] = []
-            access_by_vsn[vsn].append(access)
+                access_by_vsn[vsn] = set()
+            access_by_vsn[vsn].add(access)
 
-    items = [{"vsn": vsn, "access": access} for vsn, access in access_by_vsn.items()]
+    items = [{"vsn": vsn, "access": sorted(access)} for vsn, access in sorted(access_by_vsn.items())]
     return JsonResponse({"items": items})
