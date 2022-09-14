@@ -1,1 +1,1 @@
-ipython
+ipython # enables ipython for `./manage.py shell`
