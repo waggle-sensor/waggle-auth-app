@@ -1,0 +1,85 @@
+from django.db import models
+from django.contrib.auth.models import User
+
+
+# TODO add date created / updated type fields to all items
+
+
+class Project(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    projects = models.ManyToManyField(Project, through="ProfileMembership")
+
+    def __str__(self):
+        return str(self.user)
+
+
+# add validator for all False - no need since False by default
+class ProfileMembership(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    can_schedule = models.BooleanField(
+        "Schedule?",
+        default=False,
+        help_text="Designates whether user can schedule."
+    )
+    can_develop = models.BooleanField(
+        "Develop?",
+        default=False,
+        help_text="Designates whether user has developer access."
+    )
+    can_access_files = models.BooleanField(
+        "Files?",
+        default=False,
+        help_text="Designates whether user has file access."
+    )
+
+    def __str__(self):
+        return f"{self.profile} | {self.project}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint("profile", "project", name="app_profilemembership_uniq")
+        ]
+
+
+class Node(models.Model):
+    vsn = models.CharField("VSN", max_length=10, unique=True)
+    projects = models.ManyToManyField(Project, through="NodeMembership")
+
+    def __str__(self):
+        return self.vsn
+
+
+class NodeMembership(models.Model):
+    node = models.ForeignKey(Node, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    can_schedule = models.BooleanField(
+        "Schedule?",
+        default=False,
+        help_text="Designates whether node allows scheduling."
+    )
+    can_develop = models.BooleanField(
+        "Develop?",
+        default=False,
+        help_text="Designates whether node allows developer access."
+    )
+    can_access_files = models.BooleanField(
+        "Files?",
+        default=False,
+        help_text="Designates whether node allows file access."
+    )
+
+    def __str__(self):
+        return f"{self.node} | {self.project}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint("node", "project", name="app_nodemembership_uniq")
+        ]
