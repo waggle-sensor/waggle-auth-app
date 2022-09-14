@@ -14,7 +14,7 @@ class NodeMembershipInline(admin.TabularInline):
 
 admin.site.register(Profile, inlines=(ProfileMembershipInline,))
 admin.site.register(Node, inlines=(NodeMembershipInline,))
-admin.site.register(Project, inlines=(ProfileMembershipInline, NodeMembershipInline))
+admin.site.register(Project, inlines=(ProfileMembershipInline, NodeMembershipInline), list_display=("name", "number_of_members", "number_of_nodes"))
 
 # admin.site.register(
 #     ProfileMembership,

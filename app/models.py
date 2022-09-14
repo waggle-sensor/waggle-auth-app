@@ -11,6 +11,12 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
+    def number_of_members(self):
+        return self.profile_set.count()
+
+    def number_of_nodes(self):
+        return self.node_set.count()
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -38,6 +44,11 @@ class ProfileMembership(models.Model):
         "Files?",
         default=False,
         help_text="Designates whether user has file access."
+    )
+    allow_view = models.BooleanField(
+        "View?",
+        default=False,
+        help_text="Designates whether user has view access to project."
     )
 
     def __str__(self):
