@@ -4,21 +4,30 @@ from .models import Profile, Project, Node, ProfileMembership, NodeMembership
 
 
 class TestApp(TestCase):
-    # fixtures = ["testdata.json"]
 
     def testListAccess(self):
-        profile_membership = [
-            ("ada", "dawn", {"can_develop": True}),
-            ("ada", "sage", {"can_develop": True}),
-            ("jed", "sage", {"can_schedule": True}),
-            ("tom", "dawn", {"can_develop": True, "can_schedule": True}),
-            ("tom", "waggle", {"can_develop": True, "can_schedule": True}),
-        ]
+        self.setUpMembershipData(
+            profile_membership=[
+                ("ada", "dawn", {"can_develop": True}),
+                ("ada", "sage", {"can_develop": True}),
+                ("jed", "sage", {"can_schedule": True}),
+                ("tom", "dawn", {"can_develop": True, "can_schedule": True}),
+                ("tom", "waggle", {"can_develop": True, "can_schedule": True}),
+            ],
+            node_membership = [
+                ("dawn", "W001", {"can_develop": True})
+            ],
+        )
 
-        node_membership = [
-            ("dawn", "W001", {"can_develop": True})
-        ]
+        r = self.client.get("/app/profile-node-allow-list/ada")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json(), {
+            "items": [
+                {"vsn": "W001", "access": ["develop"]},
+            ]
+        })
 
+    def setUpMembershipData(self, profile_membership, node_membership):
         for username, projectname, access in profile_membership:
             user, _ = User.objects.get_or_create(username=username)
             profile, _ = Profile.objects.get_or_create(user=user)
@@ -29,11 +38,3 @@ class TestApp(TestCase):
             node, _ = Node.objects.get_or_create(vsn=vsn)
             project, _ = Project.objects.get_or_create(name=projectname)
             NodeMembership.objects.get_or_create(node=node, project=project, **access)
-
-        r = self.client.get("/app/profile-node-allow-list/ada")
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {
-            "items": [
-                {"vsn": "W001", "access": ["develop"]},
-            ]
-        })
