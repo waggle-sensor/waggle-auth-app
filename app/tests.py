@@ -14,7 +14,7 @@ class TestApp(TestCase):
                 ("jed", "sage", {"can_schedule": True, "can_develop": True}),
 
                 ("tom", "sage", {"can_develop": True, "can_schedule": True}),
-                ("tom", "dawn", {"can_develop": True, "can_schedule": True}),
+                ("tom", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
             ],
             node_membership = [
                 ("sage", "W000", {}),
@@ -23,7 +23,7 @@ class TestApp(TestCase):
                 ("sage", "W003", {"can_schedule": True, "can_develop": True}),
 
                 ("dawn", "W000", {}),
-                ("dawn", "W001", {"can_schedule": True, "can_develop": True}),
+                ("dawn", "W001", {"can_schedule": True, "can_develop": True, "can_access_files": True}),
             ],
         )
 
@@ -51,7 +51,7 @@ class TestApp(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {
             "items": [
-                {"vsn": "W001", "access": ["develop", "schedule"]},
+                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
                 {"vsn": "W002", "access": ["develop"]},
                 {"vsn": "W003", "access": ["develop", "schedule"]},
             ]

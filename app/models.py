@@ -18,12 +18,24 @@ class Project(models.Model):
         return self.node_set.count()
 
 
+class Node(models.Model):
+    vsn = models.CharField("VSN", max_length=10, unique=True)
+    projects = models.ManyToManyField(Project, through="NodeMembership")
+
+    def __str__(self):
+        return self.vsn
+
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     projects = models.ManyToManyField(Project, through="ProfileMembership")
 
     def __str__(self):
         return str(self.user)
+
+    def get_nodes_with_access(self, access):
+        projects = self.projects.filter(**{f"profilemembership__can_{access}": True})
+        return Node.objects.filter(projects__in=projects, **{f"nodemembership__can_{access}": True})
 
 
 # add validator for all False - no need since False by default
@@ -58,14 +70,6 @@ class ProfileMembership(models.Model):
         constraints = [
             models.UniqueConstraint("profile", "project", name="app_profilemembership_uniq")
         ]
-
-
-class Node(models.Model):
-    vsn = models.CharField("VSN", max_length=10, unique=True)
-    projects = models.ManyToManyField(Project, through="NodeMembership")
-
-    def __str__(self):
-        return self.vsn
 
 
 class NodeMembership(models.Model):
