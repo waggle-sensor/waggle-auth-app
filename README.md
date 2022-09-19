@@ -66,8 +66,14 @@ This will perform the one time database migrations, compilation of all static as
 
 Try visiting [http://localhost:8000/admin/](http://localhost:8000/admin/) to ensure the app is running.
 
-Finally, the test suite can be run against the production config using:
+The test suite can be run using:
 
 ```sh
 make test
+```
+
+Finally, when you're done working, you can stop everything using:
+
+```sh
+make stop
 ```
