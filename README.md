@@ -21,7 +21,7 @@ python3 -m venv venv
 . venv/bin/activate
 ```
 
-After activating the venv, instead the dev requirements:
+After activating your venv, install the dev requirements:
 
 ```sh
 pip install -r requirements/dev.txt
