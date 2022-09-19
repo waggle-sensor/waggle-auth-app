@@ -11,9 +11,7 @@ services:
     image: mysql
     restart: always
     environment:
-      - "MYSQL_RANDOM_ROOT_PASSWORD=yes"
-      - "MYSQL_USER=waggle"
-      - "MYSQL_PASSWORD=waggle"
+      - "MYSQL_ROOT_PASSWORD=waggle"
       - "MYSQL_DATABASE=waggle"
   django:
     image: django
@@ -23,7 +21,8 @@ services:
       - "SECRET_KEY=django-insecure-$$!4^oa&ws#nes5lo@y#7ljtsj_l+sau34a(8qb&cy-&8%gd-fp"
       - "ALLOWED_HOSTS=localhost 127.0.0.1"
       - "MYSQL_HOST=mysql"
-      - "MYSQL_USER=waggle"
+      # NOTE(sean) we use the root user to allow django to setup / teardown test databases.
+      - "MYSQL_USER=root"
       - "MYSQL_PASSWORD=waggle"
       - "MYSQL_DATABASE=waggle"
     volumes:
