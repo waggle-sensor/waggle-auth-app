@@ -26,6 +26,7 @@ services:
       - "MYSQL_PASSWORD=waggle"
       - "MYSQL_DATABASE=waggle"
     volumes:
+      - ./:/app:ro
       - static-root:/var/www/static:rw
 volumes:
   static-root:

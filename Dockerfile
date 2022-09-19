@@ -5,4 +5,4 @@ WORKDIR /app
 COPY requirements /app/requirements
 RUN pip install --no-cache-dir -r requirements/prod.txt
 COPY . /app
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:80"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:80", "--reload"]
