@@ -1,0 +1,20 @@
+services:
+  nginx:
+    image: nginx
+    restart: always
+    ports:
+      - 127.0.0.1:8000:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static-root:/var/www/static:ro
+  django:
+    image: django
+    build: .
+    environment:
+      - "DJANGO_SETTINGS_MODULE=config.settings.prod"
+      - "SECRET_KEY=django-insecure-$$!4^oa&ws#nes5lo@y#7ljtsj_l+sau34a(8qb&cy-&8%gd-fp"
+      - "ALLOWED_HOSTS=localhost 127.0.0.1"
+    volumes:
+      - static-root:/var/www/static:rw
+volumes:
+  static-root:
