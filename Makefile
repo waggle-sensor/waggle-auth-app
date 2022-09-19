@@ -12,3 +12,6 @@ collectstatic:
 
 createsuperuser:
 	docker-compose exec django python manage.py createsuperuser
+
+test:
+	docker-compose exec django python manage.py test
