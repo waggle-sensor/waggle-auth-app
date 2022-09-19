@@ -34,6 +34,12 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
+You can run the test suite using:
+
+```sh
+python manage.py test
+```
+
 Finally, you can start the dev server:
 
 ```sh
@@ -51,15 +57,17 @@ make start
 Wait a moment for all the containers to start, then run:
 
 ```sh
-make migrate collectstatic
-```
-
-This will perform a one time database migration and compilation of all static assets.
-
-Finally, create a super user using:
-
-```sh
+make migrate
+make collectstatic
 make createsuperuser
 ```
 
+This will perform the one time database migrations, compilation of all static assets and creation of a super user.
+
 Try visiting [http://localhost:8000/admin/](http://localhost:8000/admin/) to ensure the app is running.
+
+Finally, the test suite can be run against the production config using:
+
+```sh
+make test
+```
