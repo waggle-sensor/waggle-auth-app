@@ -2,14 +2,14 @@
 
 This is a prototype app which implements user, project and node access permissions management.
 
-## Development / Deployment Configurations
+## Configurations
 
 There are two development / deployment configurations:
 
 * dev (local dev on host machine, intended for fast iteration)
 * prod (intended to be run in provided docker compose or production cluster)
 
-## Local Dev using dev
+### Local Dev using dev
 
 _I highly recommend creating a virtual env when working on the app. I typically use:_
 
@@ -29,7 +29,7 @@ pip install -r requirements/dev.txt
 
 Now you're ready to start developing! You should now be able to run database migratations and create a super user.
 
-## Docker Compose using prod
+### Docker Compose using prod
 
 To stand up the prod environment in docker compose, simply run:
 
