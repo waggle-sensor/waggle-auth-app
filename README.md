@@ -6,10 +6,10 @@ This is a prototype app which implements user, project and node access permissio
 
 There are two development / deployment configurations:
 
-* dev (local dev on host machine, intended for fast iteration)
-* prod (intended to be run in provided docker compose or production cluster)
+* dev: intended for fast, local dev on host machine. debug flags are enabled.
+* prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
 
-### Local Dev using dev
+### Local development using dev configuration
 
 _I highly recommend creating a virtual env when working on the app. I typically use:_
 
@@ -40,7 +40,7 @@ Finally, you can start the dev server:
 python manage.py runserver
 ```
 
-### Docker Compose using prod
+### Running in docker compose using prod configuration
 
 To stand up the prod environment in docker compose, simply run:
 
