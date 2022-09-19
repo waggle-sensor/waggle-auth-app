@@ -27,7 +27,18 @@ After activating the venv, instead the dev requirements:
 pip install -r requirements/dev.txt
 ```
 
-Now you're ready to start developing! You should now be able to run database migratations and create a super user.
+Next, run the one time database migratations and create a super user.
+
+```sh
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+Finally, you can start the dev server:
+
+```sh
+python manage.py runserver
+```
 
 ### Docker Compose using prod
 
