@@ -1,1 +1,2 @@
+-r base.txt
 ipython # enables ipython for `./manage.py shell`
