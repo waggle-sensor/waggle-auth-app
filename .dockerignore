@@ -1,3 +1,6 @@
-__pycache__/
-venv/
-*.sqlite3
+*
+!requirements/*.txt
+!*.py
+!config/*.py
+!config/settings/*.py
+!app/*.py
