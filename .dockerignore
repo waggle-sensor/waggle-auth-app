@@ -4,3 +4,4 @@
 !config/*.py
 !config/settings/*.py
 !app/*.py
+!app/migrations/*.py
