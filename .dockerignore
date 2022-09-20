@@ -1,7 +1,9 @@
-*
-!requirements/*.txt
-!*.py
-!config/*.py
-!config/settings/*.py
-!app/*.py
-!app/migrations/*.py
+Dockerfile
+Makefile
+docker-compose.yaml
+nginx.conf
+**/.*
+**/*.md
+**/*.sqlite3
+**/__pycache__
+**/venv
