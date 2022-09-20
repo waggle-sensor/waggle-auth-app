@@ -15,3 +15,4 @@ createsuperuser:
 
 test:
 	docker-compose exec django python manage.py test
+	docker-compose exec django python manage.py check --deploy

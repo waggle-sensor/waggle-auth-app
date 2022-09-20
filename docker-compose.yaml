@@ -20,7 +20,8 @@ services:
     command: gunicorn config.wsgi:application --bind 0.0.0.0:80 --reload
     environment:
       - "DJANGO_SETTINGS_MODULE=config.settings.prod"
-      - "SECRET_KEY=django-insecure-$$!4^oa&ws#nes5lo@y#7ljtsj_l+sau34a(8qb&cy-&8%gd-fp"
+      # NOTE(sean) NEVER use this secret key in production! it is only for local dev!
+      - "SECRET_KEY=KknZPfSExc_0N5GfSkMvHgNb9BnYPdTSpxdWxHIUCawnrBLGtRz5chKXd4qseYb72Cht29Rp70qskB4O"
       - "ALLOWED_HOSTS=localhost 127.0.0.1"
       - "MYSQL_HOST=mysql"
       # NOTE(sean) we use the root user to allow django to setup / teardown test databases.
