@@ -1,10 +1,14 @@
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
 
 def profile_access(request, username):
-    user = get_object_or_404(User, username=username)
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return HttpResponse(f"no user with username {username!r}")
+
     profile = user.profile
 
     access_by_vsn = {}
