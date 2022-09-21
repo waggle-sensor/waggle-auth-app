@@ -56,6 +56,10 @@ class TestApp(TestCase):
                 {"vsn": "W003", "access": ["develop", "schedule"]},
             ]
         })
+    
+    def testAccessNotExist(self):
+        r = self.client.get("/profiles/nothere/access")
+        self.assertEqual(r.status_code, 404)
 
     def setUpMembershipData(self, profile_membership, node_membership):
         for username, projectname, access in profile_membership:

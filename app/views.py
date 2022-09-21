@@ -7,7 +7,7 @@ def profile_access(request, username):
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
-        return HttpResponse(f"no user with username {username!r}")
+        return HttpResponse(f"no user with username {username!r}", status=404)
 
     profile = user.profile
 
