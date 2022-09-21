@@ -4,6 +4,7 @@ import os
 SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = False
 ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split()
+CSRF_TRUSTED_ORIGINS = os.environ["CSRF_TRUSTED_ORIGINS"].split()
 
 DATABASES = {
     "default": {
