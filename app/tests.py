@@ -27,7 +27,7 @@ class TestApp(TestCase):
             ],
         )
 
-        r = self.client.get("/app/ada/access")
+        r = self.client.get("/profiles/ada/access")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {
             "items": [
@@ -37,7 +37,7 @@ class TestApp(TestCase):
             ]
         })
 
-        r = self.client.get("/app/jed/access")
+        r = self.client.get("/profiles/jed/access")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {
             "items": [
@@ -47,7 +47,7 @@ class TestApp(TestCase):
             ]
         })
 
-        r = self.client.get("/app/tom/access")
+        r = self.client.get("/profiles/tom/access")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {
             "items": [
