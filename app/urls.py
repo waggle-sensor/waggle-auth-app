@@ -1,8 +1,8 @@
 from django.urls import path
-from . import views
+from .views import ProfileAccessView
 
 app_name = "app"
 
 urlpatterns = [
-    path("profiles/<str:username>/access", views.profile_access, name="profile_access"),
+    path("profiles/<str:username>/access", ProfileAccessView.as_view(), name="profile_access"),
 ]
