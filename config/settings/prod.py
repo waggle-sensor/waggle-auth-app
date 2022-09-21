@@ -15,3 +15,5 @@ DATABASES = {
         "NAME" : os.environ["MYSQL_DATABASE"],
     }
 }
+
+STATIC_ROOT = "/var/www/static"

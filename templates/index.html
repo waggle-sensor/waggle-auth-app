@@ -4,17 +4,21 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Auth / Access Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,800;1,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,800&display=swap" rel="stylesheet">
+    {% load static %}
+    <link href="{% static 'styles.css' %}" rel="stylesheet">
 </head>
 <body>
-    <h1>Auth / Access Service</h1>
-
-    <p>Welcome to the auth / access service!</p>
-
-    <p>Admins can visit the <a href="/admin/">admin site</a>.</p>
-
-    <p>User access API is available at: <code>/profiles/username/access</code></p>
-
-    <p><em>The page is just a placeholder until all the initial APIs are in place.</em></p>
+    <main>
+        <div class="container">
+            <h1>Auth / Access Service</h1>
+            <p>Welcome to the auth / access service!</p>
+            <p>Admins can visit the <a href="/admin/">admin site</a>.</p>
+            <p>User access API is available at: <code>/profiles/username/access</code></p>
+            <p><em>The page is just a placeholder until all the initial APIs are in place.</em></p>
+        </div>
+    </main>
 </body>
 </html>
