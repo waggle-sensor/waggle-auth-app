@@ -17,7 +17,10 @@ class ProfileAccessView(APIView):
         access_by_vsn = {}
 
         for access in ["develop", "schedule", "access_files"]:
-            vsns = profile.get_nodes_with_access(access).values_list("vsn", flat=True)
+            vsns = profile.projects.filter(**{
+                f"profilemembership__can_{access}": True,
+                f"nodemembership__can_{access}": True,
+            }).values_list("node__vsn", flat=True)
 
             for vsn in vsns:
                 if vsn not in access_by_vsn:

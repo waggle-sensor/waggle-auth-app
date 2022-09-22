@@ -1,8 +1,6 @@
+# TODO add date created / updated type fields to all items
 from django.db import models
 from django.contrib.auth.models import User
-
-
-# TODO add date created / updated type fields to all items
 
 
 class Project(models.Model):
@@ -32,10 +30,6 @@ class Profile(models.Model):
 
     def __str__(self):
         return str(self.user)
-
-    def get_nodes_with_access(self, access):
-        projects = self.projects.filter(**{f"profilemembership__can_{access}": True})
-        return Node.objects.filter(projects__in=projects, **{f"nodemembership__can_{access}": True})
 
 
 # add validator for all False - no need since False by default
