@@ -18,6 +18,7 @@ class Project(models.Model):
 
 class Node(models.Model):
     vsn = models.CharField("VSN", max_length=10, unique=True)
+    mac = models.CharField("MAC", max_length=16, unique=True, null=True)
     projects = models.ManyToManyField(Project, through="NodeMembership")
 
     def __str__(self):

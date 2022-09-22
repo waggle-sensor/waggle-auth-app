@@ -21,18 +21,22 @@ class NodeMembershipInline(admin.TabularInline):
 
 
 class ProfileAdmin(admin.ModelAdmin):
+    search_fields = ("user__username",)
     ordering = ("user__username",)
     inlines = (ProfileMembershipInline,)
 
 
 class NodeAdmin(admin.ModelAdmin):
+    list_display = ("vsn", "mac")
+    search_fields = ("vsn", "mac")
     ordering = ("vsn",)
     inlines = (NodeMembershipInline,)
 
 
 class ProjectAdmin(admin.ModelAdmin):
-    inlines = (ProfileMembershipInline, NodeMembershipInline)
     list_display = ("name", "number_of_members", "number_of_nodes")
+    search_fields = ("name",)
+    inlines = (ProfileMembershipInline, NodeMembershipInline)
 
 
 admin.site.register(Profile, ProfileAdmin)
