@@ -2,7 +2,20 @@ from django.contrib.auth.models import User
 from django.http import Http404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Profile
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from .models import Node, Profile
+from .serializers import NodeSerializer
+
+
+class NodeListView(ListAPIView):
+    queryset = Node.objects.all()
+    serializer_class = NodeSerializer
+
+
+class NodeDetailView(RetrieveAPIView):
+    queryset = Node.objects.all()
+    serializer_class = NodeSerializer
+    lookup_field = "vsn"
 
 
 class ProfileAccessView(APIView):

@@ -5,6 +5,11 @@ from .models import Profile, Project, Node, ProfileMembership, NodeMembership
 
 class TestApp(TestCase):
 
+    def testNodes(self):
+        Node.objects.create(vsn="V001")
+        r = self.client.get("/nodes/V001")
+        self.assertEqual(r.status_code, 200)
+
     def testListAccess(self):
         self.setUpMembershipData(
             profile_membership=[
