@@ -10,6 +10,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework.authtoken",
     "app",
 ]
 
@@ -22,6 +23,16 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "app.authentication.ExpiringTokenAuthentication",
+    ]
+}
+
+TOKEN_EXPIRE_SECONDS = 31557600 # expires in one year
 
 ROOT_URLCONF = "config.urls"
 
