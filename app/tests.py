@@ -29,33 +29,27 @@ class TestApp(TestCase):
 
         r = self.client.get("/profiles/ada/access")
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {
-            "items": [
-                {"vsn": "W001", "access": ["develop", "schedule"]},
-                {"vsn": "W002", "access": ["develop"]},
-                {"vsn": "W003", "access": ["develop"]},
-            ]
-        })
+        self.assertEqual(r.json(), [
+            {"vsn": "W001", "access": ["develop", "schedule"]},
+            {"vsn": "W002", "access": ["develop"]},
+            {"vsn": "W003", "access": ["develop"]},
+        ])
 
         r = self.client.get("/profiles/jed/access")
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {
-            "items": [
-                {"vsn": "W001", "access": ["schedule"]},
-                {"vsn": "W002", "access": ["develop"]},
-                {"vsn": "W003", "access": ["develop", "schedule"]},
-            ]
-        })
+        self.assertEqual(r.json(), [
+            {"vsn": "W001", "access": ["schedule"]},
+            {"vsn": "W002", "access": ["develop"]},
+            {"vsn": "W003", "access": ["develop", "schedule"]},
+        ])
 
         r = self.client.get("/profiles/tom/access")
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {
-            "items": [
-                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
-                {"vsn": "W002", "access": ["develop"]},
-                {"vsn": "W003", "access": ["develop", "schedule"]},
-            ]
-        })
+        self.assertEqual(r.json(), [
+            {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
+            {"vsn": "W002", "access": ["develop"]},
+            {"vsn": "W003", "access": ["develop", "schedule"]},
+        ])
     
     def testAccessNotExist(self):
         r = self.client.get("/profiles/nothere/access")

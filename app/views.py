@@ -27,5 +27,6 @@ class ProfileAccessView(APIView):
                     access_by_vsn[vsn] = set()
                 access_by_vsn[vsn].add(access)
 
-        items = [{"vsn": vsn, "access": sorted(access)} for vsn, access in sorted(access_by_vsn.items())]
-        return Response({"items": items})
+        data = [{"vsn": vsn, "access": sorted(access)} for vsn, access in sorted(access_by_vsn.items())]
+
+        return Response(data)
