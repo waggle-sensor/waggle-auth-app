@@ -18,6 +18,13 @@
             <p>Admins can visit the <a href="/admin/">admin site</a>.</p>
             <p>User access API is available at: <code>/profiles/username/access</code></p>
             <p><em>The page is just a placeholder until all the initial APIs are in place.</em></p>
+
+            {% if user.is_authenticated %}
+            <p>Welcome, {{ user.username }}!</p>
+            <p><a href="{% url 'app:oidc_logout' %}">Logout</a></p>
+            {% else %}
+            <p><a href="{% url 'app:oidc_login' %}">Login</a></p>
+            {% endif %}
         </div>
     </main>
 </body>

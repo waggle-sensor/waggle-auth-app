@@ -46,6 +46,28 @@ Finally, you can start the dev server:
 python manage.py runserver
 ```
 
+#### Enabling Globus OIDC login (Optional)
+
+You can configure user login via Globus OIDC by performing the following one time setup:
+
+1. Go to [https://developers.globus.org](https://developers.globus.org)
+2. Go to Register your app with Globus
+3. Create an app with a name like "Test App"
+  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect`
+  * Copy the client ID, client secret and redirect URL and add them the following template in a convinient location like `~/waggle-auth-oidc.env`:
+
+```sh
+export OIDC_CLIENT_ID="Your Client ID!"
+export OIDC_CLIENT_SECRET="Your Client Secret!"
+export OIDC_REDIRECT_URI="http://localhost:8000/globus-auth-redirect"
+```
+
+Then, source the env using and rerun the server.
+
+```sh
+. ~/waggle-auth-oidc.env
+```
+
 ### Running in docker compose using prod configuration
 
 To stand up the prod environment in docker compose, simply run:

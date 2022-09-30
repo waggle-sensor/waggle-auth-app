@@ -20,12 +20,17 @@ class NodeMembershipInline(admin.TabularInline):
     extra = 0
 
 
+@admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    search_fields = ("user__username",)
-    ordering = ("user__username",)
+    list_display = ("username", "name")
+    search_fields = ("username", "name")
     inlines = (ProfileMembershipInline,)
 
+    def username(self, profile):
+        return profile.user.username
 
+
+@admin.register(Node)
 class NodeAdmin(admin.ModelAdmin):
     list_display = ("vsn", "mac")
     search_fields = ("vsn", "mac")
@@ -33,12 +38,8 @@ class NodeAdmin(admin.ModelAdmin):
     inlines = (NodeMembershipInline,)
 
 
+@admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ("name", "number_of_members", "number_of_nodes")
     search_fields = ("name",)
     inlines = (ProfileMembershipInline, NodeMembershipInline)
-
-
-admin.site.register(Profile, ProfileAdmin)
-admin.site.register(Node, NodeAdmin)
-admin.site.register(Project, ProjectAdmin)
