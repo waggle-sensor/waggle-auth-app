@@ -9,29 +9,7 @@ There are two development / deployment configurations:
 * dev: intended for fast, local dev on host machine. debug flags are enabled.
 * prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
 
-### Configure Globus OIDC login (Optional)
-
-You can configure user login via Globus OIDC by performing the following one time setup:
-
-1. Go to [https://developers.globus.org](https://developers.globus.org)
-2. Go to Register your app with Globus
-3. Create an app with a name like "Test App"
-  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect`
-  * Copy the following template to `~/waggle-auth-oidc.env` and fill in your client ID, client secret and redirect URL:
-
-```sh
-export OIDC_CLIENT_ID="Your Client ID!"
-export OIDC_CLIENT_SECRET="Your Client Secret!"
-export OIDC_REDIRECT_URI="http://localhost:8000/globus-auth-redirect"
-```
-
-Now, you can enable Globus OIDC login by sourcing the env using:
-
-```sh
-. ~/waggle-auth-oidc.env
-```
-
-and then running either of the following local or docker compose environments.
+Optionally, you can configure user login via Globus OIDC for either of these environments.
 
 ### Local development using dev configuration
 
@@ -100,4 +78,26 @@ Finally, when you're done working, you can stop everything using:
 
 ```sh
 make stop
+```
+
+### Enable user login via Globus OIDC (Optional)
+
+You can configure user login via Globus OIDC by performing the following _one time_ setup:
+
+1. Go to [https://developers.globus.org](https://developers.globus.org)
+2. Go to Register your app with Globus
+3. Create an app with a name like "Test App"
+  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect`
+  * Copy the following template to `~/waggle-auth-oidc.env` and fill in your client ID, client secret and redirect URL:
+
+```sh
+export OIDC_CLIENT_ID="Your Client ID!"
+export OIDC_CLIENT_SECRET="Your Client Secret!"
+export OIDC_REDIRECT_URI="http://localhost:8000/globus-auth-redirect"
+```
+
+You can enable Globus OIDC login by sourcing the env file before running either the dev or docker compose environments:
+
+```sh
+. ~/waggle-auth-oidc.env
 ```
