@@ -48,23 +48,20 @@ def oidc_login(request: HttpRequest) -> HttpResponse:
 
 
 def oidc_callback(request: HttpRequest) -> HttpResponse:
-    try:
-        state_token = request.COOKIES["statetoken"]
-    except KeyError:
-        return JsonResponse({"error": "missing state token from client"}, status=400)
+    code = request.GET.get("code")
+    if code is None:
+        return JsonResponse({"error": "missing code from authorization server"}, status=502)
 
-    try:
-        state = request.GET["state"]
-    except KeyError:
+    state = request.GET.get("state")
+    if state is None:
         return JsonResponse({"error": "missing state from authorization server"}, status=502)
+
+    state_token = request.COOKIES.get("statetoken")
+    if state_token is None:
+        return JsonResponse({"error": "missing state token from client"}, status=400)
 
     if not compare_digest(state, state_token):
         return JsonResponse({"error": f"state doesn't match state cookie: {state!r} - {state_token!r}"}, status=400)
-
-    try:
-        code = request.GET["code"]
-    except KeyError:
-        return JsonResponse({"error": "missing code from authorization server"}, status=502)
 
     try:
         access_token = exchange_code_for_access_token(code)
@@ -76,9 +73,8 @@ def oidc_callback(request: HttpRequest) -> HttpResponse:
     except Exception:
         return JsonResponse({"error": "failed to get user info from authorization server"}, status=502)
 
-    try:
-        username = userinfo.get("preferred_username")
-    except KeyError:
+    username = userinfo.get("preferred_username")
+    if username is None:
         return JsonResponse({"error": "missing username from authorization server"}, status=502)
 
     user, _ = User.objects.update_or_create(
