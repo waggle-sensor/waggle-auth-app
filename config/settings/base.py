@@ -90,7 +90,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-# OAuth2 and OIDC login settings. See README about one time setup for local use.
+# Globus OAuth2 and OIDC login settings. See README about one time setup for local use.
 OAUTH2_AUTHORIZATION_ENDPOINT = "https://auth.globus.org/v2/oauth2/authorize"
 OAUTH2_TOKEN_ENDPOINT = "https://auth.globus.org/v2/oauth2/token"
 OAUTH2_USERINFO_ENDPOINT = "https://auth.globus.org/v2/oauth2/userinfo"
