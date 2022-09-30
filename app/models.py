@@ -1,10 +1,22 @@
 from django.conf import settings
 from django.db import models
-# TODO add date created / updated type fields to all items
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class Node(models.Model):
+    vsn = models.CharField("VSN", max_length=10, unique=True)
+    mac = models.CharField("MAC", max_length=16, unique=True, null=True, blank=True)
+
+    def __str__(self):
+        return self.vsn
 
 
 class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    users = models.ManyToManyField(User, through="UserMembership")
+    nodes = models.ManyToManyField(Node, through="NodeMembership")
 
     def __str__(self):
         return self.name
@@ -16,29 +28,9 @@ class Project(models.Model):
         return self.node_set.count()
 
 
-class Node(models.Model):
-    vsn = models.CharField("VSN", max_length=10, unique=True)
-    mac = models.CharField("MAC", max_length=16, unique=True, null=True)
-    projects = models.ManyToManyField(Project, through="NodeMembership")
-
-    def __str__(self):
-        return self.vsn
-
-
-class Profile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, blank=True)
-    organization = models.CharField(max_length=255, blank=True)
-    bio = models.TextField(blank=True)
-    projects = models.ManyToManyField(Project, through="ProfileMembership")
-
-    def __str__(self):
-        return str(self.user)
-
-
-class ProfileMembership(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+class UserMembership(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     can_schedule = models.BooleanField(
         "Schedule?",
         default=False,
@@ -65,13 +57,13 @@ class ProfileMembership(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint("profile", "project", name="app_profilemembership_uniq")
+            models.UniqueConstraint("user", "project", name="app_profilemembership_uniq")
         ]
 
 
 class NodeMembership(models.Model):
-    node = models.ForeignKey(Node, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    node = models.ForeignKey(Node, on_delete=models.CASCADE)
     can_schedule = models.BooleanField(
         "Schedule?",
         default=False,

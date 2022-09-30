@@ -7,28 +7,26 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from secrets import compare_digest, token_urlsafe
 import requests
-from .models import Profile
 
 
 User = get_user_model()
 
 
-class ProfileAccessView(APIView):
+class UserAccessView(APIView):
 
     def get(self, request, username, format=None):
         try:
             user = User.objects.get(username=username)
-            profile = user.profile
-        except (User.DoesNotExist, Profile.DoesNotExist):
+        except User.DoesNotExist:
             raise Http404
 
         access_by_vsn = {}
 
         for access in ["develop", "schedule", "access_files"]:
-            vsns = profile.projects.filter(**{
-                f"profilemembership__can_{access}": True,
+            vsns = user.project_set.filter(**{
+                f"usermembership__can_{access}": True,
                 f"nodemembership__can_{access}": True,
-            }).values_list("node__vsn", flat=True)
+            }).values_list("nodes__vsn", flat=True)
 
             for vsn in vsns:
                 if vsn not in access_by_vsn:

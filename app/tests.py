@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from .models import Profile, Project, Node, ProfileMembership, NodeMembership
+from .models import Project, Node, UserMembership, NodeMembership
 
 
 User = get_user_model()
@@ -61,9 +61,8 @@ class TestApp(TestCase):
     def setUpMembershipData(self, profile_membership, node_membership):
         for username, projectname, access in profile_membership:
             user, _ = User.objects.get_or_create(username=username)
-            profile, _ = Profile.objects.get_or_create(user=user)
             project, _ = Project.objects.get_or_create(name=projectname)
-            ProfileMembership.objects.get_or_create(profile=profile, project=project, **access)
+            UserMembership.objects.get_or_create(user=user, project=project, **access)
 
         for projectname, vsn, access in node_membership:
             node, _ = Node.objects.get_or_create(vsn=vsn)
