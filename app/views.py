@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.utils.http import urlencode
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from secrets import compare_digest, token_urlsafe
@@ -42,7 +43,7 @@ class ProfileAccessView(APIView):
 def oidc_login(request: HttpRequest) -> HttpResponse:
     state = token_urlsafe(24)
     uri = get_oidc_authorize_uri(state)
-    response = HttpResponseRedirect(uri, status=302)
+    response = HttpResponseRedirect(uri, status=status.HTTP_302_FOUND)
     response.set_cookie("statetoken", state, max_age=60, samesite="lax")
     return response
 
@@ -50,32 +51,32 @@ def oidc_login(request: HttpRequest) -> HttpResponse:
 def oidc_callback(request: HttpRequest) -> HttpResponse:
     code = request.GET.get("code")
     if code is None:
-        return JsonResponse({"error": "missing code from authorization server"}, status=502)
+        return JsonResponse({"error": "missing code from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
     state = request.GET.get("state")
     if state is None:
-        return JsonResponse({"error": "missing state from authorization server"}, status=502)
+        return JsonResponse({"error": "missing state from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
     state_token = request.COOKIES.get("statetoken")
     if state_token is None:
-        return JsonResponse({"error": "missing state token from client"}, status=400)
+        return JsonResponse({"error": "missing state token from client"}, status=status.HTTP_400_BAD_REQUEST)
 
     if not compare_digest(state, state_token):
-        return JsonResponse({"error": f"state doesn't match state cookie: {state!r} - {state_token!r}"}, status=400)
+        return JsonResponse({"error": f"state doesn't match state cookie: {state!r} - {state_token!r}"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         access_token = exchange_code_for_access_token(code)
     except Exception:
-        return JsonResponse({"error": "failed to exchange code for access token"}, status=502)
+        return JsonResponse({"error": "failed to exchange code for access token"}, status=status.HTTP_502_BAD_GATEWAY)
 
     try:
         userinfo = get_oidc_userinfo(access_token)
     except Exception:
-        return JsonResponse({"error": "failed to get user info from authorization server"}, status=502)
+        return JsonResponse({"error": "failed to get user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
     username = userinfo.get("preferred_username")
     if username is None:
-        return JsonResponse({"error": "missing username from authorization server"}, status=502)
+        return JsonResponse({"error": "missing username from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
     user, _ = User.objects.update_or_create(
         username=username,
@@ -90,12 +91,12 @@ def oidc_callback(request: HttpRequest) -> HttpResponse:
 
     login(request, user)
 
-    return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL, status=302)
+    return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL, status=status.HTTP_302_FOUND)
 
 
 def oidc_logout(request: HttpRequest) -> HttpResponse:
     logout(request)
-    return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL, status=302)
+    return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL, status=status.HTTP_302_FOUND)
 
 
 def exchange_code_for_access_token(code: str) -> str:

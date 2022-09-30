@@ -1,11 +1,5 @@
 from django.contrib import admin
-from .models import (
-    Profile,
-    Node,
-    Project,
-    ProfileMembership,
-    NodeMembership,
-)
+from .models import Profile, Node, Project, ProfileMembership, NodeMembership
 
 
 class ProfileMembershipInline(admin.TabularInline):

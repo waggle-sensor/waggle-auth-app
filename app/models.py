@@ -1,6 +1,6 @@
-# TODO add date created / updated type fields to all items
 from django.db import models
 from django.contrib.auth.models import User
+# TODO add date created / updated type fields to all items
 
 
 class Project(models.Model):
