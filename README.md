@@ -96,7 +96,7 @@ export OIDC_CLIENT_SECRET="Your Client Secret!"
 export OIDC_REDIRECT_URI="http://localhost:8000/globus-auth-redirect"
 ```
 
-You can enable Globus OIDC login by sourcing the env file before running either the dev or docker compose environments:
+You can enable Globus OIDC login by sourcing the env file _before_ running either the dev or docker compose environments:
 
 ```sh
 . ~/waggle-auth-oidc.env
