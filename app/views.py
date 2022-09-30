@@ -78,14 +78,21 @@ def oidc_callback(request: HttpRequest) -> HttpResponse:
     if username is None:
         return JsonResponse({"error": "missing username from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
+    # user, _ = User.objects.update_or_create(
+    #     username=username,
+    #     email=userinfo.get("email", ""),
+    # )
+
+    # Profile.objects.update_or_create(
+    #     user=user,
+    #     name=userinfo.get("name", ""),
+    #     organization=userinfo.get("organization", ""),
+    # )
+
     user, _ = User.objects.update_or_create(
         username=username,
-        email=userinfo.get("email", ""),
-    )
-
-    Profile.objects.update_or_create(
-        user=user,
         name=userinfo.get("name", ""),
+        email=userinfo.get("email", ""),
         organization=userinfo.get("organization", ""),
     )
 

@@ -1,5 +1,5 @@
+from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import User
 # TODO add date created / updated type fields to all items
 
 
@@ -26,7 +26,7 @@ class Node(models.Model):
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, blank=True)
     organization = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True)
