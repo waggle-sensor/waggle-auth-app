@@ -5,34 +5,10 @@ from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import serializers
-from rest_framework import generics
 from secrets import compare_digest, token_urlsafe
 import requests
 
-
 User = get_user_model()
-
-
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = User
-        fields = ["url", "username", "email", "is_superuser", "is_staff", "is_active"]
-        extra_kwargs = {
-            "url": {"view_name": "app:user-detail", "lookup_field": "username"},
-            "users": {"lookup_field": "username"},
-        }
-
-
-class UserListView(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-class UserDetailView(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = "username"
 
 
 class UserAccessView(APIView):
