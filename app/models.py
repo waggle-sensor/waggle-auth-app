@@ -55,6 +55,7 @@ class UserMembership(models.Model):
     def __str__(self):
         return f"{self.user} | {self.project}"
 
+    # TODO(sean) UniqueConstraint seem to cause a bug as of Django 4.1, will investigate later.
     # class Meta:
     #     constraints = [
     #         models.UniqueConstraint("user", "project", name="app_profilemembership_uniq")
