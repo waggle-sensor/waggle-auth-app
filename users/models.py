@@ -11,6 +11,7 @@ class User(AbstractUser):
     last_name = None
     organization = models.CharField(blank=True, max_length=255)
     bio = models.TextField(blank=True)
+    ssh_public_keys = models.TextField("SSH public keys", blank=True)
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})

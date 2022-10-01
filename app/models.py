@@ -21,11 +21,11 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
-    def number_of_members(self):
-        return self.profile_set.count()
+    def number_of_users(self):
+        return self.users.count()
 
     def number_of_nodes(self):
-        return self.node_set.count()
+        return self.nodes.count()
 
 
 class UserMembership(models.Model):
@@ -53,12 +53,12 @@ class UserMembership(models.Model):
     )
 
     def __str__(self):
-        return f"{self.profile} | {self.project}"
+        return f"{self.user} | {self.project}"
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint("user", "project", name="app_profilemembership_uniq")
-        ]
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint("user", "project", name="app_profilemembership_uniq")
+    #     ]
 
 
 class NodeMembership(models.Model):
@@ -83,7 +83,7 @@ class NodeMembership(models.Model):
     def __str__(self):
         return f"{self.node} | {self.project}"
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint("node", "project", name="app_nodemembership_uniq")
-        ]
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint("node", "project", name="app_nodemembership_uniq")
+    #     ]

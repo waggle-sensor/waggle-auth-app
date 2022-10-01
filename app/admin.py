@@ -3,7 +3,7 @@ from .models import Node, Project, UserMembership, NodeMembership
 
 
 class UserMembershipInline(admin.TabularInline):
-    ordering = ("profile__user__username",)
+    ordering = ("user__username",)
     model = UserMembership
     extra = 0
 
@@ -24,6 +24,6 @@ class NodeAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("name", "number_of_members", "number_of_nodes")
+    list_display = ("name", "number_of_users", "number_of_nodes")
     search_fields = ("name",)
     inlines = (UserMembershipInline, NodeMembershipInline)
