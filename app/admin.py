@@ -25,6 +25,7 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     list_display = ("username", "name", "is_superuser")
     search_fields = ("username", "name")
+    inlines = (UserMembershipInline,)
 
 
 @admin.register(Node)
