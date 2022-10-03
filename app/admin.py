@@ -1,10 +1,11 @@
 from django.contrib import admin
-from .models import Profile, Node, Project, ProfileMembership, NodeMembership
+from django.contrib.auth import admin as auth_admin
+from .models import User, Node, Project, UserMembership, NodeMembership
 
 
-class ProfileMembershipInline(admin.TabularInline):
-    ordering = ("profile__user__username",)
-    model = ProfileMembership
+class UserMembershipInline(admin.TabularInline):
+    ordering = ("user__username",)
+    model = UserMembership
     extra = 0
 
 
@@ -14,14 +15,16 @@ class NodeMembershipInline(admin.TabularInline):
     extra = 0
 
 
-@admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
-    list_display = ("username", "name")
+@admin.register(User)
+class UserAdmin(auth_admin.UserAdmin):
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        ("Personal info", {"fields": ("name", "email", "organization", "bio", "ssh_public_keys")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
+    )
+    list_display = ("username", "name", "is_superuser")
     search_fields = ("username", "name")
-    inlines = (ProfileMembershipInline,)
-
-    def username(self, profile):
-        return profile.user.username
 
 
 @admin.register(Node)
@@ -34,6 +37,6 @@ class NodeAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("name", "number_of_members", "number_of_nodes")
+    list_display = ("name", "number_of_users", "number_of_nodes")
     search_fields = ("name",)
-    inlines = (ProfileMembershipInline, NodeMembershipInline)
+    inlines = (UserMembershipInline, NodeMembershipInline)

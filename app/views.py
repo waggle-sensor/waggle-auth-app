@@ -5,30 +5,53 @@ from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from secrets import compare_digest, token_urlsafe
 import requests
-from .models import Profile
-
+from .serializers import UserSerializer
 
 User = get_user_model()
 
 
-class ProfileAccessView(APIView):
+class UserListView(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
 
-    def get(self, request, username, format=None):
+
+class UserDetailView(RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = "username"
+    permission_classes = [IsAdminUser]
+
+
+class UserSelfDetailView(RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+class UserAccessView(APIView):
+
+    permission_classes = [IsAdminUser]
+
+    def get(self, request: HttpRequest, username: str, format=None) -> Response:
         try:
             user = User.objects.get(username=username)
-            profile = user.profile
-        except (User.DoesNotExist, Profile.DoesNotExist):
+        except User.DoesNotExist:
             raise Http404
 
         access_by_vsn = {}
 
         for access in ["develop", "schedule", "access_files"]:
-            vsns = profile.projects.filter(**{
-                f"profilemembership__can_{access}": True,
+            vsns = user.project_set.filter(**{
+                f"usermembership__can_{access}": True,
                 f"nodemembership__can_{access}": True,
-            }).values_list("node__vsn", flat=True)
+            }).values_list("nodes__vsn", flat=True)
 
             for vsn in vsns:
                 if vsn not in access_by_vsn:
@@ -80,12 +103,8 @@ def oidc_callback(request: HttpRequest) -> HttpResponse:
 
     user, _ = User.objects.update_or_create(
         username=username,
-        email=userinfo.get("email", ""),
-    )
-
-    Profile.objects.update_or_create(
-        user=user,
         name=userinfo.get("name", ""),
+        email=userinfo.get("email", ""),
         organization=userinfo.get("organization", ""),
     )
 

@@ -15,12 +15,14 @@
         <div class="container">
             <h1>Auth / Access Service</h1>
             <p>Welcome to the auth / access service!</p>
-            <p>Admins can visit the <a href="/admin/">admin site</a>.</p>
             <p>User access API is available at: <code>/profiles/username/access</code></p>
             <p><em>The page is just a placeholder until all the initial APIs are in place.</em></p>
 
             {% if user.is_authenticated %}
             <p>Welcome, {{ user.username }}!</p>
+            {% if user.is_superuser %}
+            <p><a href="/admin/">Admin site</a></p>
+            {% endif %}
             <p><a href="{% url 'app:oidc_logout' %}">Logout</a></p>
             {% else %}
             <p><a href="{% url 'app:oidc_login' %}">Login</a></p>
