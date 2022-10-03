@@ -28,6 +28,9 @@ class TestApp(TestCase):
             "token": user_token.key,
         }, r.json())
 
+        # NOTE sage-auth responds with:
+        # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}
+
     def testUserListPermissions(self):
         admin_token = self.setUpToken("admin", is_admin=True)
         user_token = self.setUpToken("user", is_admin=False)
@@ -65,12 +68,16 @@ class TestApp(TestCase):
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset({
             "username": "admin",
+            "is_staff": True,
+            "is_superuser": True,
         }, r.json())
 
         r = self.client.get("/users/~self", HTTP_AUTHORIZATION=f"Sage {user_token}")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset({
             "username": "user",
+            "is_staff": False,
+            "is_superuser": False,
         }, r.json())
 
     def testListAccess(self):
@@ -150,5 +157,5 @@ class TestApp(TestCase):
             NodeMembership.objects.get_or_create(node=node, project=project, **access)
 
     def setUpToken(self, username, is_admin):
-        user = User.objects.create(username=username, is_staff=is_admin)
+        user = User.objects.create(username=username, is_staff=is_admin, is_superuser=is_admin)
         return Token.objects.create(user=user)
