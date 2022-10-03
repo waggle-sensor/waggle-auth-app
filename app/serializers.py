@@ -11,6 +11,6 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = ["url", "username", "email", "name", "groups"]
         extra_kwargs = {
-            "url": {"lookup_field": "username"},
+            "url": {"lookup_field": "username", "view_name": "app:user-detail"},
             "users": {"lookup_field": "username"},
         }

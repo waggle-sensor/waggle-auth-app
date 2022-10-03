@@ -10,12 +10,54 @@ User = get_user_model()
 
 class TestApp(TestCase):
 
-    def testListAccess(self):
-        user = User.objects.create(username="admin", is_staff=True)
-        admin_token = Token.objects.create(user=user)
+    def testUserListPermissions(self):
+        admin_token = self.setUpToken("admin", is_admin=True)
+        user_token = self.setUpToken("user", is_admin=False)
 
-        user = User.objects.create(username="user")
-        user_token = Token.objects.create(user=user)
+        r = self.client.get("/users/")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+        
+        r = self.client.get("/users/", HTTP_AUTHORIZATION=f"Sage {user_token}")
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+        r = self.client.get("/users/", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testUserDetailPermissions(self):
+        admin_token = self.setUpToken("admin", is_admin=True)
+        user_token = self.setUpToken("user", is_admin=False)
+
+        r = self.client.get("/users/user")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+        
+        r = self.client.get("/users/user", HTTP_AUTHORIZATION=f"Sage {user_token}")
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+        r = self.client.get("/users/user", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testUserSelfDetail(self):
+        admin_token = self.setUpToken("admin", is_admin=True)
+        user_token = self.setUpToken("user", is_admin=False)
+
+        r = self.client.get("/users/~self")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        r = self.client.get("/users/~self", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertDictContainsSubset({
+            "username": "admin",
+        }, r.json())
+
+        r = self.client.get("/users/~self", HTTP_AUTHORIZATION=f"Sage {user_token}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertDictContainsSubset({
+            "username": "user",
+        }, r.json())
+
+    def testListAccess(self):
+        admin_token = self.setUpToken("admin", is_admin=True)
+        user_token = self.setUpToken("user", is_admin=False)
 
         self.setUpMembershipData(
             profile_membership=[
@@ -88,3 +130,7 @@ class TestApp(TestCase):
             node, _ = Node.objects.get_or_create(vsn=vsn)
             project, _ = Project.objects.get_or_create(name=projectname)
             NodeMembership.objects.get_or_create(node=node, project=project, **access)
+
+    def setUpToken(self, username, is_admin):
+        user = User.objects.create(username=username, is_staff=is_admin)
+        return Token.objects.create(user=user)
