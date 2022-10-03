@@ -12,5 +12,7 @@ urlpatterns = [
     path("users/", views.UserListView.as_view(), name="user-list"),
     path("users/~self", views.UserSelfDetailView.as_view(), name="user-detail-self"),
     path("users/<str:username>", views.UserDetailView.as_view(), name="user-detail"),
+    path("users/<str:username>/access", views.UserAccessView.as_view(), name="user-access"),
+    # keeping old path for now
     path("profiles/<str:username>/access", views.UserAccessView.as_view(), name="user-access"),
 ])
