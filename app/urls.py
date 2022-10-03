@@ -9,5 +9,8 @@ urlpatterns = [
     path("logout/", views.oidc_logout, name="oidc_logout"),
     path("globus-auth-redirect/", views.oidc_callback, name="oidc_callback"),
 ] + format_suffix_patterns([
-    path("profiles/<str:username>/access", views.UserAccessView.as_view(), name="user_access"),
+    path("users/", views.UserListView.as_view(), name="user-list"),
+    path("users/~self", views.UserSelfDetailView.as_view(), name="user-detail-self"),
+    path("users/<str:username>", views.UserDetailView.as_view(), name="user-detail"),
+    path("profiles/<str:username>/access", views.UserAccessView.as_view(), name="user-access"),
 ])

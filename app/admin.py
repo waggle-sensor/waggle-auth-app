@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Node, Project, UserMembership, NodeMembership
+from django.contrib.auth import admin as auth_admin
+from .models import User, Node, Project, UserMembership, NodeMembership
 
 
 class UserMembershipInline(admin.TabularInline):
@@ -12,6 +13,18 @@ class NodeMembershipInline(admin.TabularInline):
     ordering = ("node__vsn",)
     model = NodeMembership
     extra = 0
+
+
+@admin.register(User)
+class UserAdmin(auth_admin.UserAdmin):
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        ("Personal info", {"fields": ("name", "email", "organization", "bio", "ssh_public_keys")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
+    )
+    list_display = ("username", "name", "is_superuser")
+    search_fields = ("username", "name")
 
 
 @admin.register(Node)

@@ -5,13 +5,39 @@ from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from secrets import compare_digest, token_urlsafe
 import requests
+from .serializers import UserSerializer
 
 User = get_user_model()
 
 
+class UserListView(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+
+
+class UserDetailView(RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = "username"
+    permission_classes = [IsAdminUser]
+
+
+class UserSelfDetailView(RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
 class UserAccessView(APIView):
+
+    permission_classes = [IsAdminUser]
 
     def get(self, request: HttpRequest, username: str, format=None) -> Response:
         try:
@@ -74,17 +100,6 @@ def oidc_callback(request: HttpRequest) -> HttpResponse:
     username = userinfo.get("preferred_username")
     if username is None:
         return JsonResponse({"error": "missing username from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
-
-    # user, _ = User.objects.update_or_create(
-    #     username=username,
-    #     email=userinfo.get("email", ""),
-    # )
-
-    # Profile.objects.update_or_create(
-    #     user=user,
-    #     name=userinfo.get("name", ""),
-    #     organization=userinfo.get("organization", ""),
-    # )
 
     user, _ = User.objects.update_or_create(
         username=username,

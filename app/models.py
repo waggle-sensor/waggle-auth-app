@@ -1,8 +1,20 @@
-from django.conf import settings
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
-User = get_user_model()
+
+class User(AbstractUser):
+    # Use name instead of assuming cultural convention first and last name.
+    name = models.CharField(blank=True, max_length=255)
+    first_name = None
+    last_name = None
+    organization = models.CharField(blank=True, max_length=255)
+    bio = models.TextField(blank=True)
+    ssh_public_keys = models.TextField("SSH public keys", blank=True)
+
+    # def get_absolute_url(self):
+    #     return reverse("app:detail", kwargs={"username": self.username})
 
 
 class Node(models.Model):
