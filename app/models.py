@@ -13,8 +13,8 @@ class User(AbstractUser):
     bio = models.TextField(blank=True)
     ssh_public_keys = models.TextField("SSH public keys", blank=True)
 
-    # def get_absolute_url(self):
-    #     return reverse("app:detail", kwargs={"username": self.username})
+    def get_absolute_url(self):
+        return reverse("app:user-detail", kwargs={"username": self.username})
 
 
 class Node(models.Model):

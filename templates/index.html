@@ -23,10 +23,10 @@
             {% if user.is_superuser %}
             <p><a href="/admin/">View admin site</a></p>
             {% endif %}
-            <p><a href="/token">View token</a></p>
-            <p><a href="{% url 'app:oidc_logout' %}">Logout</a></p>
+            <p><a href="{% url 'app:my-token' %}">View token</a></p>
+            <p><a href="{% url 'app:oidc-logout' %}">Logout</a></p>
             {% else %}
-            <p><a href="{% url 'app:oidc_login' %}">Login</a></p>
+            <p><a href="{% url 'app:oidc-login' %}">Login</a></p>
             {% endif %}
         </div>
     </main>
