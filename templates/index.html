@@ -21,8 +21,9 @@
             {% if user.is_authenticated %}
             <p>Welcome, {{ user.username }}!</p>
             {% if user.is_superuser %}
-            <p><a href="/admin/">Admin site</a></p>
+            <p><a href="/admin/">View admin site</a></p>
             {% endif %}
+            <p><a href="/token">View token</a></p>
             <p><a href="{% url 'app:oidc_logout' %}">Logout</a></p>
             {% else %}
             <p><a href="{% url 'app:oidc_login' %}">Login</a></p>

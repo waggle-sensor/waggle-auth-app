@@ -4,11 +4,29 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 from .models import Project, Node, UserMembership, NodeMembership
 
-
 User = get_user_model()
 
 
 class TestApp(TestCase):
+
+    def testToken(self):
+        admin_token = self.setUpToken("admin", is_admin=True)
+        user_token = self.setUpToken("user", is_admin=False)
+
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        r = self.client.get("/token", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertDictContainsSubset({
+            "token": admin_token.key,
+        }, r.json())
+
+        r = self.client.get("/token", HTTP_AUTHORIZATION=f"Sage {user_token}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertDictContainsSubset({
+            "token": user_token.key,
+        }, r.json())
 
     def testUserListPermissions(self):
         admin_token = self.setUpToken("admin", is_admin=True)

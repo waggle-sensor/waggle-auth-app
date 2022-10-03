@@ -3,12 +3,14 @@ from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.utils.http import urlencode
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from secrets import compare_digest, token_urlsafe
+from rest_framework.authtoken.models import Token
 import requests
+from secrets import compare_digest, token_urlsafe
 from .serializers import UserSerializer
 
 User = get_user_model()
@@ -35,11 +37,18 @@ class UserSelfDetailView(RetrieveAPIView):
         return self.request.user
 
 
-class UserAccessView(APIView):
+class TokenView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request: Request, format=None) -> Response:
+        token, _ = Token.objects.get_or_create(user=request.user)
+        return Response({"token": token.key})
+
+
+class UserAccessView(APIView):
     permission_classes = [IsAdminUser]
 
-    def get(self, request: HttpRequest, username: str, format=None) -> Response:
+    def get(self, request: Request, username: str, format=None) -> Response:
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
