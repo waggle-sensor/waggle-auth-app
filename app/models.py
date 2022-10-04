@@ -1,7 +1,17 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+import re
+
+ssh_public_key_re = re.compile("^ssh-(\S+) (\S+)")
+
+
+def validate_ssh_public_key_list(value: str):
+    for line in value.splitlines():
+        if not ssh_public_key_re.match(line):
+            raise ValidationError(f"Enter a valid list of newline delimited SSH public keys.", params={"value": value})
 
 
 class User(AbstractUser):
@@ -11,7 +21,7 @@ class User(AbstractUser):
     last_name = None
     organization = models.CharField(blank=True, max_length=255)
     bio = models.TextField(blank=True)
-    ssh_public_keys = models.TextField("SSH public keys", blank=True)
+    ssh_public_keys = models.TextField("SSH public keys", blank=True, validators=[validate_ssh_public_key_list])
 
     def get_absolute_url(self):
         return reverse("app:user-detail", kwargs={"username": self.username})
