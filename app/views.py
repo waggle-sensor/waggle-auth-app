@@ -129,18 +129,24 @@ def oidc_logout(request: HttpRequest) -> HttpResponse:
 
 def exchange_code_for_access_token(code: str) -> str:
     uri = get_oidc_token_uri(code)
-    r = requests.post(uri, headers={
-        "Accept": "application/json",
-    })
+    r = requests.post(uri,
+        headers={
+            "Accept": "application/json",
+        },
+        timeout=5,
+    )
     r.raise_for_status()
     return r.json()["access_token"]
 
 
 def get_oidc_userinfo(access_token: str):
-    r = requests.get(settings.OAUTH2_USERINFO_ENDPOINT, headers={
-        "Accept": "application/json",
-        "Authorization": f"Bearer {access_token}",
-    })
+    r = requests.get(settings.OAUTH2_USERINFO_ENDPOINT,
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {access_token}",
+        },
+        timeout=5,
+    )
     r.raise_for_status()
     return r.json()
 
