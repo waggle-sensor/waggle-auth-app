@@ -14,7 +14,7 @@
 <p><a href="/admin/">View admin site</a></p>
 {% endif %}
 <p><a href="{% url 'app:my-token' %}">View token</a></p>
-<p><a href="{% url 'app:update-my-keys' %}">Update SSH Public Keys</a></p>
+<p><a href="{% url 'app:update-my-keys' %}">Update SSH public keys</a></p>
 <p><a href="{% url 'app:oidc-logout' %}">Logout</a></p>
 {% else %}
 <p><a href="{% url 'app:oidc-login' %}">Login</a></p>
