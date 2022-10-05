@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Update SSH Public Keys{% endblock %}
+
+{% block content %}
+<h1>Update SSH Public Keys</h1>
+
+{% if user.is_authenticated %}
+<p>Please update and submit your SSH public keys below.</p>
+
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update</button>
+</form>
+
+<h2>Additional Configuration</h2>
+
+<p>You will need to update your <code>~/.ssh/config</code> file to include the following lines:</p>
+
+<pre>
+Host waggle-dev-sshd
+    HostName 192.5.86.5
+    Port 49190
+    User waggle
+    IdentityFile ~/.ssh/id_ed25519 # <<< your personal key
+
+Host waggle-dev-node-*
+    ProxyCommand ssh waggle-dev-sshd connect-to-node $(echo %h | sed "s/waggle-dev-node-//" )
+    User waggle
+    IdentityFile ~/.ssh/ecdsa_waggle_dev # <<< waggle dev key. please contact us for this.
+</pre>
+{% else %}
+<p><a href="{% url 'app:oidc-login' %}">Login</a></p>
+{% endif %}
+
+{% endblock %}

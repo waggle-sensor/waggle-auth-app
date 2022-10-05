@@ -1,7 +1,10 @@
+from dataclasses import field
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.utils.http import urlencode
+from django import forms
+from django.views.generic import FormView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -169,3 +172,27 @@ def get_oidc_token_uri(code: str) -> str:
         "grant_type": "authorization_code",
         "code": code,
     })
+
+
+class UpdateSSHPublicKeysForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["ssh_public_keys"]
+
+
+class UpdateSSHPublicKeysView(FormView):
+    form_class = UpdateSSHPublicKeysForm
+    template_name="update-my-keys.html"
+    success_url = "/"
+    
+    def get_initial(self):
+        data = super().get_initial()
+        data["ssh_public_keys"] = self.request.user.ssh_public_keys
+        return data
+
+    def form_valid(self, form) -> HttpResponse:
+        cleaned_data = form.cleaned_data
+        user = self.request.user
+        user.ssh_public_keys = cleaned_data["ssh_public_keys"]
+        user.save()
+        return HttpResponseRedirect("/")

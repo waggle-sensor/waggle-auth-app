@@ -1,34 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth / Access Service</title>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,800;1,800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,800&display=swap" rel="stylesheet">
-    {% load static %}
-    <link href="{% static 'styles.css' %}" rel="stylesheet">
-</head>
-<body>
-    <main>
-        <div class="container">
-            <h1>Auth / Access Service</h1>
-            <p>Welcome to the auth / access service!</p>
-            <p>User access API is available at: <code>/profiles/username/access</code></p>
-            <p><em>The page is just a placeholder until all the initial APIs are in place.</em></p>
+{% extends "base.html" %}
 
-            {% if user.is_authenticated %}
-            <p>Welcome, {{ user.username }}!</p>
-            {% if user.is_superuser %}
-            <p><a href="/admin/">View admin site</a></p>
-            {% endif %}
-            <p><a href="{% url 'app:my-token' %}">View token</a></p>
-            <p><a href="{% url 'app:oidc-logout' %}">Logout</a></p>
-            {% else %}
-            <p><a href="{% url 'app:oidc-login' %}">Login</a></p>
-            {% endif %}
-        </div>
-    </main>
-</body>
-</html>
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1>Auth / Access Service</h1>
+<p>Welcome to the auth / access service!</p>
+<p>User access API is available at: <code>/profiles/username/access</code></p>
+<p><em>The page is just a placeholder until all the initial APIs are in place.</em></p>
+
+{% if user.is_authenticated %}
+<p>Welcome, {{ user.username }}!</p>
+{% if user.is_superuser %}
+<p><a href="/admin/">View admin site</a></p>
+{% endif %}
+<p><a href="{% url 'app:my-token' %}">View token</a></p>
+<p><a href="{% url 'app:update-my-keys' %}">Update SSH Public Keys</a></p>
+<p><a href="{% url 'app:oidc-logout' %}">Logout</a></p>
+{% else %}
+<p><a href="{% url 'app:oidc-login' %}">Login</a></p>
+{% endif %}
+{% endblock %}
