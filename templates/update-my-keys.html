@@ -13,7 +13,7 @@
     <button type="submit">Update</button>
 </form>
 
-<h2>Additional Configuration</h2>
+<h2>SSH Config</h2>
 
 <p>You will need to update your <code>~/.ssh/config</code> file to include the following lines:</p>
 
@@ -32,6 +32,15 @@ Host waggle-dev-node-*
     IdentitiesOnly yes
     StrictHostKeyChecking no
 </pre>
+
+<h2>Host Fingerprint</h2>
+
+<p>Upon first connecting to our gateway, please check that the fingerprint matches:</p>
+
+<pre>
+ED25519 key fingerprint is SHA256:0EZvahC0dry74dmu7DBjweZwGWMt2zvV7rWZTb3Ao9g.
+</pre>
+
 {% else %}
 <p><a href="{% url 'app:oidc-login' %}">Login</a></p>
 {% endif %}
