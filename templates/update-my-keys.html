@@ -23,11 +23,14 @@ Host waggle-dev-sshd
     Port 49190
     User waggle
     IdentityFile ~/.ssh/id_ed25519 # <<< your personal key
+    IdentitiesOnly yes
 
 Host waggle-dev-node-*
     ProxyCommand ssh waggle-dev-sshd connect-to-node $(echo %h | sed "s/waggle-dev-node-//" )
     User waggle
     IdentityFile ~/.ssh/ecdsa_waggle_dev # <<< waggle dev key. please contact us for this.
+    IdentitiesOnly yes
+    StrictHostKeyChecking no
 </pre>
 {% else %}
 <p><a href="{% url 'app:oidc-login' %}">Login</a></p>
