@@ -22,4 +22,5 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("", include("app.urls")),
     path("", TemplateView.as_view(template_name="index.html"), name="home"),
+    path("", include("django_prometheus.urls")),
 ]

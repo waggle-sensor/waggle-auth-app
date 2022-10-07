@@ -1,3 +1,4 @@
 django==4.1.1
 djangorestframework
 requests
+django-prometheus
