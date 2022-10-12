@@ -1,5 +1,3 @@
-from dataclasses import field
-from click import confirm
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
