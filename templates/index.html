@@ -4,19 +4,25 @@
 
 {% block content %}
 <h1>Auth / Access Service</h1>
-<p>Welcome to the auth / access service!</p>
-<p>User access API is available at: <code>/profiles/username/access</code></p>
-<p><em>The page is just a placeholder until all the initial APIs are in place.</em></p>
 
 {% if user.is_authenticated %}
-<p>Welcome, {{ user.username }}!</p>
-{% if user.is_superuser %}
-<p><a href="/admin/">View admin site</a></p>
-{% endif %}
-<p><a href="{% url 'app:my-token' %}">View token</a></p>
-<p><a href="{% url 'app:update-my-keys' %}">Update SSH public keys</a></p>
-<p><a href="{% url 'app:oidc-logout' %}">Logout</a></p>
+    {% if not user.globus_preferred_username %}
+        <p><em>Your account requires some additional setup!</em></p>
+        <p>Please log out and then log in again.</p>
+    {% elif user.username == user.globus_preferred_username %}
+        <p>Welcome, {{ user.name }}!</p>
+        <p>Please finish setting up your account by <a href="{% url 'app:update-username' %}">choosing a username</a>!</p>
+    {% else %}
+        <p>Welcome, {{ user.name }} ({{ user.username }})!</p>
+        {% if user.is_superuser %}
+        <p><a href="/admin/">View admin site</a></p>
+        {% endif %}
+        <p><a href="{% url 'app:my-token' %}">View token</a></p>
+        <p><a href="{% url 'app:update-my-keys' %}">Update SSH public keys</a></p>
+    {% endif %}
+    <p><a href="{% url 'app:oidc-logout' %}">Log out</a></p>
 {% else %}
-<p><a href="{% url 'app:oidc-login' %}">Login</a></p>
+    <p><a href="{% url 'app:oidc-login' %}">Log in</a></p>
 {% endif %}
+
 {% endblock %}

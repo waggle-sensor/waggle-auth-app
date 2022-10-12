@@ -1,4 +1,5 @@
 from dataclasses import field
+from click import confirm
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
@@ -109,16 +110,22 @@ def oidc_callback(request: HttpRequest) -> HttpResponse:
     except Exception:
         return JsonResponse({"error": "failed to get user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
-    username = userinfo.get("preferred_username")
-    if username is None:
-        return JsonResponse({"error": "missing username from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
+    globus_subject = userinfo.get("sub")
+    globus_preferred_username = userinfo.get("preferred_username")
+    if globus_subject is None or globus_preferred_username is None:
+        return JsonResponse({"error": "missing user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
-    user, _ = User.objects.update_or_create(
-        username=username,
-        name=userinfo.get("name", ""),
-        email=userinfo.get("email", ""),
-        organization=userinfo.get("organization", ""),
-    )
+    try:
+        user = User.objects.get(globus_preferred_username=globus_preferred_username)
+    except User.DoesNotExist:
+        # setup new user with globus preferred username as username. site will prompt user to change this.
+        user, _ = User.objects.get_or_create(username=globus_preferred_username)
+        user.globus_subject = globus_subject
+        user.globus_preferred_username = globus_preferred_username
+        user.name = userinfo.get("name", "")
+        user.email = userinfo.get("email", "")
+        user.organization = userinfo.get("organization", "")
+        user.save()
 
     login(request, user)
 
@@ -194,5 +201,33 @@ class UpdateSSHPublicKeysView(FormView):
         cleaned_data = form.cleaned_data
         user = self.request.user
         user.ssh_public_keys = cleaned_data["ssh_public_keys"]
+        user.save()
+        return HttpResponseRedirect("/")
+
+
+class UpdateUsernameForm(forms.ModelForm):
+    confirm_username = forms.CharField(max_length=255)
+
+    class Meta:
+        model = User
+        fields = ["username", "confirm_username"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get("username")
+        confirm_username = cleaned_data.get("confirm_username")
+        if username != confirm_username:
+            raise forms.ValidationError("usernames don't match")
+
+
+class UpdateUsernameView(FormView):
+    form_class = UpdateUsernameForm
+    template_name="update-username.html"
+    success_url = "/"
+
+    def form_valid(self, form) -> HttpResponse:
+        cleaned_data = form.cleaned_data
+        user = self.request.user
+        user.username = cleaned_data["username"]
         user.save()
         return HttpResponseRedirect("/")
