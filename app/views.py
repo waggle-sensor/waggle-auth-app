@@ -113,17 +113,19 @@ def oidc_callback(request: HttpRequest) -> HttpResponse:
     if globus_subject is None or globus_preferred_username is None:
         return JsonResponse({"error": "missing user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
+    # get user by globus preferred username, otherwise setup new user using
+    # globus preferred username. site will prompt user to change this.
     try:
         user = User.objects.get(globus_preferred_username=globus_preferred_username)
     except User.DoesNotExist:
-        # setup new user with globus preferred username as username. site will prompt user to change this.
         user, _ = User.objects.get_or_create(username=globus_preferred_username)
-        user.globus_subject = globus_subject
-        user.globus_preferred_username = globus_preferred_username
-        user.name = userinfo.get("name", "")
-        user.email = userinfo.get("email", "")
-        user.organization = userinfo.get("organization", "")
-        user.save()
+
+    user.globus_subject = globus_subject
+    user.globus_preferred_username = globus_preferred_username
+    user.name = userinfo.get("name", "")
+    user.email = userinfo.get("email", "")
+    user.organization = userinfo.get("organization", "")
+    user.save()
 
     login(request, user)
 

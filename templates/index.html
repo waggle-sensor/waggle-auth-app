@@ -6,7 +6,7 @@
 <h1>Auth / Access Service</h1>
 
 {% if user.is_authenticated %}
-    {% if not user.globus_preferred_username %}
+    {% if not user.globus_subject or not user.globus_preferred_username %}
         <p><em>Your account requires some additional setup!</em></p>
         <p>Please log out and then log in again.</p>
     {% elif user.username == user.globus_preferred_username %}
