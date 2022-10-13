@@ -199,6 +199,22 @@ class TestApp(TestCase):
 
         r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
+    
+    def testHomeMissingGlobusInfo(self):
+        user = User.objects.create(username="user")
+        self.client.force_login(user)
+        
+        User.objects.update(username="user", globus_subject=None, globus_preferred_username=None)
+        r = self.client.get("/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        text = r.content.decode()
+        self.assertEqual("Your account requires some additional setup!" in text)
+
+        User.objects.update(username="user", globus_subject="1234-4567", globus_preferred_username=None)
+        r = self.client.get("/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        text = r.content.decode()
+        self.assertEqual("Your account requires some additional setup!" in text)
 
     def setUpMembershipData(self, profile_membership, node_membership):
         for username, projectname, access in profile_membership:

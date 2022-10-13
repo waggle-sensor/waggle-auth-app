@@ -2,7 +2,6 @@ from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.utils.http import urlencode
-from django import forms
 from django.views.generic import FormView
 from rest_framework import status
 from rest_framework.request import Request
@@ -14,6 +13,7 @@ from rest_framework.authtoken.models import Token
 import requests
 from secrets import compare_digest, token_urlsafe
 from .serializers import UserSerializer
+from .forms import UpdateSSHPublicKeysForm, UpdateUsernameForm
 
 User = get_user_model()
 
@@ -181,12 +181,6 @@ def get_oidc_token_uri(code: str) -> str:
     })
 
 
-class UpdateSSHPublicKeysForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ["ssh_public_keys"]
-
-
 class UpdateSSHPublicKeysView(FormView):
     form_class = UpdateSSHPublicKeysForm
     template_name="update-my-keys.html"
@@ -203,21 +197,6 @@ class UpdateSSHPublicKeysView(FormView):
         user.ssh_public_keys = cleaned_data["ssh_public_keys"]
         user.save()
         return HttpResponseRedirect("/")
-
-
-class UpdateUsernameForm(forms.ModelForm):
-    confirm_username = forms.CharField(max_length=255)
-
-    class Meta:
-        model = User
-        fields = ["username", "confirm_username"]
-
-    def clean(self):
-        cleaned_data = super().clean()
-        username = cleaned_data.get("username")
-        confirm_username = cleaned_data.get("confirm_username")
-        if username != confirm_username:
-            raise forms.ValidationError("usernames don't match")
 
 
 class UpdateUsernameView(FormView):
