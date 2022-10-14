@@ -10,7 +10,9 @@ from rest_framework import status
 import requests
 from .forms import CreateUserForm
 from .models import Identity
-# TODO csrf protect these views!!!
+
+# TODO csrf protect these views where needed!!!
+# TODO clean up config and make more modular wrt the rest of the site
 
 NEXT_SESSION_KEY = "oidc_auth_next"
 
@@ -36,21 +38,17 @@ class RedirectView(View):
     def get(self, request: HttpRequest) -> HttpResponse:
         try:
             code = request.GET["code"]
-        except KeyError:
-            return JsonResponse({"error": "missing code from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
-
-        try:
             state = request.GET["state"]
-        except KeyError:
-            return JsonResponse({"error": "missing state from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
+        except KeyError as key:
+            return JsonResponse({"error": f"missing {key} param from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
         try:
             state_token = request.session["oidc_auth_state"]
-        except KeyError:
-            return JsonResponse({"error": "missing state token from client"}, status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as key:
+            return HttpResponseBadRequest(f"missing {key} from client session")
 
         if not compare_digest(state, state_token):
-            return JsonResponse({"error": f"state doesn't match state cookie: {state!r} - {state_token!r}"}, status=status.HTTP_400_BAD_REQUEST)
+            return HttpResponseBadRequest("oauth2 state and session state differ")
 
         try:
             access_token = exchange_code_for_access_token(code)
@@ -98,6 +96,27 @@ class CompleteLoginView(View):
             return redirect(request.session.get(NEXT_SESSION_KEY, settings.LOGIN_REDIRECT_URL))
 
         return redirect(self.create_user_url)
+
+
+class CreateUserView(FormView):
+    form_class = CreateUserForm
+    template_name = None
+
+    def form_valid(self, form):
+        cleaned_data = form.cleaned_data
+
+        identity = get_request_identity(self.request)
+        user = User.objects.create(username=cleaned_data["username"])
+        user.name = identity.name
+        user.email = identity.email
+        user.organization = identity.organization
+        user.save()
+
+        identity.user = user
+        identity.save()
+
+        login(self.request, user)
+        return redirect(self.request.session.get("oidc_auth_next", settings.LOGIN_REDIRECT_URL))
 
 
 def exchange_code_for_access_token(code: str) -> str:
@@ -150,24 +169,3 @@ def get_request_identity(request: HttpRequest) -> Identity:
 
 def set_request_identity(request: HttpRequest, identity: Identity):
     request.session["oidc_auth_sub"] = str(identity.sub)
-
-
-class CreateUserView(FormView):
-    form_class = CreateUserForm
-    template_name = None
-
-    def form_valid(self, form):
-        cleaned_data = form.cleaned_data
-
-        identity = get_request_identity(self.request)
-        user = User.objects.create(username=cleaned_data["username"])
-        user.name = identity.name
-        user.email = identity.email
-        user.organization = identity.organization
-        user.save()
-
-        identity.user = user
-        identity.save()
-
-        login(self.request, user)
-        return redirect(self.request.session.get("oidc_auth_next", settings.LOGIN_REDIRECT_URL))
