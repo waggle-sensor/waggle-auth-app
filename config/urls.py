@@ -26,9 +26,7 @@ urlpatterns = [
     # OIDC auth views
     path("login/", oidc_views.LoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("globus-auth-redirect/", oidc_views.RedirectView.as_view(), name="redirect"),
-    path("complete-login/", oidc_views.CompleteLoginView.as_view(create_user_url="create-user"), name="complete-login"),
-    path("create-user", oidc_views.CreateUserView.as_view(template_name="create-user.html"), name="create-user"),
+    path("globus-auth-redirect/", oidc_views.RedirectView.as_view(complete_login_url="app:complete-login"), name="redirect"),
     # App views
     path("", TemplateView.as_view(template_name="index.html"), name="home"),
     path("", include("app.urls")),

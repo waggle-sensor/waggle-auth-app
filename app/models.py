@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 import re
+import uuid
 
 ssh_public_key_re = re.compile("^ssh-(\S+) (\S+)")
 
@@ -17,14 +18,18 @@ def validate_ssh_public_key_list(value: str):
             raise ValidationError(f"Enter a valid list of newline delimited SSH public keys.", params={"value": value})
 
 
+# hmmm... an interesting idea... we *could* support lookup by both uuid and username, similar to globus
+# this would allow a pretty seamless
 class User(AbstractUser):
-    # Use name instead of assuming cultural convention first and last name.
+    # use uuid as primary key to more directly support systems like globus
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # use name instead of assuming cultural convention first and last name.
     name = models.CharField(blank=True, max_length=255)
     first_name = None
     last_name = None
+    # profile info
     organization = models.CharField(blank=True, max_length=255)
     bio = models.TextField(blank=True)
-    # make this an associated field instead...
     ssh_public_keys = models.TextField("SSH public keys", blank=True,
         validators=[validate_ssh_public_key_list])
 

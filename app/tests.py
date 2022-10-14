@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework import status
+import uuid
 from .models import Project, Node, UserMembership, NodeMembership
 
 User = get_user_model()
@@ -243,3 +244,107 @@ class TestApp(TestCase):
     def setUpToken(self, username, is_admin):
         user = User.objects.create(username=username, is_staff=is_admin, is_superuser=is_admin)
         return Token.objects.create(user=user)
+
+
+class TestLogin(TestCase):
+
+    def testCompleteLogin(self):
+        user_info = {
+            "sub": str(uuid.uuid4()),
+            "name": "Test User",
+            "email": "test@test.com",
+            "preferred_username": "testuser",
+            "organization": "Test Organization",
+        }
+
+        session = self.client.session
+        session["oidc_auth_user_info"] = user_info
+        session.save()
+
+        # visit page. should just render form.
+        r = self.client.get("/complete-login/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        # fail to login because of differing usernames
+        r = self.client.post("/complete-login/", {
+            "username": "someuser",
+            "confirm_username": "nomatch",
+        })
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertFalse(r.wsgi_request.user.is_authenticated)
+
+        # successfully login
+        r = self.client.post("/complete-login/", {
+            "username": "someuser",
+            "confirm_username": "someuser",
+        })
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertTrue(r.wsgi_request.user.is_authenticated)
+
+        # check that user was created and has all fields populated
+        user = User.objects.get(id=user_info["sub"])
+        self.assertEqual(user.username, "someuser")
+        self.assertEqual(user.name, user_info["name"])
+        self.assertEqual(user.email, user_info["email"])
+        self.assertEqual(user.organization, user_info["organization"])
+        # self.assertEqual(user.preferred_username, user_info["preferred_username"])
+
+    def testHandlerUserInfoMissingUserInfo(self):
+        r = self.client.get("/complete-login/")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(r.wsgi_request.user.is_authenticated)
+
+    def testHandlerUserInfoMissingSub(self):
+        session = self.client.session
+        session["oidc_auth_user_info"] = {"random": "fields"}
+        session.save()
+
+        r = self.client.get("/complete-login/")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(r.wsgi_request.user.is_authenticated)
+
+
+#     def testHandlerUserInfoExistingIdentity(self):
+#         user_info = generate_user_info()
+
+#         session = self.client.session
+#         session["oidc_auth_user_info"] = user_info
+#         session.save()
+
+#         Identity.objects.create(sub=user_info["sub"])
+        
+#         r = self.client.get("/complete-login/")
+#         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+#         self.assertEqual(r.url, "/create-user")
+#         self.assertFalse(r.wsgi_request.user.is_authenticated)
+
+#         identity = Identity.objects.get(sub=user_info["sub"])
+#         self.assertEqual(identity.name, user_info["name"])
+#         self.assertEqual(identity.email, user_info["email"])
+#         self.assertEqual(identity.preferred_username, user_info["preferred_username"])
+#         self.assertEqual(identity.organization, user_info["organization"])
+
+#     def testHandlerUserInfoExistingIdentityAndUser(self):
+#         user_info = generate_user_info()
+
+#         session = self.client.session
+#         session["oidc_auth_user_info"] = user_info
+#         session.save()
+
+#         Identity.objects.create(
+#             sub=user_info["sub"],
+#             user=User.objects.create(username="atestuser"),
+#         )
+
+#         r = self.client.get("/complete-login/")
+#         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+#         self.assertEqual(r.url, settings.LOGIN_REDIRECT_URL)
+#         self.assertTrue(r.wsgi_request.user.is_authenticated)
+
+#         identity = Identity.objects.get(sub=user_info["sub"])
+#         self.assertEqual(identity.name, user_info["name"])
+#         self.assertEqual(identity.email, user_info["email"])
+#         self.assertEqual(identity.preferred_username, user_info["preferred_username"])
+#         self.assertEqual(identity.organization, user_info["organization"])
+#         self.assertEqual(identity.user.username, "atestuser")
+#         self.assertEqual(r.wsgi_request.user, identity.user)

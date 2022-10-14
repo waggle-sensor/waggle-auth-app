@@ -8,6 +8,7 @@ app_name = "app"
 
 urlpatterns = [
     path("update-my-keys", views.UpdateSSHPublicKeysView.as_view(), name="update-my-keys"),
+    path("complete-login/", views.CompleteLoginView.as_view(template_name="create-user.html"), name="complete-login"),
 ] + format_suffix_patterns([
     # token views
     path("token", views.TokenView.as_view(), name="my-token"),
