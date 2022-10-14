@@ -289,12 +289,12 @@ class TestLogin(TestCase):
         self.assertEqual(user.organization, user_info["organization"])
         # self.assertEqual(user.preferred_username, user_info["preferred_username"])
 
-    def testHandlerUserInfoMissingUserInfo(self):
+    def testMissingUserInfo(self):
         r = self.client.get("/complete-login/")
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(r.wsgi_request.user.is_authenticated)
 
-    def testHandlerUserInfoMissingSub(self):
+    def testBadUserInfo(self):
         session = self.client.session
         session["oidc_auth_user_info"] = {"random": "fields"}
         session.save()
