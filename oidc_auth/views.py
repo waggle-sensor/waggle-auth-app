@@ -3,13 +3,12 @@ from django.conf import settings
 from django.contrib.auth import login, get_user_model
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
-from django.utils.http import urlencode
 from django.views import View
 from django.views.generic import FormView
 from rest_framework import status
-import requests
 from .forms import CreateUserForm
 from .models import Identity
+from . import oidc
 
 # TODO csrf protect these views where needed!!!
 # TODO clean up config and make more modular wrt the rest of the site
@@ -30,7 +29,7 @@ class LoginView(View):
         state = token_urlsafe(32)
         request.session["oidc_auth_state"] = state
         request.session["oidc_auth_next"] = next_url
-        return redirect(get_oidc_authorize_uri(state))
+        return redirect(oidc.get_authorize_uri(state))
 
 
 class RedirectView(View):
@@ -51,12 +50,12 @@ class RedirectView(View):
             return HttpResponseBadRequest("oauth2 state and session state differ")
 
         try:
-            access_token = exchange_code_for_access_token(code)
+            access_token = oidc.exchange_code_for_access_token(code)
         except Exception:
             return JsonResponse({"error": "failed to exchange code for access token"}, status=status.HTTP_502_BAD_GATEWAY)
 
         try:
-            user_info = get_oidc_user_info(access_token)
+            user_info = oidc.get_user_info(access_token)
         except Exception:
             return JsonResponse({"error": "failed to get user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
@@ -117,50 +116,6 @@ class CreateUserView(FormView):
 
         login(self.request, user)
         return redirect(self.request.session.get("oidc_auth_next", settings.LOGIN_REDIRECT_URL))
-
-
-def exchange_code_for_access_token(code: str) -> str:
-    uri = get_oidc_token_uri(code)
-    r = requests.post(uri,
-        headers={
-            "Accept": "application/json",
-        },
-        timeout=5,
-    )
-    r.raise_for_status()
-    return r.json()["access_token"]
-
-
-def get_oidc_user_info(access_token: str):
-    r = requests.get(settings.OAUTH2_USERINFO_ENDPOINT,
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {access_token}",
-        },
-        timeout=5,
-    )
-    r.raise_for_status()
-    return r.json()
-
-
-def get_oidc_authorize_uri(state: str) -> str:
-    return settings.OAUTH2_AUTHORIZATION_ENDPOINT + "?" + urlencode({
-        "client_id": settings.OIDC_CLIENT_ID,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "openid profile email",
-        "state": state,
-    })
-
-
-def get_oidc_token_uri(code: str) -> str:
-    return settings.OAUTH2_TOKEN_ENDPOINT + "?" + urlencode({
-        "client_id": settings.OIDC_CLIENT_ID,
-        "client_secret": settings.OIDC_CLIENT_SECRET,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "grant_type": "authorization_code",
-        "code": code,
-    })
 
 
 def get_request_identity(request: HttpRequest) -> Identity:
