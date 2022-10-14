@@ -200,34 +200,34 @@ class TestApp(TestCase):
         r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
     
-    def testHomeMissingGlobusInfo(self):
-        user = User.objects.create(username="user@example.com", name="Cool User")
-        self.client.force_login(user)
+    # def testHomeMissingGlobusInfo(self):
+    #     user = User.objects.create(username="user@example.com", name="Cool User")
+    #     self.client.force_login(user)
 
-        def updateAndGet(tc, globus_subject, globus_preferred_username):
-            User.objects.update(username="user@example.com", globus_subject=globus_subject, globus_preferred_username=globus_preferred_username)
-            r = self.client.get("/")
-            tc.assertEqual(r.status_code, status.HTTP_200_OK)
-            return r.content.decode()
+    #     def updateAndGet(tc, globus_subject, globus_preferred_username):
+    #         User.objects.update(username="user@example.com", globus_subject=globus_subject, globus_preferred_username=globus_preferred_username)
+    #         r = self.client.get("/")
+    #         tc.assertEqual(r.status_code, status.HTTP_200_OK)
+    #         return r.content.decode()
         
-        text = updateAndGet(self, globus_subject=None, globus_preferred_username=None)
-        self.assertIn("Your account requires some additional setup!", text)
-        self.assertNotIn("Update SSH public keys", text)
+    #     text = updateAndGet(self, globus_subject=None, globus_preferred_username=None)
+    #     self.assertIn("Your account requires some additional setup!", text)
+    #     self.assertNotIn("Update SSH public keys", text)
 
-        text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username=None)
-        self.assertIn("Your account requires some additional setup!", text)
-        self.assertNotIn("Update SSH public keys", text)
+    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username=None)
+    #     self.assertIn("Your account requires some additional setup!", text)
+    #     self.assertNotIn("Update SSH public keys", text)
 
-        text = updateAndGet(self, globus_subject=None, globus_preferred_username="user@example.com")
-        self.assertIn("Your account requires some additional setup!", text)
-        self.assertNotIn("Update SSH public keys", text)
+    #     text = updateAndGet(self, globus_subject=None, globus_preferred_username="user@example.com")
+    #     self.assertIn("Your account requires some additional setup!", text)
+    #     self.assertNotIn("Update SSH public keys", text)
 
-        text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user@example.com")
-        self.assertIn("Please finish setting up your account", text)
-        self.assertNotIn("Update SSH public keys", text)
+    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user@example.com")
+    #     self.assertIn("Please finish setting up your account", text)
+    #     self.assertNotIn("Update SSH public keys", text)
 
-        text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user")
-        self.assertIn("Update SSH public keys", text)
+    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user")
+    #     self.assertIn("Update SSH public keys", text)
 
     def setUpMembershipData(self, profile_membership, node_membership):
         for username, projectname, access in profile_membership:

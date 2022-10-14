@@ -16,11 +16,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
+from django.contrib.auth import views as auth_views
+from oidc_auth import views as oidc_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls")),
-    path("", include("app.urls")),
-    path("", TemplateView.as_view(template_name="index.html"), name="home"),
     path("", include("django_prometheus.urls")),
+    # OIDC auth views
+    path("login/", oidc_views.LoginView.as_view(), name="login"),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("globus-auth-redirect/", oidc_views.RedirectView.as_view(), name="redirect"),
+    path("complete-login/", oidc_views.CompleteLoginView.as_view(create_user_url="create-user"), name="complete-login"),
+    path("create-user", oidc_views.CreateUserView.as_view(template_name="create-user.html"), name="create-user"),
+    # App views
+    path("", TemplateView.as_view(template_name="index.html"), name="home"),
+    path("", include("app.urls")),
 ]

@@ -22,10 +22,9 @@ class User(AbstractUser):
     name = models.CharField(blank=True, max_length=255)
     first_name = None
     last_name = None
-    globus_subject = models.UUIDField("Globus Subject", null=True, blank=True, db_index=True)
-    globus_preferred_username = models.CharField("Globus Preferred Username", max_length=255, null=True, blank=True, db_index=True)
     organization = models.CharField(blank=True, max_length=255)
     bio = models.TextField(blank=True)
+    # make this an associated field instead...
     ssh_public_keys = models.TextField("SSH public keys", blank=True,
         validators=[validate_ssh_public_key_list])
 

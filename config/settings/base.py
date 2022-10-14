@@ -13,6 +13,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "app",
+    "oidc_auth",
     "django_prometheus",
 ]
 
@@ -104,6 +105,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Login configuration
+LOGIN_URL = "/login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 

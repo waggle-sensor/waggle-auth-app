@@ -1,19 +1,14 @@
-from django.conf import settings
-from django.contrib.auth import login, logout, get_user_model
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse, Http404
-from django.utils.http import urlencode
+from django.contrib.auth import get_user_model
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.views.generic import FormView
-from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
-import requests
-from secrets import compare_digest, token_urlsafe
 from .serializers import UserSerializer
-from .forms import UpdateSSHPublicKeysForm, UpdateUsernameForm
+from .forms import UpdateSSHPublicKeysForm
 
 User = get_user_model()
 
@@ -27,12 +22,13 @@ class UserListView(ListAPIView):
 class UserDetailView(RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    lookup_field = "username"
     permission_classes = [IsAdminUser]
+    lookup_field = "username"
 
 
 class UserSelfDetailView(RetrieveAPIView):
     serializer_class = UserSerializer
+    # TODO allow self permissions
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
@@ -74,113 +70,6 @@ class UserAccessView(APIView):
         return Response(data)
 
 
-def oidc_login(request: HttpRequest) -> HttpResponse:
-    state = token_urlsafe(24)
-    uri = get_oidc_authorize_uri(state)
-    response = HttpResponseRedirect(uri, status=status.HTTP_302_FOUND)
-    response.set_cookie("statetoken", state, max_age=60, samesite="lax")
-    return response
-
-
-def oidc_callback(request: HttpRequest) -> HttpResponse:
-    code = request.GET.get("code")
-    if code is None:
-        return JsonResponse({"error": "missing code from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
-
-    state = request.GET.get("state")
-    if state is None:
-        return JsonResponse({"error": "missing state from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
-
-    state_token = request.COOKIES.get("statetoken")
-    if state_token is None:
-        return JsonResponse({"error": "missing state token from client"}, status=status.HTTP_400_BAD_REQUEST)
-
-    if not compare_digest(state, state_token):
-        return JsonResponse({"error": f"state doesn't match state cookie: {state!r} - {state_token!r}"}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        access_token = exchange_code_for_access_token(code)
-    except Exception:
-        return JsonResponse({"error": "failed to exchange code for access token"}, status=status.HTTP_502_BAD_GATEWAY)
-
-    try:
-        userinfo = get_oidc_userinfo(access_token)
-    except Exception:
-        return JsonResponse({"error": "failed to get user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
-
-    globus_subject = userinfo.get("sub")
-    globus_preferred_username = userinfo.get("preferred_username")
-    if globus_subject is None or globus_preferred_username is None:
-        return JsonResponse({"error": "missing user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
-
-    # get user by globus preferred username, otherwise setup new user using
-    # globus preferred username. site will prompt user to change this.
-    try:
-        user = User.objects.get(globus_preferred_username=globus_preferred_username)
-    except User.DoesNotExist:
-        user, _ = User.objects.get_or_create(username=globus_preferred_username)
-
-    user.globus_subject = globus_subject
-    user.globus_preferred_username = globus_preferred_username
-    user.name = userinfo.get("name", "")
-    user.email = userinfo.get("email", "")
-    user.organization = userinfo.get("organization", "")
-    user.save()
-
-    login(request, user)
-
-    return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL, status=status.HTTP_302_FOUND)
-
-
-def oidc_logout(request: HttpRequest) -> HttpResponse:
-    logout(request)
-    return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL, status=status.HTTP_302_FOUND)
-
-
-def exchange_code_for_access_token(code: str) -> str:
-    uri = get_oidc_token_uri(code)
-    r = requests.post(uri,
-        headers={
-            "Accept": "application/json",
-        },
-        timeout=5,
-    )
-    r.raise_for_status()
-    return r.json()["access_token"]
-
-
-def get_oidc_userinfo(access_token: str):
-    r = requests.get(settings.OAUTH2_USERINFO_ENDPOINT,
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {access_token}",
-        },
-        timeout=5,
-    )
-    r.raise_for_status()
-    return r.json()
-
-
-def get_oidc_authorize_uri(state: str) -> str:
-    return settings.OAUTH2_AUTHORIZATION_ENDPOINT + "?" + urlencode({
-        "client_id": settings.OIDC_CLIENT_ID,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "openid profile email",
-        "state": state,
-    })
-
-
-def get_oidc_token_uri(code: str) -> str:
-    return settings.OAUTH2_TOKEN_ENDPOINT + "?" + urlencode({
-        "client_id": settings.OIDC_CLIENT_ID,
-        "client_secret": settings.OIDC_CLIENT_SECRET,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "grant_type": "authorization_code",
-        "code": code,
-    })
-
-
 class UpdateSSHPublicKeysView(FormView):
     form_class = UpdateSSHPublicKeysForm
     template_name="update-my-keys.html"
@@ -195,18 +84,5 @@ class UpdateSSHPublicKeysView(FormView):
         cleaned_data = form.cleaned_data
         user = self.request.user
         user.ssh_public_keys = cleaned_data["ssh_public_keys"]
-        user.save()
-        return HttpResponseRedirect("/")
-
-
-class UpdateUsernameView(FormView):
-    form_class = UpdateUsernameForm
-    template_name="update-username.html"
-    success_url = "/"
-
-    def form_valid(self, form) -> HttpResponse:
-        cleaned_data = form.cleaned_data
-        user = self.request.user
-        user.username = cleaned_data["username"]
         user.save()
         return HttpResponseRedirect("/")
