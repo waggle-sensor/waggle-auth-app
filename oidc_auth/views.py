@@ -1,3 +1,4 @@
+import logging
 from secrets import token_urlsafe, compare_digest
 from hashlib import sha256
 from base64 import urlsafe_b64encode
@@ -9,40 +10,41 @@ from django.views import View
 from rest_framework import status
 from django.utils.http import urlencode
 import requests
+import globus_sdk
+from contextlib import ExitStack
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
-
+# TODO don't need a whole view for this...just need a redirect url, so we can provide login via a button
 # TODO csrf protect these views where needed!!!
 # TODO clean up config and make more modular wrt the rest of the site
 # TODO implement this to logout *and* wipe session info
 # TODO maybe add a couple tests for check session and protection
 # TODO invalidate tokens on logout
-# TODO finish adding pkce
+# TODO finish adding PKCE
 
-# maybe call this authenticate or something?
+
+def get_auth_client():
+    return globus_sdk.ConfidentialAppAuthClient(settings.OIDC_CLIENT_ID, settings.OIDC_CLIENT_SECRET)
+
+
 class LoginView(View):
 
     def get(self, request: HttpRequest) -> HttpResponse:
         next_url = request.session.get("next", settings.LOGIN_REDIRECT_URL)
 
         if request.user.is_authenticated:
+            logger.info("user %s attempted to login but was already logged in", request.user)
             return redirect(next_url)
-
-        # TODO finish adding pkce
-        # code_verifier = token_urlsafe(32)
-        # code_challenge = urlsafe_b64encode(sha256(code_verifier.encode()).digest()).decode().rstrip("=")
 
         state = token_urlsafe(32)
         request.session["oidc_auth_state"] = state
         request.session["oidc_auth_next"] = next_url
-        return redirect(get_authorize_uri(state))
 
-
-# class LogoutView(View):
-
-#     def get(self):
-#         pass
+        client = get_auth_client()
+        client.oauth2_start_flow(settings.OIDC_REDIRECT_URI, "openid profile email", state=state)
+        return redirect(client.oauth2_get_authorize_url())
 
 
 class RedirectView(View):
@@ -64,34 +66,31 @@ class RedirectView(View):
         if not compare_digest(state, state_token):
             return HttpResponseBadRequest("oauth2 state and session state differ")
 
-        try:
-            tokens = exchange_code_for_tokens(code)
-            access_token = tokens["access_token"]
-        except Exception:
-            return JsonResponse({"error": "failed to exchange code for access token"}, status=status.HTTP_502_BAD_GATEWAY)
+        with ExitStack() as es:
+            client = get_auth_client()
+            client.oauth2_start_flow(settings.OIDC_REDIRECT_URI, "openid profile email")
 
-        try:
-            user_info = get_user_info(access_token)
-        except Exception:
-            return JsonResponse({"error": "failed to get user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
+            try:
+                tokens = client.oauth2_exchange_code_for_tokens(code)
+                access_token = tokens["access_token"]
+            except Exception:
+                return JsonResponse({"error": "failed to exchange code for access token"}, status=status.HTTP_502_BAD_GATEWAY)
 
-        if "sub" not in user_info:
-            return JsonResponse({"error": "missing user info subject from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
+            # since we only use the access token to lookup identity info for login, ensure we revoke it immediately afterwards
+            # this should change in the future since we probably want to use globus access tokens everywhere instead of native tokens
+            es.callback(lambda: client.oauth2_revoke_token(access_token))
 
-        request.session["oidc_auth_user_info"] = user_info
-        return redirect(self.complete_login_url)
+            try:
+                user_info = get_user_info(access_token)
+            except Exception:
+                return JsonResponse({"error": "failed to get user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
+            if "sub" not in user_info:
+                return JsonResponse({"error": "missing user info subject from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
 
-def exchange_code_for_tokens(code: str) -> str:
-    uri = get_token_uri(code)
-    r = requests.post(uri,
-        headers={
-            "Accept": "application/json",
-        },
-        timeout=5,
-    )
-    r.raise_for_status()
-    return r.json()
+            request.session["oidc_auth_user_info"] = user_info
+
+            return redirect(self.complete_login_url)
 
 
 def get_user_info(access_token: str):
@@ -104,23 +103,3 @@ def get_user_info(access_token: str):
     )
     r.raise_for_status()
     return r.json()
-
-
-def get_authorize_uri(state: str) -> str:
-    return settings.OAUTH2_AUTHORIZATION_ENDPOINT + "?" + urlencode({
-        "client_id": settings.OIDC_CLIENT_ID,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "openid profile email",
-        "state": state,
-    })
-
-
-def get_token_uri(code: str) -> str:
-    return settings.OAUTH2_TOKEN_ENDPOINT + "?" + urlencode({
-        "client_id": settings.OIDC_CLIENT_ID,
-        "client_secret": settings.OIDC_CLIENT_SECRET,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "grant_type": "authorization_code",
-        "code": code,
-    })

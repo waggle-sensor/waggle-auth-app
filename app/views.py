@@ -129,4 +129,14 @@ class CompleteLoginView(FormView):
     
     def login_and_redirect(self, user):
         login(self.request, user)
-        return redirect(self.request.session.get("oidc_auth_next", settings.LOGIN_REDIRECT_URL))
+
+        response = redirect(self.request.session.get("oidc_auth_next", settings.LOGIN_REDIRECT_URL))
+
+        token, _ = Token.objects.get_or_create(user=user)
+
+        # TODO ensure that strict is used whenever we're not using localhost
+        response.set_cookie("sage_uuid", str(user.id), samesite="Strict")
+        response.set_cookie("sage_username", user.username, samesite="Strict")
+        response.set_cookie("sage_token", str(token), samesite="Strict")
+
+        return response
