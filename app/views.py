@@ -149,4 +149,5 @@ def set_cookie_using_session_settings(response: HttpResponse, key: str, value: s
         value=value,
         samesite=settings.SESSION_COOKIE_SAMESITE,
         secure=settings.SESSION_COOKIE_SECURE,
+        domain=settings.SAGE_COOKIE_DOMAIN,
     )
