@@ -1,4 +1,6 @@
 from secrets import token_urlsafe, compare_digest
+from hashlib import sha256
+from base64 import urlsafe_b64encode
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
@@ -11,6 +13,13 @@ import requests
 User = get_user_model()
 
 
+# TODO csrf protect these views where needed!!!
+# TODO clean up config and make more modular wrt the rest of the site
+# TODO implement this to logout *and* wipe session info
+# TODO maybe add a couple tests for check session and protection
+# TODO invalidate tokens on logout
+# TODO finish adding pkce
+
 # maybe call this authenticate or something?
 class LoginView(View):
 
@@ -20,16 +29,15 @@ class LoginView(View):
         if request.user.is_authenticated:
             return redirect(next_url)
 
+        # TODO finish adding pkce
+        # code_verifier = token_urlsafe(32)
+        # code_challenge = urlsafe_b64encode(sha256(code_verifier.encode()).digest()).decode().rstrip("=")
+
         state = token_urlsafe(32)
         request.session["oidc_auth_state"] = state
         request.session["oidc_auth_next"] = next_url
         return redirect(get_authorize_uri(state))
 
-
-# TODO csrf protect these views where needed!!!
-# TODO clean up config and make more modular wrt the rest of the site
-# TODO implement this to logout *and* wipe session info
-# TODO maybe add a couple tests for check session and protection
 
 # class LogoutView(View):
 
@@ -57,7 +65,8 @@ class RedirectView(View):
             return HttpResponseBadRequest("oauth2 state and session state differ")
 
         try:
-            access_token = exchange_code_for_access_token(code)
+            tokens = exchange_code_for_tokens(code)
+            access_token = tokens["access_token"]
         except Exception:
             return JsonResponse({"error": "failed to exchange code for access token"}, status=status.HTTP_502_BAD_GATEWAY)
 
@@ -73,7 +82,7 @@ class RedirectView(View):
         return redirect(self.complete_login_url)
 
 
-def exchange_code_for_access_token(code: str) -> str:
+def exchange_code_for_tokens(code: str) -> str:
     uri = get_token_uri(code)
     r = requests.post(uri,
         headers={
@@ -82,7 +91,7 @@ def exchange_code_for_access_token(code: str) -> str:
         timeout=5,
     )
     r.raise_for_status()
-    return r.json()["access_token"]
+    return r.json()
 
 
 def get_user_info(access_token: str):
