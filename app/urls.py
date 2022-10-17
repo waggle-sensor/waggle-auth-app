@@ -1,15 +1,14 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.permissions import AllowAny
+from oidc_auth import views as oidc_auth_views
 from . import views
 
 app_name = "app"
 
 urlpatterns = [
-    path("login/", views.oidc_login, name="oidc-login"),
-    path("logout/", views.oidc_logout, name="oidc-logout"),
-    path("globus-auth-redirect/", views.oidc_callback, name="oidc-callback"),
     path("update-my-keys", views.UpdateSSHPublicKeysView.as_view(), name="update-my-keys"),
+    path("complete-login/", views.CompleteLoginView.as_view(template_name="create-user.html"), name="complete-login"),
 ] + format_suffix_patterns([
     # token views
     path("token", views.TokenView.as_view(), name="my-token"),

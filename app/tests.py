@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework import status
+import uuid
 from .models import Project, Node, UserMembership, NodeMembership
 
 User = get_user_model()
@@ -199,6 +200,35 @@ class TestApp(TestCase):
 
         r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
+    
+    # def testHomeMissingGlobusInfo(self):
+    #     user = User.objects.create(username="user@example.com", name="Cool User")
+    #     self.client.force_login(user)
+
+    #     def updateAndGet(tc, globus_subject, globus_preferred_username):
+    #         User.objects.update(username="user@example.com", globus_subject=globus_subject, globus_preferred_username=globus_preferred_username)
+    #         r = self.client.get("/")
+    #         tc.assertEqual(r.status_code, status.HTTP_200_OK)
+    #         return r.content.decode()
+        
+    #     text = updateAndGet(self, globus_subject=None, globus_preferred_username=None)
+    #     self.assertIn("Your account requires some additional setup!", text)
+    #     self.assertNotIn("Update SSH public keys", text)
+
+    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username=None)
+    #     self.assertIn("Your account requires some additional setup!", text)
+    #     self.assertNotIn("Update SSH public keys", text)
+
+    #     text = updateAndGet(self, globus_subject=None, globus_preferred_username="user@example.com")
+    #     self.assertIn("Your account requires some additional setup!", text)
+    #     self.assertNotIn("Update SSH public keys", text)
+
+    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user@example.com")
+    #     self.assertIn("Please finish setting up your account", text)
+    #     self.assertNotIn("Update SSH public keys", text)
+
+    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user")
+    #     self.assertIn("Update SSH public keys", text)
 
     def setUpMembershipData(self, profile_membership, node_membership):
         for username, projectname, access in profile_membership:
@@ -214,3 +244,61 @@ class TestApp(TestCase):
     def setUpToken(self, username, is_admin):
         user = User.objects.create(username=username, is_staff=is_admin, is_superuser=is_admin)
         return Token.objects.create(user=user)
+
+
+class TestLogin(TestCase):
+
+    def testCompleteLogin(self):
+        user_info = {
+            "sub": str(uuid.uuid4()),
+            "name": "Test User",
+            "email": "test@test.com",
+            "preferred_username": "testuser",
+            "organization": "Test Organization",
+        }
+
+        session = self.client.session
+        session["oidc_auth_user_info"] = user_info
+        session.save()
+
+        # visit page. should just render form.
+        r = self.client.get("/complete-login/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        # fail to login because of differing usernames
+        r = self.client.post("/complete-login/", {
+            "username": "someuser",
+            "confirm_username": "nomatch",
+        })
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertFalse(r.wsgi_request.user.is_authenticated)
+
+        # successfully login
+        r = self.client.post("/complete-login/", {
+            "username": "someuser",
+            "confirm_username": "someuser",
+        })
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertTrue(r.wsgi_request.user.is_authenticated)
+
+        # check that user was created and has all fields populated
+        user = User.objects.get(id=user_info["sub"])
+        self.assertEqual(user.username, "someuser")
+        self.assertEqual(user.name, user_info["name"])
+        self.assertEqual(user.email, user_info["email"])
+        self.assertEqual(user.organization, user_info["organization"])
+        # self.assertEqual(user.preferred_username, user_info["preferred_username"])
+
+    def testMissingUserInfo(self):
+        r = self.client.get("/complete-login/")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(r.wsgi_request.user.is_authenticated)
+
+    def testBadUserInfo(self):
+        session = self.client.session
+        session["oidc_auth_user_info"] = {"random": "fields"}
+        session.save()
+
+        r = self.client.get("/complete-login/")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(r.wsgi_request.user.is_authenticated)
