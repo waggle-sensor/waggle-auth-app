@@ -19,7 +19,6 @@ class NodeMembershipInline(admin.TabularInline):
 class UserAdmin(auth_admin.UserAdmin):
     fieldsets = (
         (None, {"fields": ("username", "password")}),
-        ("Globus OIDC info", {"fields": ("globus_subject", "globus_preferred_username")}),
         ("Personal info", {"fields": ("name", "email", "organization", "bio", "ssh_public_keys")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
