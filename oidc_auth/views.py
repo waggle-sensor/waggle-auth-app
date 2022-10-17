@@ -20,8 +20,6 @@ User = get_user_model()
 # TODO csrf protect these views where needed!!!
 # TODO clean up config and make more modular wrt the rest of the site
 # TODO implement this to logout *and* wipe session info
-# TODO maybe add a couple tests for check session and protection
-# TODO invalidate tokens on logout
 # TODO finish adding PKCE
 
 
@@ -33,6 +31,7 @@ class LoginView(View):
 
     def get(self, request: HttpRequest) -> HttpResponse:
         next_url = request.session.get("next", settings.LOGIN_REDIRECT_URL)
+        request.session["oidc_auth_next"] = next_url
 
         if request.user.is_authenticated:
             logger.info("user %s attempted to login but was already logged in", request.user)
@@ -40,7 +39,6 @@ class LoginView(View):
 
         state = token_urlsafe(32)
         request.session["oidc_auth_state"] = state
-        request.session["oidc_auth_next"] = next_url
 
         client = get_auth_client()
         client.oauth2_start_flow(settings.OIDC_REDIRECT_URI, "openid profile email", state=state)

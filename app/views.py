@@ -134,9 +134,19 @@ class CompleteLoginView(FormView):
 
         token, _ = Token.objects.get_or_create(user=user)
 
-        # TODO ensure that strict is used whenever we're not using localhost
-        response.set_cookie("sage_uuid", str(user.id), samesite="Strict")
-        response.set_cookie("sage_username", user.username, samesite="Strict")
-        response.set_cookie("sage_token", str(token), samesite="Strict")
+        # this seems strange to set the data this way, can we tie all this to the user session?
+        # users can also modify these with no real checks to protect them. that seems potentially dangerous!
+        set_cookie_using_session_settings(response, "sage_uuid", str(user.id))
+        set_cookie_using_session_settings(response, "sage_username", user.username)
+        set_cookie_using_session_settings(response, "sage_token", token.key)
 
         return response
+
+
+def set_cookie_using_session_settings(response: HttpResponse, key: str, value: str):
+    response.set_cookie(
+        key=key,
+        value=value,
+        samesite=settings.SESSION_COOKIE_SAMESITE,
+        secure=settings.SESSION_COOKIE_SECURE,
+    )

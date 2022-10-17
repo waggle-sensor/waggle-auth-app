@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework import status
@@ -200,7 +201,7 @@ class TestApp(TestCase):
 
         r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     # def testHomeMissingGlobusInfo(self):
     #     user = User.objects.create(username="user@example.com", name="Cool User")
     #     self.client.force_login(user)
@@ -210,7 +211,7 @@ class TestApp(TestCase):
     #         r = self.client.get("/")
     #         tc.assertEqual(r.status_code, status.HTTP_200_OK)
     #         return r.content.decode()
-        
+
     #     text = updateAndGet(self, globus_subject=None, globus_preferred_username=None)
     #     self.assertIn("Your account requires some additional setup!", text)
     #     self.assertNotIn("Update SSH public keys", text)
@@ -279,6 +280,7 @@ class TestLogin(TestCase):
             "confirm_username": "someuser",
         })
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, settings.LOGIN_REDIRECT_URL)
         self.assertTrue(r.wsgi_request.user.is_authenticated)
 
         # check that user was created and has all fields populated
@@ -287,7 +289,35 @@ class TestLogin(TestCase):
         self.assertEqual(user.name, user_info["name"])
         self.assertEqual(user.email, user_info["email"])
         self.assertEqual(user.organization, user_info["organization"])
-        # self.assertEqual(user.preferred_username, user_info["preferred_username"])
+
+        token = Token.objects.get(user=user)
+
+        # check that response cookies match user info
+        self.assertEqual(r.cookies["sage_uuid"].value, str(user.id))
+        self.assertEqual(r.cookies["sage_username"].value, user.username)
+        self.assertEqual(r.cookies["sage_token"].value, token.key)
+
+    def testCompleteLoginRedirectToNext(self):
+        user_info = {
+            "sub": str(uuid.uuid4()),
+            "name": "Test User",
+            "email": "test@test.com",
+            "preferred_username": "testuser",
+            "organization": "Test Organization",
+        }
+
+        session = self.client.session
+        session["oidc_auth_user_info"] = user_info
+        session["oidc_auth_next"] = "https://app-portal.org/"
+        session.save()
+
+        r = self.client.post("/complete-login/", {
+            "username": "someuser",
+            "confirm_username": "someuser",
+        })
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, "https://app-portal.org/")
+        self.assertTrue(r.wsgi_request.user.is_authenticated)
 
     def testMissingUserInfo(self):
         r = self.client.get("/complete-login/")
