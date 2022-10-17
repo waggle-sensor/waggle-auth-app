@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import views as auth_views
 from .serializers import UserSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 
@@ -140,6 +141,16 @@ class CompleteLoginView(FormView):
         set_cookie_using_session_settings(response, "sage_username", user.username)
         set_cookie_using_session_settings(response, "sage_token", token.key)
 
+        return response
+
+
+class LogoutView(auth_views.LogoutView):
+
+    def dispatch(self, *args, **kwargs):
+        response = super().dispatch(*args, **kwargs)
+        response.delete_cookie("sage_uuid", domain=settings.SAGE_COOKIE_DOMAIN)
+        response.delete_cookie("sage_username", domain=settings.SAGE_COOKIE_DOMAIN)
+        response.delete_cookie("sage_token", domain=settings.SAGE_COOKIE_DOMAIN)
         return response
 
 

@@ -11,6 +11,10 @@ User = get_user_model()
 
 class TestApp(TestCase):
 
+    def testHome(self):
+        r = self.client.get("/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
     def testToken(self):
         admin_token = self.setUpToken("admin", is_admin=True)
         user_token = self.setUpToken("user", is_admin=False)
@@ -249,7 +253,7 @@ class TestApp(TestCase):
 
 class TestLogin(TestCase):
 
-    def testCompleteLogin(self):
+    def testCompleteLoginAndLogout(self):
         user_info = {
             "sub": str(uuid.uuid4()),
             "name": "Test User",
@@ -296,6 +300,16 @@ class TestLogin(TestCase):
         self.assertEqual(r.cookies["sage_uuid"].value, str(user.id))
         self.assertEqual(r.cookies["sage_username"].value, user.username)
         self.assertEqual(r.cookies["sage_token"].value, token.key)
+
+        # check that logout cleans up cookies
+        r = self.client.post("/logout/")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, settings.LOGOUT_REDIRECT_URL)
+        self.assertFalse(r.wsgi_request.user.is_authenticated)
+        # TODO see if test client can clear expired / deleted cookies
+        self.assertEqual(r.cookies.get("sage_uuid").value, "")
+        self.assertEqual(r.cookies.get("sage_username").value, "")
+        self.assertEqual(r.cookies.get("sage_token").value, "")
 
     def testCompleteLoginRedirectToNext(self):
         user_info = {

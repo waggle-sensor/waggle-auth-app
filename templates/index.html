@@ -12,18 +12,10 @@
     {% endif %}
     <p><a href="{% url 'app:my-token' %}">View token</a></p>
     <p><a href="{% url 'app:update-my-keys' %}">Update SSH public keys</a></p>
-{% elif user.is_authenticated %}
-    <p><em>Your account requires some additional setup!</em></p>
-    <p>Please log out and then log in again.</p>
-{% elif request.session.globus_account_subject %}
-    <p>Welcome, {{ user.name }}!</p>
-    <p>Please finish setting up your account by <a href="{% url 'create_user' %}">choosing a username</a>!</p>
-{% endif %}
-
-{% if user.is_authenticated %}
-    <p><a href="{% url 'logout' %}">Log out</a></p>
+    <p><a href="{% url 'app:logout' %}">Log out</a></p>
 {% else %}
-    <p><a href="{% url 'login' %}">Log in</a></p>
+    <p>Welcome!</p>
+    <p><a href="{% url 'app:login' %}">Log in</a></p>
 {% endif %}
 
 {% endblock %}
