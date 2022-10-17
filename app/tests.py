@@ -206,35 +206,6 @@ class TestApp(TestCase):
         r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
 
-    # def testHomeMissingGlobusInfo(self):
-    #     user = User.objects.create(username="user@example.com", name="Cool User")
-    #     self.client.force_login(user)
-
-    #     def updateAndGet(tc, globus_subject, globus_preferred_username):
-    #         User.objects.update(username="user@example.com", globus_subject=globus_subject, globus_preferred_username=globus_preferred_username)
-    #         r = self.client.get("/")
-    #         tc.assertEqual(r.status_code, status.HTTP_200_OK)
-    #         return r.content.decode()
-
-    #     text = updateAndGet(self, globus_subject=None, globus_preferred_username=None)
-    #     self.assertIn("Your account requires some additional setup!", text)
-    #     self.assertNotIn("Update SSH public keys", text)
-
-    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username=None)
-    #     self.assertIn("Your account requires some additional setup!", text)
-    #     self.assertNotIn("Update SSH public keys", text)
-
-    #     text = updateAndGet(self, globus_subject=None, globus_preferred_username="user@example.com")
-    #     self.assertIn("Your account requires some additional setup!", text)
-    #     self.assertNotIn("Update SSH public keys", text)
-
-    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user@example.com")
-    #     self.assertIn("Please finish setting up your account", text)
-    #     self.assertNotIn("Update SSH public keys", text)
-
-    #     text = updateAndGet(self, globus_subject="11111111-2222-3333-4444-555555555555", globus_preferred_username="user")
-    #     self.assertIn("Update SSH public keys", text)
-
     def setUpMembershipData(self, profile_membership, node_membership):
         for username, projectname, access in profile_membership:
             user, _ = User.objects.get_or_create(username=username)
@@ -254,6 +225,7 @@ class TestApp(TestCase):
 class TestLogin(TestCase):
 
     def testCompleteLoginAndLogout(self):
+        # generate user info and set as session data to match oidc data
         user_info = {
             "sub": str(uuid.uuid4()),
             "name": "Test User",
@@ -261,16 +233,15 @@ class TestLogin(TestCase):
             "preferred_username": "testuser",
             "organization": "Test Organization",
         }
-
         session = self.client.session
         session["oidc_auth_user_info"] = user_info
         session.save()
 
-        # visit page. should just render form.
+        # visiting the page should just render the form
         r = self.client.get("/complete-login/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
-        # fail to login because of differing usernames
+        # should not login if form data is invalid
         r = self.client.post("/complete-login/", {
             "username": "someuser",
             "confirm_username": "nomatch",
@@ -278,17 +249,17 @@ class TestLogin(TestCase):
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertFalse(r.wsgi_request.user.is_authenticated)
 
-        # successfully login
+        # upon successfully logging, we should be logged in as our user with
+        # fields initially populated from the oidc data
         r = self.client.post("/complete-login/", {
             "username": "someuser",
             "confirm_username": "someuser",
         })
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, settings.LOGIN_REDIRECT_URL)
-        self.assertTrue(r.wsgi_request.user.is_authenticated)
-
-        # check that user was created and has all fields populated
-        user = User.objects.get(id=user_info["sub"])
+        user = r.wsgi_request.user
+        self.assertTrue(user.is_authenticated)
+        self.assertEqual(user.id, user_info["sub"])
         self.assertEqual(user.username, "someuser")
         self.assertEqual(user.name, user_info["name"])
         self.assertEqual(user.email, user_info["email"])
@@ -301,7 +272,7 @@ class TestLogin(TestCase):
         self.assertEqual(r.cookies["sage_username"].value, user.username)
         self.assertEqual(r.cookies["sage_token"].value, token.key)
 
-        # check that logout cleans up cookies
+        # logging out must tell client to delete user cookies
         r = self.client.post("/logout/")
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, settings.LOGOUT_REDIRECT_URL)
