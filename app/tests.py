@@ -59,7 +59,7 @@ class TestApp(TestCase):
         # should show token info
         r = post_json({"token": token.key})
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset({
+        self.assertDictEqual({
             "active": True,
             "scope": "default",
             "client_id": "some-client-id",
