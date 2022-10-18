@@ -27,7 +27,8 @@ class User(AbstractUser):
     last_name = None
     # profile info
     organization = models.CharField(blank=True, max_length=255)
-    bio = models.TextField(blank=True)
+    department = models.CharField(blank=True, max_length=255)
+    bio = models.TextField(blank=True, max_length=2000)
     ssh_public_keys = models.TextField("SSH public keys", blank=True,
         validators=[validate_ssh_public_key_list])
 

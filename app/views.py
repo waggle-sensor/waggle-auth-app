@@ -6,12 +6,13 @@ from django.views.generic.edit import FormView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import views as auth_views
-from .serializers import UserSerializer
+from .serializers import UserSerializer, UserProfileSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
+from .permissions import IsSelf
 
 User = get_user_model()
 
@@ -35,6 +36,13 @@ class UserSelfDetailView(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class UserProfileView(RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+    lookup_field = "username"
+    permission_classes = [IsSelf]
 
 
 class TokenView(APIView):

@@ -12,3 +12,11 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             "url": {"lookup_field": "username", "view_name": "app:user-detail"},
             "users": {"lookup_field": "username"},
         }
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        lookup_field = 'username'
+        fields = ["username", "organization", "department", "bio"]
+        read_only_fields = ["username"]
