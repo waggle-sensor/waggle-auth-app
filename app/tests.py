@@ -148,26 +148,30 @@ class TestApp(TestCase):
             }, r.json())
 
     def testUserProfileUpdate(self):
-        user = User.objects.create_user(username="jed", organization="some place")
+        username = "jed"
+
+        user = User.objects.create_user(username=username, organization="some place")
 
         self.client.force_login(user)
 
         data = {
             "organization": "wow",
             "bio": "changed bio",
+            "username": "this field should be ignored",
         }
 
-        r = self.client.put(f"/user_profile/{user.username}", data, content_type="application/json")
+        r = self.client.put(f"/user_profile/{username}", data, content_type="application/json")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
-        user = User.objects.get(username="jed")
+        user = User.objects.get(username=username)
+        self.assertEqual(user.username, username)
         self.assertEqual(user.organization, data["organization"])
         self.assertEqual(user.bio, data["bio"])
 
-        r = self.client.get(f"/user_profile/{user.username}")
+        r = self.client.get(f"/user_profile/{username}")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertEqual({
-            "username": user.username,
+            "username": username,
             "organization": user.organization,
             "department": user.department,
             "bio": user.bio,
