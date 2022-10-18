@@ -10,7 +10,6 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import views as auth_views
-from stack_data import Serializer
 from .serializers import UserSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 
