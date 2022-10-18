@@ -10,6 +10,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import views as auth_views
+from stack_data import Serializer
 from .serializers import UserSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 
@@ -52,7 +53,16 @@ class TokenInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request: Request, format=None) -> Response:
-        token = get_object_or_404(Token, key=request.data["token"])
+        token_key = request.data.get("token")
+
+        # TODO use drf serializer to handle validation
+        if token_key is None:
+            return HttpResponseBadRequest("missing token data")
+        if not isinstance(token_key, str):
+            return HttpResponseBadRequest("invalid token data")
+
+        token = get_object_or_404(Token, key=token_key)
+
         return Response({
             "active": True,
             "scope": "default",
