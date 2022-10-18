@@ -41,23 +41,23 @@ class TestApp(TestCase):
 
     # keep this for compatibility as ecr depends on it
     def testTokenInfo(self):
-        def post_data(data):
-            return self.client.post("/token_info/", data, content_type="application/json")
-
         # generate test user and token
         admin = User.objects.create_user(username="sage-data-api")
         user = User.objects.create_user(username="coolperson")
         token = Token.objects.create(user=user)
 
+        # define helper funcs
+        def post_json(data): return self.client.post("/token_info/", data, content_type="application/json")
+
         # endpoint should deny unauthorized request
-        r = post_data({"token": token.key})
+        r = post_json({"token": token.key})
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # logging in should allow access
         self.client.force_login(admin)
 
         # should show token info
-        r = post_data({"token": token.key})
+        r = post_json({"token": token.key})
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset({
             "active": True,
@@ -68,16 +68,16 @@ class TestApp(TestCase):
         }, r.json())
 
         # should show 404 for nonexistant token
-        r = post_data({"token": "notarealtoken"})
+        r = post_json({"token": "notarealtoken"})
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
 
         # endpoint handle missing token field
-        r = post_data({"nottoken": "..."})
+        r = post_json({"nottoken": "..."})
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
         # endpoint handle bad values
         for value in [123, None, True]:
-            r = post_data({"token": value})
+            r = post_json({"token": value})
             self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
     def testUserListPermissions(self):
