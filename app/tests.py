@@ -301,6 +301,7 @@ class TestAuth(TestCase):
         self.assertEqual(user.name, user_info["name"])
         self.assertEqual(user.email, user_info["email"])
         self.assertEqual(user.organization, user_info["organization"])
+        # TODO figure out correct way to verify user is created with password login disabled. seems to be that it starts with !?
         self.assertTrue(user.password.startswith("!"))
 
         token = Token.objects.get(user=user)
