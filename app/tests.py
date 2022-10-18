@@ -15,27 +15,49 @@ class TestApp(TestCase):
         r = self.client.get("/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
+    # sage-auth responds with:
+    # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}
     def testToken(self):
-        admin_token = self.setUpToken("admin", is_admin=True)
-        user_token = self.setUpToken("user", is_admin=False)
+        user = User.objects.create(username="someuser")
+        token = Token.objects.create(user=user)
 
+        # check that endpoint requires auth
         r = self.client.get("/token")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        r = self.client.get("/token", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        # login as test user
+        self.client.force_login(user)
+
+        # check that we get our own token and info as a response
+        r = self.client.get("/token")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset({
-            "token": admin_token.key,
+            "token": token.key,
+            "user_uuid": str(user.id),
         }, r.json())
 
-        r = self.client.get("/token", HTTP_AUTHORIZATION=f"Sage {user_token}")
+    # keep this for compatibility as ecr depends on it
+    def testTokenInfo(self):
+        # generate test user and token
+        user = User.objects.create(username="coolperson")
+        token = Token.objects.create(user=user)
+
+        # endpoint should deny unauthorized request
+        r = self.client.post("/token_info/", {"token": token.key})
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # logging in should allow access
+        self.client.force_login(User.objects.create(username="sage-data-api"))
+
+        r = self.client.post("/token_info/", {"token": token.key})
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset({
-            "token": user_token.key,
+            "active": True,
+            "scope": "default",
+            "client_id": "some-client-id",
+            "username": user.username,
+            "exp": 0,
         }, r.json())
-
-        # NOTE sage-auth responds with:
-        # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}
 
     def testUserListPermissions(self):
         admin_token = self.setUpToken("admin", is_admin=True)

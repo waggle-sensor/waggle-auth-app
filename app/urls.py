@@ -17,6 +17,7 @@ urlpatterns = [
 ] + format_suffix_patterns([
     # token views
     path("token", views.TokenView.as_view(), name="my-token"),
+    path("token_info/", views.TokenInfoView.as_view(), name="token-info"),
     # user views
     path("users/", views.UserListView.as_view(), name="user-list"),
     path("users/~self", views.UserSelfDetailView.as_view(), name="user-detail-self"),

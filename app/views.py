@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, Http404
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic.edit import FormView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -42,7 +42,24 @@ class TokenView(APIView):
 
     def get(self, request: Request, format=None) -> Response:
         token, _ = Token.objects.get_or_create(user=request.user)
-        return Response({"token": token.key})
+        return Response({
+            "user_uuid": str(request.user.id),
+            "token": token.key,
+        })
+
+
+class TokenInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request, format=None) -> Response:
+        token = get_object_or_404(Token, key=request.data["token"])
+        return Response({
+            "active": True,
+            "scope": "default",
+            "client_id": "some-client-id",
+            "username": token.user.username,
+            "exp": 0,
+        })
 
 
 class UserAccessView(APIView):
