@@ -10,6 +10,9 @@ User = get_user_model()
 
 
 class TestApp(TestCase):
+    """
+    TestApp tests general app features such as landing pages and APIs.
+    """
 
     def testHome(self):
         r = self.client.get("/")
@@ -18,7 +21,7 @@ class TestApp(TestCase):
     # sage-auth responds with:
     # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}
     def testToken(self):
-        user = User.objects.create(username="someuser")
+        user = User.objects.create_user(username="someuser")
         token = Token.objects.create(user=user)
 
         # check that endpoint requires auth
@@ -39,7 +42,7 @@ class TestApp(TestCase):
     # keep this for compatibility as ecr depends on it
     def testTokenInfo(self):
         # generate test user and token
-        user = User.objects.create(username="coolperson")
+        user = User.objects.create_user(username="coolperson")
         token = Token.objects.create(user=user)
 
         # endpoint should deny unauthorized request
@@ -47,7 +50,7 @@ class TestApp(TestCase):
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # logging in should allow access
-        self.client.force_login(User.objects.create(username="sage-data-api"))
+        self.client.force_login(User.objects.create_user(username="sage-data-api"))
 
         # should show token info
         r = self.client.post("/token_info/", {"token": token.key})
@@ -172,7 +175,7 @@ class TestApp(TestCase):
         ])
 
     def testAccessNotExist(self):
-        user = User.objects.create(username="admin", is_staff=True)
+        user = User.objects.create_user(username="admin", is_staff=True)
         token = Token.objects.create(user=user)
 
         r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
@@ -227,7 +230,7 @@ class TestApp(TestCase):
         ])
 
     def testAccessNotExist(self):
-        user = User.objects.create(username="admin", is_staff=True)
+        user = User.objects.create_user(username="admin", is_staff=True)
         token = Token.objects.create(user=user)
 
         r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
@@ -245,11 +248,18 @@ class TestApp(TestCase):
             NodeMembership.objects.get_or_create(node=node, project=project, **access)
 
     def setUpToken(self, username, is_admin):
-        user = User.objects.create(username=username, is_staff=is_admin, is_superuser=is_admin)
+        user = User.objects.create_user(username=username, is_staff=is_admin, is_superuser=is_admin)
         return Token.objects.create(user=user)
 
 
-class TestLogin(TestCase):
+class TestAuth(TestCase):
+    """
+    TestAuth tests that our post Globus login, create user and logout flows work as expected.
+
+    As a test boundary, we assume that the Globus login and callback works. Our starting point
+    is that oidc_auth_user_info has been the callback so we can perform any additional user
+    creation and login.
+    """
 
     def testCompleteLoginAndLogout(self):
         # generate user info and set as session data to match oidc data
@@ -310,6 +320,10 @@ class TestLogin(TestCase):
         self.assertEqual(r.cookies.get("sage_token").value, "")
 
     def testCompleteLoginRedirectToNext(self):
+        # start login flow
+        r = self.client.get("/login/?next=https://app-portal.org/")
+
+        # assume redirect callback works and manually set user info session data
         user_info = {
             "sub": str(uuid.uuid4()),
             "name": "Test User",
@@ -317,12 +331,11 @@ class TestLogin(TestCase):
             "preferred_username": "testuser",
             "organization": "Test Organization",
         }
-
         session = self.client.session
         session["oidc_auth_user_info"] = user_info
-        session["oidc_auth_next"] = "https://app-portal.org/"
         session.save()
 
+        # manually redirect to complete login, do valid login and then check redirect
         r = self.client.post("/complete-login/", {
             "username": "someuser",
             "confirm_username": "someuser",
@@ -344,3 +357,37 @@ class TestLogin(TestCase):
         r = self.client.get("/complete-login/")
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(r.wsgi_request.user.is_authenticated)
+
+
+class TestAuthSettings(TestCase):
+    """
+    TestAuthSettings tests that all expected authentication methods are enabled.
+
+    Note that we're using /token as an arbitrary authenticated endpoint to try auth methods on.
+    """
+
+    endpoint = "/token"
+
+    def testEndpointRequiresAuth(self):
+        r = self.client.get(self.endpoint)
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def testBasicAuthEnabled(self):
+        import base64
+        user = User.objects.create_user(username="user", password="averygoodpassword")
+        auth = base64.b64encode(b"user:averygoodpassword").decode()
+        r = self.client.get(self.endpoint, HTTP_AUTHORIZATION=f"Basic {auth}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testSessionAuthEnabled(self):
+        user = User.objects.create_user(username="user")
+        self.client.force_login(user)
+        r = self.client.get(self.endpoint)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testTokenAuthEnabled(self):
+        user = User.objects.create_user(username="user")
+        token = Token.objects.create(user=user)
+        self.client.force_login(user)
+        r = self.client.get(self.endpoint, HTTP_AUTHORIZATION=f"Sage {token.key}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)

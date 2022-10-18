@@ -30,7 +30,7 @@ def get_auth_client():
 class LoginView(View):
 
     def get(self, request: HttpRequest) -> HttpResponse:
-        next_url = request.session.get("next", settings.LOGIN_REDIRECT_URL)
+        next_url = request.GET.get("next", settings.LOGIN_REDIRECT_URL)
         request.session["oidc_auth_next"] = next_url
 
         if request.user.is_authenticated:

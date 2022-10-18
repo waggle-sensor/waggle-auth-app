@@ -12,9 +12,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "django_prometheus",
     "app",
     "oidc_auth",
-    "django_prometheus",
 ]
 
 AUTH_USER_MODEL = "app.User"
@@ -33,9 +33,9 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "app.authentication.TokenAuthentication",
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
+        "app.authentication.TokenAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
@@ -119,4 +119,7 @@ OIDC_CLIENT_ID = os.getenv("OIDC_CLIENT_ID", "")
 OIDC_CLIENT_SECRET = os.getenv("OIDC_CLIENT_SECRET", "")
 OIDC_REDIRECT_URI = os.getenv("OIDC_REDIRECT_URI", "")
 
+# SAGE_COOKIE_DOMAIN should be set to allow cookies to be shared across subdomains. For example,
+# if you'd use .sagecontinuum.org if you want to share cookies from access.sagecontinuum.org with
+# portal.sagecontinuum.org.
 SAGE_COOKIE_DOMAIN = os.environ.get("SAGE_COOKIE_DOMAIN")

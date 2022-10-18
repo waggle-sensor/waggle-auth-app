@@ -135,7 +135,7 @@ class CompleteLoginView(FormView):
 
         user_info = self.request.session["oidc_auth_user_info"]
 
-        user = User.objects.create(
+        user = User.objects.create_user(
             id=user_info["sub"],
             username=cleaned_data["username"],
             name=user_info.get("name"),

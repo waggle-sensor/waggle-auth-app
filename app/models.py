@@ -18,8 +18,6 @@ def validate_ssh_public_key_list(value: str):
             raise ValidationError(f"Enter a valid list of newline delimited SSH public keys.", params={"value": value})
 
 
-# hmmm... an interesting idea... we *could* support lookup by both uuid and username, similar to globus
-# this would allow a pretty seamless
 class User(AbstractUser):
     # use uuid as primary key to more directly support systems like globus
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
