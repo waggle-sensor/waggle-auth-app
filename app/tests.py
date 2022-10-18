@@ -49,6 +49,7 @@ class TestApp(TestCase):
         # logging in should allow access
         self.client.force_login(User.objects.create(username="sage-data-api"))
 
+        # should show token info
         r = self.client.post("/token_info/", {"token": token.key})
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset({
@@ -58,6 +59,10 @@ class TestApp(TestCase):
             "username": user.username,
             "exp": 0,
         }, r.json())
+
+        # should show 404 for nonexistant token
+        r = self.client.post("/token_info/", {"token": "notarealtoken"})
+        self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
 
     def testUserListPermissions(self):
         admin_token = self.setUpToken("admin", is_admin=True)
