@@ -257,8 +257,8 @@ class TestAuth(TestCase):
     TestAuth tests that our post Globus login, create user and logout flows work as expected.
 
     As a test boundary, we assume that the Globus login and callback works. Our starting point
-    is that oidc_auth_user_info has been the callback so we can perform any additional user
-    creation and login.
+    is oidc_auth_user_info session data has been the callback so we can perform any additional
+    user creation and login.
     """
 
     def testCompleteLoginAndLogout(self):
