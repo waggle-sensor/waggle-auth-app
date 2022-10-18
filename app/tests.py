@@ -129,75 +129,6 @@ class TestApp(TestCase):
             "is_superuser": False,
         }, r.json())
 
-    def testUserProfileGet(self):
-        users = [
-            User.objects.create_user(username="jed", organization="some place"),
-            User.objects.create_user(username="mia", organization="some lab", department="sports"),
-            User.objects.create_user(username="reina", bio="did some cool stuff"),
-        ]
-
-        for user in users:
-            self.client.force_login(user)
-            r = self.client.get(f"/user_profile/{user.username}")
-            self.assertEqual(r.status_code, status.HTTP_200_OK)
-            self.assertEqual({
-                "username": user.username,
-                "organization": user.organization,
-                "department": user.department,
-                "bio": user.bio,
-            }, r.json())
-
-    def testUserProfileUpdate(self):
-        username = "jed"
-
-        user = User.objects.create_user(username=username, organization="some place")
-
-        self.client.force_login(user)
-
-        data = {
-            "organization": "wow",
-            "bio": "changed bio",
-            "username": "this field should be ignored",
-        }
-
-        r = self.client.put(f"/user_profile/{username}", data, content_type="application/json")
-        self.assertEqual(r.status_code, status.HTTP_200_OK)
-
-        user = User.objects.get(username=username)
-        self.assertEqual(user.username, username)
-        self.assertEqual(user.organization, data["organization"])
-        self.assertEqual(user.bio, data["bio"])
-
-        r = self.client.get(f"/user_profile/{username}")
-        self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual({
-            "username": username,
-            "organization": user.organization,
-            "department": user.department,
-            "bio": user.bio,
-        }, r.json())
-
-    def testUserProfilePermissions(self):
-        users = [
-            User.objects.create_user(username="jed"),
-            User.objects.create_user(username="mia"),
-            User.objects.create_user(username="reina"),
-        ]
-
-        # check that all users require authorization
-        for user in users:
-            r = self.client.get(f"/user_profile/{user.username}")
-            self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        # check that a user is only able to access their own profile
-        for login_user in users:
-            self.client.force_login(login_user)
-            for user in users:
-                r = self.client.get(f"/user_profile/{user.username}")
-                self.assertEqual(r.status_code, status.HTTP_200_OK if user == login_user else status.HTTP_403_FORBIDDEN)
-                r = self.client.get(f"/user_profile/{user.username}", {"bio": "changing bio"})
-                self.assertEqual(r.status_code, status.HTTP_200_OK if user == login_user else status.HTTP_403_FORBIDDEN)
-
     def testListUserAccess(self):
         admin_token = self.setUpToken("admin", is_admin=True)
         user_token = self.setUpToken("user", is_admin=False)
@@ -332,6 +263,81 @@ class TestApp(TestCase):
     def setUpToken(self, username, is_admin):
         user = User.objects.create_user(username=username, is_staff=is_admin, is_superuser=is_admin)
         return Token.objects.create(user=user)
+
+
+class TestUserProfile(TestCase):
+    """
+    TestUserProfile tests user profile permissions, get and update behavior.
+    """
+
+    def testUserProfileGet(self):
+        users = [
+            User.objects.create_user(username="jed", organization="some place"),
+            User.objects.create_user(username="mia", organization="some lab", department="sports"),
+            User.objects.create_user(username="reina", bio="did some cool stuff"),
+        ]
+
+        for user in users:
+            self.client.force_login(user)
+            r = self.client.get(f"/user_profile/{user.username}")
+            self.assertEqual(r.status_code, status.HTTP_200_OK)
+            self.assertEqual({
+                "username": user.username,
+                "organization": user.organization,
+                "department": user.department,
+                "bio": user.bio,
+            }, r.json())
+
+    def testUserProfileUpdate(self):
+        username = "jed"
+
+        user = User.objects.create_user(username=username, organization="some place")
+
+        self.client.force_login(user)
+
+        data = {
+            "organization": "wow",
+            "bio": "changed bio",
+            "username": "this field should be ignored",
+        }
+
+        r = self.client.put(f"/user_profile/{username}", data, content_type="application/json")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        user = User.objects.get(username=username)
+        self.assertEqual(user.username, username)
+        self.assertEqual(user.organization, data["organization"])
+        self.assertEqual(user.bio, data["bio"])
+
+        r = self.client.get(f"/user_profile/{username}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual({
+            "username": username,
+            "organization": user.organization,
+            "department": user.department,
+            "bio": user.bio,
+        }, r.json())
+
+    def testUserProfilePermissions(self):
+        users = [
+            User.objects.create_user(username="jed"),
+            User.objects.create_user(username="mia"),
+            User.objects.create_user(username="reina"),
+        ]
+
+        # check that all users require authorization
+        for user in users:
+            r = self.client.get(f"/user_profile/{user.username}")
+            self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # check that a user is only able to access their own profile
+        for login_user in users:
+            self.client.force_login(login_user)
+            for user in users:
+                r = self.client.get(f"/user_profile/{user.username}")
+                self.assertEqual(r.status_code, status.HTTP_200_OK if user == login_user else status.HTTP_403_FORBIDDEN)
+                r = self.client.get(f"/user_profile/{user.username}", {"bio": "changing bio"})
+                self.assertEqual(r.status_code, status.HTTP_200_OK if user == login_user else status.HTTP_403_FORBIDDEN)
 
 
 class TestAuth(TestCase):
