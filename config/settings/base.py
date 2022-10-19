@@ -119,7 +119,6 @@ OAUTH2_USERINFO_ENDPOINT = "https://auth.globus.org/v2/oauth2/userinfo"
 
 OIDC_CLIENT_ID = os.getenv("OIDC_CLIENT_ID", "")
 OIDC_CLIENT_SECRET = os.getenv("OIDC_CLIENT_SECRET", "")
-# TODO we shouldn't be syncing this up ourselves. the app should place the url of the redirect to match this automatically.
 OIDC_REDIRECT_PATH = os.getenv("OIDC_REDIRECT_PATH", "globus-auth-redirect/")
 
 # SAGE_COOKIE_DOMAIN should be set to allow cookies to be shared across subdomains. For example,
