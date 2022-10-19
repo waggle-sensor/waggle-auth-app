@@ -4,8 +4,8 @@ import os
 DEBUG = False
 
 SECRET_KEY = os.environ["SECRET_KEY"]
-ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split()
-CSRF_TRUSTED_ORIGINS = os.environ["CSRF_TRUSTED_ORIGINS"].split()
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split()
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split()
 SESSION_COOKIE_SECURE = True
 
 DATABASES = {
@@ -19,3 +19,6 @@ DATABASES = {
 }
 
 STATIC_ROOT = "/var/www/static"
+
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split()
+CORS_ALLOWED_ORIGIN_REGEXES = os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").split()

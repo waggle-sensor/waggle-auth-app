@@ -1,6 +1,5 @@
-import django
 from django.conf import settings
-from django.contrib.auth import login, logout, get_user_model
+from django.contrib.auth import login, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView

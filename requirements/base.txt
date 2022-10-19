@@ -3,3 +3,4 @@ djangorestframework
 requests
 django-prometheus
 globus-sdk
+django-cors-headers
