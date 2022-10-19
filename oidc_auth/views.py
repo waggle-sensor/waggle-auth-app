@@ -23,6 +23,10 @@ User = get_user_model()
 # TODO finish adding PKCE
 
 
+def get_redirect_uri(request):
+    return request.build_absolute_uri(settings.OIDC_REDIRECT_PATH)
+
+
 def get_auth_client():
     return globus_sdk.ConfidentialAppAuthClient(settings.OIDC_CLIENT_ID, settings.OIDC_CLIENT_SECRET)
 
@@ -41,7 +45,7 @@ class LoginView(View):
         request.session["oidc_auth_state"] = state
 
         client = get_auth_client()
-        client.oauth2_start_flow(settings.OIDC_REDIRECT_URI, "openid profile email", state=state)
+        client.oauth2_start_flow(get_redirect_uri(request), "openid profile email", state=state)
         return redirect(client.oauth2_get_authorize_url())
 
 
@@ -66,7 +70,7 @@ class RedirectView(View):
 
         with ExitStack() as es:
             client = get_auth_client()
-            client.oauth2_start_flow(settings.OIDC_REDIRECT_URI, "openid profile email")
+            client.oauth2_start_flow(get_redirect_uri(request), "openid profile email")
 
             try:
                 tokens = client.oauth2_exchange_code_for_tokens(code)

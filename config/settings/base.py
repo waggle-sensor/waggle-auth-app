@@ -119,7 +119,7 @@ OAUTH2_USERINFO_ENDPOINT = "https://auth.globus.org/v2/oauth2/userinfo"
 
 OIDC_CLIENT_ID = os.getenv("OIDC_CLIENT_ID", "")
 OIDC_CLIENT_SECRET = os.getenv("OIDC_CLIENT_SECRET", "")
-OIDC_REDIRECT_URI = os.getenv("OIDC_REDIRECT_URI", "")
+OIDC_REDIRECT_PATH = os.getenv("OIDC_REDIRECT_PATH", "")
 
 # SAGE_COOKIE_DOMAIN should be set to allow cookies to be shared across subdomains. For example,
 # if you'd use .sagecontinuum.org if you want to share cookies from access.sagecontinuum.org with
