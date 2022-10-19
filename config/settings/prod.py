@@ -22,3 +22,10 @@ STATIC_ROOT = "/var/www/static"
 
 CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split()
 CORS_ALLOWED_ORIGIN_REGEXES = os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").split()
+
+# Important! We have made these configuration choices assuming that our app will be behind
+# a reverse proxy like an nginx ingress controller.
+#
+# If this is not the case, please pause and read up on the correct settings to use for this.
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
