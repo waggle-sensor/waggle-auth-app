@@ -126,4 +126,5 @@ OIDC_REDIRECT_PATH = os.getenv("OIDC_REDIRECT_PATH", "globus-auth-redirect/")
 # portal.sagecontinuum.org.
 SAGE_COOKIE_DOMAIN = os.environ.get("SAGE_COOKIE_DOMAIN")
 
+# TODO see if we can leave this empty by default. tests currently need some value to pass
 SUCCESS_URL_ALLOWED_HOSTS = set(os.environ.get("SUCCESS_URL_ALLOWED_HOSTS", "portal.sagecontinuum.org").split())

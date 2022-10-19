@@ -424,11 +424,15 @@ class TestAuth(TestCase):
         self.assertEqual(r.cookies.get("sage_username").value, "")
         self.assertEqual(r.cookies.get("sage_token").value, "")
 
-    def testEnsureCookiesWhenAlreadyLoggedIn(self):
+    def testCompleteLoginWhenAlreadyLoggedIn(self):
         user = User.objects.create_user(username="someuser")
         self.client.force_login(user)
 
-        r = self.client.get("/complete-login/")
+        r = self.client.get("/login/")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, "/complete-login/")
+
+        r = self.client.get(r.url)
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, settings.LOGIN_REDIRECT_URL)
 

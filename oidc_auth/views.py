@@ -28,13 +28,15 @@ def get_auth_client():
 
 class LoginView(View):
 
+    complete_login_url = None
+
     def get(self, request: HttpRequest) -> HttpResponse:
         next_url = request.GET.get("next", settings.LOGIN_REDIRECT_URL)
         request.session["oidc_auth_next"] = next_url
 
         if request.user.is_authenticated:
             logger.info("user %s attempted to login but was already logged in", request.user)
-            return redirect(next_url)
+            return redirect(self.complete_login_url)
 
         state = token_urlsafe(32)
         request.session["oidc_auth_state"] = state
