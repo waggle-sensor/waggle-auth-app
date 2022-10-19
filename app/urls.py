@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.permissions import AllowAny
@@ -12,7 +13,6 @@ urlpatterns = [
     path("complete-login/", views.CompleteLoginView.as_view(template_name="create-user.html"), name="complete-login"),
     path("login/", oidc_views.LoginView.as_view(), name="login"),
     path("logout/", views.LogoutView.as_view(), name="logout"),
-    path("globus-auth-redirect/", oidc_views.RedirectView.as_view(complete_login_url="app:complete-login"), name="redirect"),
 ] + format_suffix_patterns([
     # token views
     path("token", views.TokenView.as_view(), name="my-token"),

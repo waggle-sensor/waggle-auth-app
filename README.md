@@ -87,13 +87,12 @@ You can configure user login via Globus OIDC by performing the following _one ti
 1. Go to [https://developers.globus.org](https://developers.globus.org)
 2. Go to Register your app with Globus
 3. Create an app with a name like "Test App"
-  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect`
+  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect/`
   * Copy the following template to `~/waggle-auth-oidc.env` and fill in your client ID, client secret and redirect URL:
 
 ```sh
 export OIDC_CLIENT_ID="Your Client ID!"
 export OIDC_CLIENT_SECRET="Your Client Secret!"
-export OIDC_REDIRECT_URI="http://localhost:8000/globus-auth-redirect"
 ```
 
 You can enable Globus OIDC login by sourcing the env file _before_ running either one of the development environments:

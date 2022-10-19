@@ -13,12 +13,16 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
+from django.urls import path
+from oidc_auth import views as oidc_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls")),
     path("", include("django_prometheus.urls")),
     path("", include("app.urls")),
+    path(settings.OIDC_REDIRECT_PATH, oidc_views.RedirectView.as_view(complete_login_url="app:complete-login"), name="oauth2-redirect"),
 ]

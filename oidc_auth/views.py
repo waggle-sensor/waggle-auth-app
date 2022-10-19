@@ -1,14 +1,11 @@
 import logging
 from secrets import token_urlsafe, compare_digest
-from hashlib import sha256
-from base64 import urlsafe_b64encode
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from django.views import View
 from rest_framework import status
-from django.utils.http import urlencode
 import requests
 import globus_sdk
 from contextlib import ExitStack
@@ -17,14 +14,12 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 # TODO don't need a whole view for this...just need a redirect url, so we can provide login via a button
-# TODO csrf protect these views where needed!!!
 # TODO clean up config and make more modular wrt the rest of the site
-# TODO implement this to logout *and* wipe session info
 # TODO finish adding PKCE
 
 
 def get_redirect_uri(request):
-    return request.build_absolute_uri(settings.OIDC_REDIRECT_PATH)
+    return request.build_absolute_uri(resolve_url("oauth2-redirect"))
 
 
 def get_auth_client():
