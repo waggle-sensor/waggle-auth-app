@@ -125,3 +125,5 @@ OIDC_REDIRECT_PATH = os.getenv("OIDC_REDIRECT_PATH", "globus-auth-redirect/")
 # if you'd use .sagecontinuum.org if you want to share cookies from access.sagecontinuum.org with
 # portal.sagecontinuum.org.
 SAGE_COOKIE_DOMAIN = os.environ.get("SAGE_COOKIE_DOMAIN")
+
+SUCCESS_URL_ALLOWED_HOSTS = set(os.environ.get("SUCCESS_URL_ALLOWED_HOSTS", "portal.sagecontinuum.org").split())

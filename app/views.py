@@ -142,6 +142,9 @@ class CompleteLoginView(FormView):
     template_name = None
 
     def get(self, request: HttpRequest) -> HttpResponse:
+        if request.user.is_authenticated:
+            return self.login_and_redirect(request.user)
+
         try:
             user_info = request.session["oidc_auth_user_info"]
         except KeyError:
@@ -191,6 +194,8 @@ class CompleteLoginView(FormView):
 
 
 class LogoutView(auth_views.LogoutView):
+
+    success_url_allowed_hosts = settings.SUCCESS_URL_ALLOWED_HOSTS
 
     def dispatch(self, *args, **kwargs):
         response = super().dispatch(*args, **kwargs)

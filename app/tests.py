@@ -9,7 +9,7 @@ from .models import Project, Node, UserMembership, NodeMembership
 User = get_user_model()
 
 
-class TestApp(TestCase):
+class TestHome(TestCase):
     """
     TestApp tests general app features such as landing pages and APIs.
     """
@@ -24,14 +24,8 @@ class TestApp(TestCase):
         r = self.client.get("/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
-    def testHomePortalCallback(self):
-        # TODO migrate portal to using /login/?next=...
-        # this test is here to ensure backwards compatibility with the existing
-        # portal site until it switches to directly logging in using
-        # /login/?next=... instead of /?callback=...
-        r = self.client.get("/?callback=https://my.site.org/")
-        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(r.url, "/login/?next=https://my.site.org/")
+
+class TestToken(TestCase):
 
     # sage-auth responds with:
     # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}
@@ -53,6 +47,9 @@ class TestApp(TestCase):
             "token": token.key,
             "user_uuid": str(user.id),
         }, r.json())
+
+
+class TestTokenInfo(TestCase):
 
     # keep this for compatibility as ecr depends on it
     def testTokenInfo(self):
@@ -94,6 +91,9 @@ class TestApp(TestCase):
         for value in [123, None, True]:
             r = post_json({"token": value})
             self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TestAccess(TestCase):
 
     def testUserListPermissions(self):
         admin_token = self.setUpToken("admin", is_admin=True)
@@ -424,7 +424,22 @@ class TestAuth(TestCase):
         self.assertEqual(r.cookies.get("sage_username").value, "")
         self.assertEqual(r.cookies.get("sage_token").value, "")
 
-    def testCompleteLoginRedirectToNext(self):
+    def testEnsureCookiesWhenAlreadyLoggedIn(self):
+        user = User.objects.create_user(username="someuser")
+        self.client.force_login(user)
+
+        r = self.client.get("/complete-login/")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, settings.LOGIN_REDIRECT_URL)
+
+        token = Token.objects.get(user=user)
+
+        # check that response cookies match user info
+        self.assertEqual(r.cookies["sage_uuid"].value, str(user.id))
+        self.assertEqual(r.cookies["sage_username"].value, user.username)
+        self.assertEqual(r.cookies["sage_token"].value, token.key)
+
+    def testLoginRedirectToNext(self):
         # start login flow
         r = self.client.get("/login/?next=https://app-portal.org/")
 
@@ -448,6 +463,11 @@ class TestAuth(TestCase):
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, "https://app-portal.org/")
         self.assertTrue(r.wsgi_request.user.is_authenticated)
+
+    def testLogoutNext(self):
+        r = self.client.get("/logout/?next=https://portal.sagecontinuum.org")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, "https://portal.sagecontinuum.org")
 
     def testMissingUserInfo(self):
         r = self.client.get("/complete-login/")
@@ -496,3 +516,25 @@ class TestAuthSettings(TestCase):
         self.client.force_login(user)
         r = self.client.get(self.endpoint, HTTP_AUTHORIZATION=f"Sage {token.key}")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+
+class TestPortalCompatibility(TestCase):
+    """
+    TestPortalCompatibility tests that all existing endpoints the portal depends on work as expected
+    until we can migrate to the new endpoints.
+    """
+
+    def testLoginCallback(self):
+        # TODO migrate portal to using /login/?next=...
+        r = self.client.get("/?callback=https://my.site.org/")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, "/login/?next=https://my.site.org/")
+
+    def testLogoutCallback(self):
+        # TODO migrate portal to using /logout/?next=...
+        r = self.client.get("/portal-logout/?callback=https://portal.sagecontinuum.org")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, "https://portal.sagecontinuum.org")
+        self.assertEqual(r.cookies.get("sage_uuid").value, "")
+        self.assertEqual(r.cookies.get("sage_username").value, "")
+        self.assertEqual(r.cookies.get("sage_token").value, "")
