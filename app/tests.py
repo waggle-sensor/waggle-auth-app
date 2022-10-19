@@ -14,9 +14,24 @@ class TestApp(TestCase):
     TestApp tests general app features such as landing pages and APIs.
     """
 
-    def testHome(self):
+    def testHomeRendersNotLoggedIn(self):
         r = self.client.get("/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testHomeRendersLoggedIn(self):
+        user = User.objects.create_user(username="someuser")
+        self.client.force_login(user)
+        r = self.client.get("/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testHomePortalCallback(self):
+        # TODO migrate portal to using /login/?next=...
+        # this test is here to ensure backwards compatibility with the existing
+        # portal site until it switches to directly logging in using
+        # /login/?next=... instead of /?callback=...
+        r = self.client.get("/?callback=https://my.site.org/")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, "/login/?next=https://my.site.org/")
 
     # sage-auth responds with:
     # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}

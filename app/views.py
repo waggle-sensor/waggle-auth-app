@@ -1,7 +1,9 @@
+import django
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, Http404
 from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,6 +17,17 @@ from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf
 
 User = get_user_model()
+
+
+class HomeView(TemplateView):
+    template_name = "index.html"
+
+    def get(self, request):
+        try:
+            callback = request.GET["callback"]
+            return redirect(f"/login/?next={callback}")
+        except KeyError:
+            return super().get(request)
 
 
 class UserListView(ListAPIView):
