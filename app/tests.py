@@ -9,47 +9,56 @@ from .models import Project, Node, UserMembership, NodeMembership
 User = get_user_model()
 
 
-class TestHome(TestCase):
+class TestHomeView(TestCase):
     """
     TestApp tests general app features such as landing pages and APIs.
     """
 
-    def testHomeRendersNotLoggedIn(self):
+    def testAsAnon(self):
         r = self.client.get("/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
-    def testHomeRendersLoggedIn(self):
+    def testAsUser(self):
         user = User.objects.create_user(username="someuser")
         self.client.force_login(user)
         r = self.client.get("/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
 
-class TestToken(TestCase):
+class TestTokenView(TestCase):
 
-    # sage-auth responds with:
-    # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}
-    def testToken(self):
-        user = User.objects.create_user(username="someuser")
-        token = Token.objects.create(user=user)
-
-        # check that endpoint requires auth
+    def testNeedsAuth(self):
         r = self.client.get("/token")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # login as test user
+    def testGetExistingToken(self):
+        user = User.objects.create_user(username="someuser")
+        token = Token.objects.create(user=user)
         self.client.force_login(user)
 
-        # check that we get our own token and info as a response
         r = self.client.get("/token")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset({
-            "token": token.key,
-            "user_uuid": str(user.id),
-        }, r.json())
+        self.assertDictEqual({"token": token.key, "user_uuid": str(user.id)}, r.json())
+
+    def testCreateTokenIfNotExists(self):
+        user = User.objects.create_user(username="someuser")
+        self.client.force_login(user)
+
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        token = Token.objects.get(user=user)
+        self.assertDictEqual({"token": token.key, "user_uuid": str(user.id)}, r.json())
 
 
-class TestTokenInfo(TestCase):
+class TestTokenInfoView(TestCase):
+
+    # TODO simplify this. auth doesn't actually add any protection here... if you have a real token,
+    # then you can just authenticate as that user and view their own data...
+
+    def testNeedsAuth(self):
+        r = self.client.post("/token_info/")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # keep this for compatibility as ecr depends on it
     def testTokenInfo(self):
@@ -93,33 +102,52 @@ class TestTokenInfo(TestCase):
             self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestAccess(TestCase):
+class TestUserListView(TestCase):
 
-    def testUserListPermissions(self):
-        admin_token = self.setUpToken("admin", is_admin=True)
-        user_token = self.setUpToken("user", is_admin=False)
-
+    def testNeedsAuth(self):
         r = self.client.get("/users/")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        r = self.client.get("/users/", HTTP_AUTHORIZATION=f"Sage {user_token}")
-        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
-
-        r = self.client.get("/users/", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+    def testAdminPermissions(self):
+        self.client.force_login(User.objects.create_user(username="admin", is_staff=True, is_superuser=True))
+        r = self.client.get("/users/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
-    def testUserDetailPermissions(self):
-        admin_token = self.setUpToken("admin", is_admin=True)
-        user_token = self.setUpToken("user", is_admin=False)
-
-        r = self.client.get("/users/user")
-        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        r = self.client.get("/users/user", HTTP_AUTHORIZATION=f"Sage {user_token}")
+    def testUserPermissions(self):
+        self.client.force_login(User.objects.create_user(username="user"))
+        r = self.client.get("/users/")
         self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
 
-        r = self.client.get("/users/user", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+
+class TestUserDetailView(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="user")
+
+    def testAdminPermissions(self):
+        self.client.force_login(User.objects.create_user(username="admin", is_staff=True, is_superuser=True))
+        r = self.client.get(f"/users/{self.user.username}")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testSelfPermissions(self):
+        self.client.force_login(self.user)
+        r = self.client.get(f"/users/{self.user.username}")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testOtherPermissions(self):
+        self.client.force_login(User.objects.create_user(username="other"))
+        r = self.client.get(f"/users/{self.user.username}")
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestAccess(TestCase):
+
+    def setUp(self):
+        self.admin = User.objects.create_user(username="theadmin", is_staff=True, is_superuser=True)
+        self.user = User.objects.create_user(username="theuser")
+
+        self.admin_token = Token.objects.create(user=self.admin)
+        self.user_token = Token.objects.create(user=self.user)
 
     def testUserSelfDetail(self):
         admin_token = self.setUpToken("admin", is_admin=True)
