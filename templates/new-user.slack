@@ -1,0 +1,5 @@
+{% extends django_slack %}
+
+{% block text %}
+A user new has registered! Let's welcome {{ user.name }} to Waggle!
+{% endblock %}

@@ -14,3 +14,7 @@ DATABASES = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Slack messaging configuration
+SLACK_TOKEN = "xoxb-debug"
+SLACK_BACKEND = "django_slack.backends.DisabledBackend"

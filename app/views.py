@@ -14,6 +14,7 @@ from django.contrib.auth import views as auth_views
 from .serializers import UserSerializer, UserProfileSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf
+from django_slack import slack_message
 
 User = get_user_model()
 
@@ -174,6 +175,11 @@ class CompleteLoginView(FormView):
             email=user_info.get("email"),
             organization=user_info.get("organization"),
         )
+
+        # notify channel of new user
+        slack_message("new-user.slack", {
+            "user": user,
+        })
 
         return self.login_and_redirect(user)
     

@@ -1,6 +1,7 @@
-django==4.1.1
-djangorestframework
-requests
-django-prometheus
-globus-sdk
-django-cors-headers
+django==4.1.*
+djangorestframework==3.14.*
+requests==2.28.*
+django-prometheus==2.2.*
+globus-sdk==3.13.*
+django-cors-headers==3.13.*
+django-slack==5.18.*
