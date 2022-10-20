@@ -8,48 +8,80 @@ from .models import Project, Node, UserMembership, NodeMembership
 
 User = get_user_model()
 
+# TODO(sean) refactor and clean up some of the tests. these work but are a little repetitive
 
-class TestHome(TestCase):
+
+class TestHomeView(TestCase):
     """
-    TestApp tests general app features such as landing pages and APIs.
+    TestHomeView tests that the home page renders its templates without error for anonymous, regular and admin users.
     """
 
-    def testHomeRendersNotLoggedIn(self):
+    def testAsAnon(self):
         r = self.client.get("/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertContains(r, "Log in")
+        self.assertNotContains(r, "Log out")
+        self.assertNotContains(r, "View admin site")
 
-    def testHomeRendersLoggedIn(self):
-        user = User.objects.create_user(username="someuser")
+    def testAsUser(self):
+        user = create_random_user()
         self.client.force_login(user)
         r = self.client.get("/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertNotContains(r, "Log in")
+        self.assertContains(r, "Log out")
+        self.assertNotContains(r, "View admin site")
+
+    def testAsAdmin(self):
+        user = create_random_admin_user()
+        self.client.force_login(user)
+        r = self.client.get("/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertNotContains(r, "Log in")
+        self.assertContains(r, "Log out")
+        self.assertContains(r, "View admin site")
 
 
-class TestToken(TestCase):
+class TestTokenView(TestCase):
+    """
+    TestTokenView tests that tokens can be gotten and automatically created if they don't exist.
+    """
 
-    # sage-auth responds with:
-    # {"token": "...", "user_uuid": "...", "expires": "1/1/2023"}
-    def testToken(self):
-        user = User.objects.create_user(username="someuser")
-        token = Token.objects.create(user=user)
-
-        # check that endpoint requires auth
+    def testNeedsAuth(self):
         r = self.client.get("/token")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        # login as test user
+    def testGetTokenExists(self):
+        user = create_random_user()
+        token = Token.objects.create(user=user)
         self.client.force_login(user)
 
-        # check that we get our own token and info as a response
         r = self.client.get("/token")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset({
-            "token": token.key,
-            "user_uuid": str(user.id),
-        }, r.json())
+        self.assertDictEqual({"token": token.key, "user_uuid": str(user.id)}, r.json())
+
+    def testGetTokenNotExists(self):
+        user = create_random_user()
+        self.client.force_login(user)
+
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        token = Token.objects.get(user=user)
+        self.assertDictEqual({"token": token.key, "user_uuid": str(user.id)}, r.json())
 
 
-class TestTokenInfo(TestCase):
+class TestTokenInfoView(TestCase):
+    """
+    TestTokenInfoView tests that token info is provided correctly
+
+    TODO Simplify this a lot. Auth isn't *really* required, as if you have a real token,
+    then you can just authenticate as that user and view their token info.
+    """
+
+    def testNeedsAuth(self):
+        r = self.client.post("/token_info/")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # keep this for compatibility as ecr depends on it
     def testTokenInfo(self):
@@ -93,56 +125,152 @@ class TestTokenInfo(TestCase):
             self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class TestAccess(TestCase):
+class TestUserListView(TestCase):
 
-    def testUserListPermissions(self):
-        admin_token = self.setUpToken("admin", is_admin=True)
-        user_token = self.setUpToken("user", is_admin=False)
+    def setUp(self):
+        self.admin = create_random_admin_user()
+        self.users = [create_random_user() for _ in range(3)] + [self.admin]
+        self.url = "/users/"
 
-        r = self.client.get("/users/")
+    def testGetAsAnon(self):
+        r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        r = self.client.get("/users/", HTTP_AUTHORIZATION=f"Sage {user_token}")
+    def testGetAsAdmin(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.json()), len(self.users))
+        # TODO actually check the content
+
+    def testGetAsUser(self):
+        self.client.force_login(create_random_user())
+        r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
 
-        r = self.client.get("/users/", HTTP_AUTHORIZATION=f"Sage {admin_token}")
-        self.assertEqual(r.status_code, status.HTTP_200_OK)
 
-    def testUserDetailPermissions(self):
-        admin_token = self.setUpToken("admin", is_admin=True)
-        user_token = self.setUpToken("user", is_admin=False)
+class TestUserDetailView(TestCase):
 
-        r = self.client.get("/users/user")
+    def setUp(self):
+        self.user = create_random_user()
+        self.url = f"/users/{self.user.username}"
+        self.want = {
+            "username": self.user.username,
+            "name": self.user.name,
+        }
+
+    def testGetAsAnon(self):
+        r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        r = self.client.get("/users/user", HTTP_AUTHORIZATION=f"Sage {user_token}")
+    def testGetAsAdmin(self):
+        self.client.force_login(create_random_admin_user())
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertDictContainsSubset(self.want, r.json())
+
+    def testGetAsSelf(self):
+        self.client.force_login(self.user)
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertDictContainsSubset(self.want, r.json())
+
+    def testGetAsOther(self):
+        self.client.force_login(create_random_user())
+        r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
 
-        r = self.client.get("/users/user", HTTP_AUTHORIZATION=f"Sage {admin_token}")
-        self.assertEqual(r.status_code, status.HTTP_200_OK)
 
-    def testUserSelfDetail(self):
-        admin_token = self.setUpToken("admin", is_admin=True)
-        user_token = self.setUpToken("user", is_admin=False)
+class TestUserSelfDetailView(TestCase):
 
+    def testGetAsAnon(self):
         r = self.client.get("/users/~self")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        r = self.client.get("/users/~self", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+    def testGetAsUser(self):
+        user = create_random_user()
+        self.client.force_login(user)
+        r = self.client.get("/users/~self")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertDictContainsSubset({
-            "username": "admin",
-            "is_staff": True,
-            "is_superuser": True,
+            "username": user.username,
+            "name": user.name,
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser,
         }, r.json())
 
-        r = self.client.get("/users/~self", HTTP_AUTHORIZATION=f"Sage {user_token}")
+
+class TestUserProfileView(TestCase):
+    """
+    TestUserProfile tests user profile permissions, get and update behavior.
+    """
+
+    def setUp(self):
+        self.user = create_random_user()
+        self.url = f"/user_profile/{self.user.username}"
+        self.want = {
+            "username": self.user.username,
+            "organization": self.user.organization,
+            "department": self.user.department,
+            "bio": self.user.bio,
+        }
+
+    def testGetAsAnon(self):
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def testGetAsAdmin(self):
+        self.client.force_login(create_random_admin_user())
+        r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset({
-            "username": "user",
-            "is_staff": False,
-            "is_superuser": False,
+        self.assertDictContainsSubset(self.want, r.json())
+
+    def testGetAsSelf(self):
+        self.client.force_login(self.user)
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertDictContainsSubset(self.want, r.json())
+
+    def testGetAsOther(self):
+        self.client.force_login(create_random_user())
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    def testUserProfileUpdate(self):
+        # TODO(sean) what's the right way to test this pattern
+        self.client.force_login(self.user)
+
+        data = {
+            "organization": "wow",
+            "bio": "changed bio",
+            "username": "this field should be ignored",
+        }
+
+        r = self.client.put(self.url, data, content_type="application/json")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        user = User.objects.get(username=self.user.username)
+        self.assertEqual(user.organization, data["organization"])
+        self.assertEqual(user.bio, data["bio"])
+
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual({
+            "username": self.user.username,
+            "organization": user.organization,
+            "department": user.department,
+            "bio": user.bio,
         }, r.json())
+
+
+class TestAccessView(TestCase):
+
+    def setUp(self):
+        self.admin = create_random_admin_user()
+        self.user = create_random_user()
+
+        self.admin_token = Token.objects.create(user=self.admin)
+        self.user_token = Token.objects.create(user=self.user)
 
     def testListUserAccess(self):
         admin_token = self.setUpToken("admin", is_admin=True)
@@ -278,81 +406,6 @@ class TestAccess(TestCase):
     def setUpToken(self, username, is_admin):
         user = User.objects.create_user(username=username, is_staff=is_admin, is_superuser=is_admin)
         return Token.objects.create(user=user)
-
-
-class TestUserProfile(TestCase):
-    """
-    TestUserProfile tests user profile permissions, get and update behavior.
-    """
-
-    def testUserProfileGet(self):
-        users = [
-            User.objects.create_user(username="jed", organization="some place"),
-            User.objects.create_user(username="mia", organization="some lab", department="sports"),
-            User.objects.create_user(username="reina", bio="did some cool stuff"),
-        ]
-
-        for user in users:
-            self.client.force_login(user)
-            r = self.client.get(f"/user_profile/{user.username}")
-            self.assertEqual(r.status_code, status.HTTP_200_OK)
-            self.assertEqual({
-                "username": user.username,
-                "organization": user.organization,
-                "department": user.department,
-                "bio": user.bio,
-            }, r.json())
-
-    def testUserProfileUpdate(self):
-        username = "jed"
-
-        user = User.objects.create_user(username=username, organization="some place")
-
-        self.client.force_login(user)
-
-        data = {
-            "organization": "wow",
-            "bio": "changed bio",
-            "username": "this field should be ignored",
-        }
-
-        r = self.client.put(f"/user_profile/{username}", data, content_type="application/json")
-        self.assertEqual(r.status_code, status.HTTP_200_OK)
-
-        user = User.objects.get(username=username)
-        self.assertEqual(user.username, username)
-        self.assertEqual(user.organization, data["organization"])
-        self.assertEqual(user.bio, data["bio"])
-
-        r = self.client.get(f"/user_profile/{username}")
-        self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual({
-            "username": username,
-            "organization": user.organization,
-            "department": user.department,
-            "bio": user.bio,
-        }, r.json())
-
-    def testUserProfilePermissions(self):
-        users = [
-            User.objects.create_user(username="jed"),
-            User.objects.create_user(username="mia"),
-            User.objects.create_user(username="reina"),
-        ]
-
-        # check that all users require authorization
-        for user in users:
-            r = self.client.get(f"/user_profile/{user.username}")
-            self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        # check that a user is only able to access their own profile
-        for login_user in users:
-            self.client.force_login(login_user)
-            for user in users:
-                r = self.client.get(f"/user_profile/{user.username}")
-                self.assertEqual(r.status_code, status.HTTP_200_OK if user == login_user else status.HTTP_403_FORBIDDEN)
-                r = self.client.get(f"/user_profile/{user.username}", {"bio": "changing bio"})
-                self.assertEqual(r.status_code, status.HTTP_200_OK if user == login_user else status.HTTP_403_FORBIDDEN)
 
 
 class TestAuth(TestCase):
@@ -509,15 +562,12 @@ class TestAuthSettings(TestCase):
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
     def testSessionAuthEnabled(self):
-        user = User.objects.create_user(username="user")
-        self.client.force_login(user)
+        self.client.force_login(create_random_user())
         r = self.client.get(self.endpoint)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
     def testTokenAuthEnabled(self):
-        user = User.objects.create_user(username="user")
-        token = Token.objects.create(user=user)
-        self.client.force_login(user)
+        token = Token.objects.create(user=create_random_user())
         r = self.client.get(self.endpoint, HTTP_AUTHORIZATION=f"Sage {token.key}")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
@@ -542,3 +592,17 @@ class TestPortalCompatibility(TestCase):
         self.assertEqual(r.cookies.get("sage_uuid").value, "")
         self.assertEqual(r.cookies.get("sage_username").value, "")
         self.assertEqual(r.cookies.get("sage_token").value, "")
+
+
+def create_random_user(**kwargs) -> User:
+    from random import choice, randint
+    from string import ascii_letters, printable
+    return User.objects.create_user(
+        username="".join(choice(ascii_letters) for _ in range(randint(43, 64))),
+        name="".join(choice(printable) for _ in range(randint(4, 24))),
+        **kwargs,
+    )
+
+
+def create_random_admin_user(**kwargs):
+    return create_random_user(is_staff=True, is_superuser=True, **kwargs)

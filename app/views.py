@@ -38,7 +38,7 @@ class UserListView(ListAPIView):
 class UserDetailView(RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsSelf]
     lookup_field = "username"
 
 
@@ -54,7 +54,7 @@ class UserProfileView(RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
     lookup_field = "username"
-    permission_classes = [IsSelf]
+    permission_classes = [IsAdminUser | IsSelf]
 
 
 class TokenView(APIView):
