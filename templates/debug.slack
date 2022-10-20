@@ -1,0 +1,5 @@
+{% extends django_slack %}
+
+{% block text %}
+Debug message from Waggle auth site: {{ msg|safe }}
+{% endblock %}
