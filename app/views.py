@@ -42,19 +42,19 @@ class UserDetailView(RetrieveAPIView):
     lookup_field = "username"
 
 
-class UserProfileView(RetrieveUpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserProfileSerializer
-    lookup_field = "username"
-    permission_classes = [IsAdminUser | IsSelf]
-
-
 class UserSelfDetailView(RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+
+class UserProfileView(RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+    lookup_field = "username"
+    permission_classes = [IsAdminUser | IsSelf]
 
 
 class TokenView(APIView):
