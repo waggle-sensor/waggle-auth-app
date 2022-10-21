@@ -493,8 +493,11 @@ class TestAuth(TestCase):
 
         # check that response cookies match user info
         self.assertEqual(r.cookies["sage_uuid"].value, str(user.id))
+        self.assertEqual(r.cookies["sage_uuid"].get("samesite"), "Strict")
         self.assertEqual(r.cookies["sage_username"].value, user.username)
+        self.assertEqual(r.cookies["sage_username"].get("samesite"), "Strict")
         self.assertEqual(r.cookies["sage_token"].value, token.key)
+        self.assertEqual(r.cookies["sage_token"].get("samesite"), "Strict")
 
     def testLoginRedirectToNext(self):
         # start login flow

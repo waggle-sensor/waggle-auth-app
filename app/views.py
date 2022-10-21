@@ -215,7 +215,7 @@ def set_site_cookie(response: HttpResponse, key: str, value: str):
     response.set_cookie(
         key=key,
         value=value,
-        samesite=settings.SESSION_COOKIE_SAMESITE,
+        samesite="Strict",
+        secure=settings.SESSION_COOKIE_SECURE,
         domain=settings.SAGE_COOKIE_DOMAIN,
-        secure="Strict",
     )
