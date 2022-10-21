@@ -192,9 +192,9 @@ class CompleteLoginView(FormView):
 
         # this seems strange to set the data this way, can we tie all this to the user session?
         # users can also modify these with no real checks to protect them. that seems potentially dangerous!
-        set_cookie_using_session_settings(response, "sage_uuid", str(user.id))
-        set_cookie_using_session_settings(response, "sage_username", user.username)
-        set_cookie_using_session_settings(response, "sage_token", token.key)
+        set_site_cookie(response, "sage_uuid", str(user.id))
+        set_site_cookie(response, "sage_username", user.username)
+        set_site_cookie(response, "sage_token", token.key)
 
         return response
 
@@ -211,11 +211,11 @@ class LogoutView(auth_views.LogoutView):
         return response
 
 
-def set_cookie_using_session_settings(response: HttpResponse, key: str, value: str):
+def set_site_cookie(response: HttpResponse, key: str, value: str):
     response.set_cookie(
         key=key,
         value=value,
         samesite=settings.SESSION_COOKIE_SAMESITE,
-        secure=settings.SESSION_COOKIE_SECURE,
         domain=settings.SAGE_COOKIE_DOMAIN,
+        secure="Strict",
     )
