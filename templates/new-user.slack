@@ -1,5 +1,5 @@
 {% extends django_slack %}
 
 {% block text %}
-A user new has registered! Let's welcome {{ user.name|safe }} to Waggle! :tada:
+A new user has registered! Let's welcome {{ user.name|safe }} to Waggle! :tada:
 {% endblock %}
