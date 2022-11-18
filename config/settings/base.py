@@ -15,7 +15,9 @@ INSTALLED_APPS = [
     "django_prometheus",
     "django_slack",
     "corsheaders",
+    "nested_inline",
     "app",
+    "manifests",
     "oidc_auth",
 ]
 
