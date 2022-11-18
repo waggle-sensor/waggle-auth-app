@@ -14,9 +14,11 @@ class NodeData(models.Model):
     gps_lat = models.FloatField(blank=True)
     gps_lan = models.FloatField(blank=True)
 
-
     def __str__(self):
          return self.VSN
+
+    class Meta:
+        verbose_name_plural = "Nodes"
 
 # Hardware
 class Hardware(models.Model):
@@ -35,6 +37,9 @@ class Hardware(models.Model):
     def __str__(self):
          return self.hardware
 
+    class Meta:
+        verbose_name_plural = "Hardware"
+
 # Capability
 class Capability(models.Model):
 
@@ -42,6 +47,9 @@ class Capability(models.Model):
 
     def __str__(self):
          return self.capability
+
+    class Meta:
+        verbose_name_plural = "Capabilities"
 
 # Compute
 class Compute(models.Model):
