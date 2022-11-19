@@ -11,6 +11,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdate
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .serializers import UserSerializer, UserProfileSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf
@@ -119,11 +120,11 @@ class UserAccessView(APIView):
         return Response(data)
 
 
-class UpdateSSHPublicKeysView(FormView):
+class UpdateSSHPublicKeysView(LoginRequiredMixin, FormView):
     form_class = UpdateSSHPublicKeysForm
     template_name="update-my-keys.html"
     success_url = "/"
-    
+
     def get_initial(self):
         return {
             "ssh_public_keys": self.request.user.ssh_public_keys
@@ -182,7 +183,7 @@ class CompleteLoginView(FormView):
         })
 
         return self.login_and_redirect(user)
-    
+
     def login_and_redirect(self, user):
         login(self.request, user)
 

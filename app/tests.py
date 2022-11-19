@@ -42,6 +42,17 @@ class TestHomeView(TestCase):
         self.assertContains(r, "View admin site")
 
 
+class TestUpdateSSHPublicKeysView(TestCase):
+    """
+    TestUpdateSSHPublicKeysView tests that the update ssh public keys renders.
+    """
+
+    def testLoginRequired(self):
+        r = self.client.get("/update-my-keys")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(r.url, f"{settings.LOGIN_URL}?next=/update-my-keys")
+
+
 class TestTokenView(TestCase):
     """
     TestTokenView tests that tokens can be gotten and automatically created if they don't exist.
