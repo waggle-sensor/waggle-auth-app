@@ -1,12 +1,9 @@
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from .models import *
-import json
 
 
-class HomepageTest(TestCase):
-    def test_url_exists_at_correct_location(self):
-        response = self.client.get("/manifests/")
-        self.assertEqual(response.status_code, 200)
+User = get_user_model()
 
 
 class ManifestTest(TestCase):
@@ -31,12 +28,9 @@ class ManifestTest(TestCase):
         N = self.Node
         self.assertEqual(N.computes.count(), 1)
 
-    def test_contains_expected_fields(self):
-        r = self.client.get("/manifests/")
-        data = json.loads(r.content)
-        self.assertEqual(data[0].keys(), set(['vsn', 'name', 'resources', 'sensors', 'gps_lat', 'gps_lon', 'tags', 'computes']))
-
     def test_get_manifest(self):
+        self.client.force_login(User.objects.create(username="admin"))
+
         self.createHardware([
             {"hardware": "nx1", "hw_model": "Nvidia Jetson Xavier"},
             {"hardware": "rpi4", "hw_model": "Raspberry PI 4"},
