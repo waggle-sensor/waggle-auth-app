@@ -17,6 +17,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "app",
     "oidc_auth",
+    "manifests",
+    "nested_inline",
 ]
 
 AUTH_USER_MODEL = "app.User"
