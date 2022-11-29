@@ -24,5 +24,6 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("", include("django_prometheus.urls")),
     path("", include("app.urls")),
+    path("", include("manifests.urls")),
     path(settings.OIDC_REDIRECT_PATH, oidc_views.RedirectView.as_view(complete_login_url="app:complete-login"), name="oauth2-redirect"),
 ]
