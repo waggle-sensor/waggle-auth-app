@@ -1,12 +1,8 @@
 from django.test import TestCase
-from django.contrib.auth import get_user_model
 from .models import *
 
 
-User = get_user_model()
-
-
-class ManifestTest(TestCase):
+class ManifestInitialTest(TestCase):
     def setUp(self):
         self.Node = NodeData.objects.create(vsn="A", name="A_name", gps_lat=50.00, gps_lon=50.00)
 
@@ -28,9 +24,10 @@ class ManifestTest(TestCase):
         N = self.Node
         self.assertEqual(N.computes.count(), 1)
 
-    def test_get_manifest(self):
-        self.client.force_login(User.objects.create(username="admin"))
 
+class ManifestTest(TestCase):
+
+    def test_get_manifest(self):
         self.createHardware([
             {"hardware": "nx1", "hw_model": "Nvidia Jetson Xavier"},
             {"hardware": "rpi4", "hw_model": "Raspberry PI 4"},
@@ -66,9 +63,15 @@ class ManifestTest(TestCase):
             },
         ])
 
+        # TODO(sean) move to own check
+        r = self.client.get("/manifests/")
+        self.assertEqual(r.status_code, 200)
+        manifests = r.json()
+        self.assertEqual(len(manifests), 1)
+
         r = self.client.get("/manifests/W123/")
         self.assertEqual(r.status_code, 200)
-        manifest = data = r.json()
+        manifest = r.json()
 
         self.assertManifestContainsSubset(manifest, {
             "vsn": "W123",
