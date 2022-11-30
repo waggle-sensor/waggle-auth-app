@@ -1,6 +1,12 @@
 from django.db import models
 
 
+class NodeDataManager(models.Manager):
+
+    def get_by_natural_key(self, vsn):
+        return self.get(vsn=vsn)
+
+
 class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
     name = models.CharField(max_length=30)
@@ -10,6 +16,8 @@ class NodeData(models.Model):
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
 
+    objects = NodeDataManager()
+
     def __str__(self):
          return self.vsn
 
@@ -17,8 +25,14 @@ class NodeData(models.Model):
         verbose_name_plural = "Nodes"
 
 
+class HardwareManager(models.Manager):
+
+    def get_by_natural_key(self, hardware):
+        return self.get(hardware=hardware)
+
+
 class Hardware(models.Model):
-    hardware = models.CharField(max_length=30)
+    hardware = models.CharField(max_length=30, unique=True)
     hw_model = models.CharField(max_length=30, blank=True)
     hw_version = models.CharField(max_length=30, blank=True)
     sw_version = models.CharField(max_length=30, blank=True)
@@ -28,6 +42,11 @@ class Hardware(models.Model):
     gpu_ram = models.CharField(max_length=30, blank=True)
     shared_ram = models.BooleanField(default=False, blank=True)
     capabilities = models.ManyToManyField("Capability", blank=True)
+
+    objects = HardwareManager()
+
+    def natural_key(self):
+        return self.hardware
 
     def __str__(self):
          return self.hardware
@@ -65,6 +84,7 @@ class Compute(models.Model):
 
     class Meta:
         verbose_name_plural = "Compute"
+        unique_together = [["node", "hardware", "name"]]
 
 
 class CommonSensor(models.Model):
