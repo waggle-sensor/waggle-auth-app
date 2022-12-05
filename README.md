@@ -1,5 +1,9 @@
-# Auth App
+# Waggle Site Backend (Previously Auth App)
 
+This Django project serves as the following backends and APIs for Waggle via the following apps:
+
+* `app (to be renamed to something more descriptive)`. Manages user accounts and their permissions across the site. Specfically, scheduler and dev node access is managed by this.
+* `manifests`. Manages data for nodes, hardware and sensors and provides our manifest API.
 This is a prototype app which implements user, project and node access permissions management.
 
 ## Configurations
