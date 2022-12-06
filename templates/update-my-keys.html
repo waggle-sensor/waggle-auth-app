@@ -13,9 +13,19 @@
     <button type="submit">Update</button>
 </form>
 
-<h2>SSH Config</h2>
+<h2>Finish setting up node access</h2>
 
-<p>You will need to update your <code>~/.ssh/config</code> file to include the following lines:</p>
+<p>Once you've updated your SSH public key above, you'll need to do the following steps:</p>
+
+<h3>1. Request dev key</h3>
+
+<p>First, <a href="https://docs.waggle-edge.ai/docs/contact-us">email us</a> with subject "Dev Key Request" so that we can provide you with an SSH key you should save at to <code>~/.ssh/ecdsa_waggle_dev</code>.</p>
+
+<p><em>This is a legacy step which will no longer be required in the future.</em></p>
+
+<h3>2. Update SSH config</h3>
+
+<p>Next, you'll need to update your <code>~/.ssh/config</code> file to include the following lines:</p>
 
 <pre>
 Host waggle-dev-sshd
@@ -28,14 +38,22 @@ Host waggle-dev-sshd
 Host waggle-dev-node-*
     ProxyCommand ssh waggle-dev-sshd connect-to-node $(echo %h | sed "s/waggle-dev-node-//" )
     User waggle
-    IdentityFile ~/.ssh/ecdsa_waggle_dev # <<< waggle dev key. please contact us for this.
+    IdentityFile ~/.ssh/ecdsa_waggle_dev # <<< dev key from previous step
     IdentitiesOnly yes
     StrictHostKeyChecking no
 </pre>
 
-<h2>Host Fingerprint</h2>
+<h3>3. SSH to node</h3>
 
-<p>Upon first connecting to our gateway, please check that the fingerprint matches:</p>
+You can access a specific node by its VSN, if you have permissions.
+
+For example, you can SSH to node V030 using:
+
+<pre>
+ssh waggle-dev-node-V030
+</pre>
+
+<p>Note that upon first connecting to a node, please check that the fingerprint matches:</p>
 
 <pre>
 ED25519 key fingerprint is SHA256:0EZvahC0dry74dmu7DBjweZwGWMt2zvV7rWZTb3Ao9g.
