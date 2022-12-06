@@ -1,6 +1,11 @@
-# Auth App
+# Waggle Site Backend (Previously Auth App)
 
-This is a prototype app which implements user, project and node access permissions management.
+This Django project provides a few different APIs and services for Waggle. They are roughly broken down into the following apps:
+
+* `app (to be renamed to something more descriptive)`. Manages user accounts, authentication through Globus, and their permissions across the site. Specfically, scheduler and dev node access is managed by this.
+* `manifests`. Manages data for nodes, hardware and sensors and provides our manifest API.
+
+This list may be expanded upon in the future.
 
 ## Configurations
 
