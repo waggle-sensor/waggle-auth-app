@@ -30,10 +30,6 @@ class HardwareManager(models.Manager):
     def get_by_natural_key(self, hardware):
         return self.get(hardware=hardware)
 
-# this is probably too general of a model...
-# we'd be better off just splitting Hardware into ComputeHardware and SensorHardware
-# and possibly having both support some common subset / abstract interface over both
-# ...right... subclassing seems like the wrong approach here
 
 class Hardware(models.Model):
     hardware = models.CharField(max_length=30, unique=True)

@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
+from rest_framework import status
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .serializers import UserSerializer, UserProfileSerializer
@@ -68,6 +69,10 @@ class TokenView(APIView):
             "user_uuid": str(request.user.id),
             "token": token.key,
         })
+    
+    def delete(self, request: Request, format=None) -> Response:
+        Token.objects.filter(user=request.user).delete()
+        return Response()
 
 
 class TokenInfoView(APIView):
