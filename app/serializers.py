@@ -18,5 +18,5 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         lookup_field = 'username'
-        fields = ["username", "organization", "department", "bio"]
+        fields = ["username", "organization", "department", "bio", "ssh_public_keys"]
         read_only_fields = ["username"]

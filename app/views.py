@@ -69,7 +69,7 @@ class TokenView(APIView):
             "user_uuid": str(request.user.id),
             "token": token.key,
         })
-    
+
     def delete(self, request: Request, format=None) -> Response:
         Token.objects.filter(user=request.user).delete()
         return Response()

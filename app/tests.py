@@ -276,6 +276,7 @@ class TestUserProfileView(TestCase):
             "organization": self.user.organization,
             "department": self.user.department,
             "bio": self.user.bio,
+            "ssh_public_keys": "",
         }
 
     def testGetAsAnon(self):
@@ -307,6 +308,7 @@ class TestUserProfileView(TestCase):
             "organization": "wow",
             "bio": "changed bio",
             "username": "this field should be ignored",
+            "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK0LT3jNyfUtkJwxiv/7YfPU4PIOsQzeCVKlLCAfwlg3\n",
         }
 
         r = self.client.put(self.url, data, content_type="application/json")
@@ -323,6 +325,7 @@ class TestUserProfileView(TestCase):
             "organization": user.organization,
             "department": user.department,
             "bio": user.bio,
+            "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK0LT3jNyfUtkJwxiv/7YfPU4PIOsQzeCVKlLCAfwlg3",
         }, r.json())
 
 
