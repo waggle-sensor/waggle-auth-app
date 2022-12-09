@@ -1,10 +1,9 @@
 from .models import *
 from collections import defaultdict
 from rest_framework import serializers
-from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 
-class NodeSerializer(WritableNestedModelSerializer):
+class NodeSerializer(serializers.ModelSerializer):
     computes = serializers.SerializerMethodField("get_computes")
     resources = serializers.SerializerMethodField("get_resources")
     tags = serializers.StringRelatedField(many=True)
