@@ -62,6 +62,9 @@ class TestTokenView(TestCase):
         r = self.client.get("/token")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
+        r = self.client.delete("/token")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def testGetTokenExists(self):
         user = create_random_user()
         token = Token.objects.create(user=user)
@@ -80,6 +83,55 @@ class TestTokenView(TestCase):
 
         token = Token.objects.get(user=user)
         self.assertDictEqual({"token": token.key, "user_uuid": str(user.id)}, r.json())
+
+    def testRefreshToken(self):
+        user = create_random_user()
+        self.client.force_login(user)
+
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        token1 = r.json()["token"]
+
+        r = self.client.delete("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        token2 = r.json()["token"]
+
+        self.assertNotEqual(token1, token2)
+
+    def testRefreshTokenOnlyAffectsSelf(self):
+        user1 = create_random_user()
+        user2 = create_random_user()
+
+        # user 1 creates token
+        self.client.force_login(user1)
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        token1 = r.json()["token"]
+
+        # user 2 creates token
+        self.client.force_login(user2)
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        token2 = r.json()["token"]
+
+        # user 1 refreshes token
+        self.client.force_login(user1)
+        r = self.client.delete("/token")
+
+        # user 1 should have new token
+        self.client.force_login(user1)
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(token1, r.json()["token"])
+
+        # user 2 should have same token
+        self.client.force_login(user2)
+        r = self.client.get("/token")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(token2, r.json()["token"])
 
 
 class TestTokenInfoView(TestCase):
@@ -224,6 +276,7 @@ class TestUserProfileView(TestCase):
             "organization": self.user.organization,
             "department": self.user.department,
             "bio": self.user.bio,
+            "ssh_public_keys": "",
         }
 
     def testGetAsAnon(self):
@@ -255,6 +308,7 @@ class TestUserProfileView(TestCase):
             "organization": "wow",
             "bio": "changed bio",
             "username": "this field should be ignored",
+            "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK0LT3jNyfUtkJwxiv/7YfPU4PIOsQzeCVKlLCAfwlg3\n",
         }
 
         r = self.client.put(self.url, data, content_type="application/json")
@@ -271,6 +325,7 @@ class TestUserProfileView(TestCase):
             "organization": user.organization,
             "department": user.department,
             "bio": user.bio,
+            "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK0LT3jNyfUtkJwxiv/7YfPU4PIOsQzeCVKlLCAfwlg3",
         }, r.json())
 
 
