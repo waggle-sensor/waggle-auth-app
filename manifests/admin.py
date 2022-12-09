@@ -63,5 +63,7 @@ class NodeMetaData(NestedModelAdmin):
 admin.site.register(NodeData, NodeMetaData)
 admin.site.register(Label)
 admin.site.register(Tag)
-admin.site.register(Hardware)
+admin.site.register(ComputeHardware)
+admin.site.register(SensorHardware)
+admin.site.register(ResourceHardware)
 admin.site.register(Capability)

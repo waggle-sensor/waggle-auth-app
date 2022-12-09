@@ -19,7 +19,7 @@ class NodeSerializer(WritableNestedModelSerializer):
         for c in compute_obj:
             compute_dict = defaultdict()
             compute_dict["hardware"] = defaultdict(list)
-            h = Hardware.objects.get(hardware=c.hardware)
+            h = ComputeHardware.objects.get(hardware=c.hardware)
             cap_obj = h.capabilities.all()
 
             compute_dict["name"] = c.name
@@ -56,8 +56,7 @@ class NodeSerializer(WritableNestedModelSerializer):
         for s_o in sensor_obj:
             sensor_dict = defaultdict()
             sensor_dict["hardware"] = defaultdict(list)
-            h = Hardware.objects.get(hardware=s_o.hardware)
-            cap_obj = h.capabilities.all()
+            h = SensorHardware.objects.get(hardware=s_o.hardware)
             lab_obj = s_o.labels.all()
 
             sensor_dict["name"] = s_o.name
@@ -68,11 +67,6 @@ class NodeSerializer(WritableNestedModelSerializer):
             sensor_dict["hardware"]["hw_version"] = h.hw_version
             sensor_dict["hardware"]["sw_version"] = h.sw_version
             sensor_dict["hardware"]["datasheet"] = h.datasheet
-            sensor_dict["hardware"]["cpu"] = h.cpu
-            sensor_dict["hardware"]["cpu_ram"] = h.cpu_ram
-            sensor_dict["hardware"]["gpu_ram"] = h.gpu_ram
-            sensor_dict["hardware"]["shared_ram"] = h.shared_ram
-            sensor_dict["hardware"]["capabilities"] = [cap.capability for cap in cap_obj]
 
             sensor.append(sensor_dict)
 
@@ -88,8 +82,7 @@ class NodeSerializer(WritableNestedModelSerializer):
         for r in resource_obj:
             resource_dict = defaultdict()
             resource_dict["hardware"] = defaultdict(list)
-            h = Hardware.objects.get(hardware=r.hardware)
-            cap_obj = h.capabilities.all()
+            h = ResourceHardware.objects.get(hardware=r.hardware)
 
             resource_dict["name"] = r.name
             resource_dict["hardware"]["hardware"] = h.hardware
@@ -97,11 +90,6 @@ class NodeSerializer(WritableNestedModelSerializer):
             resource_dict["hardware"]["hw_version"] = h.hw_version
             resource_dict["hardware"]["sw_version"] = h.sw_version
             resource_dict["hardware"]["datasheet"] = h.datasheet
-            resource_dict["hardware"]["cpu"] = h.cpu
-            resource_dict["hardware"]["cpu_ram"] = h.cpu_ram
-            resource_dict["hardware"]["gpu_ram"] = h.gpu_ram
-            resource_dict["hardware"]["shared_ram"] = h.shared_ram
-            resource_dict["hardware"]["capabilities"] = [cap.capability for cap in cap_obj]
 
             resource.append(resource_dict)
 
