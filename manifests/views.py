@@ -1,8 +1,8 @@
 from django.contrib.auth.models import *
-from .models import *
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
-from .api.serializers import NodeSerializer
+from .models import *
+from .serializers import NodeSerializer
 
 
 class NodeList(ListCreateAPIView):

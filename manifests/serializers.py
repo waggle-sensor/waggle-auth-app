@@ -1,4 +1,4 @@
-from ..models import *
+from .models import *
 from collections import defaultdict
 from rest_framework import serializers
 from drf_writable_nested.serializers import WritableNestedModelSerializer
