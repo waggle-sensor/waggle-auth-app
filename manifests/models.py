@@ -17,19 +17,20 @@ class NodeData(models.Model):
         verbose_name_plural = "Nodes"
 
 
-class CommonHardware(models.Model):
+class AbstractHardware(models.Model):
     hardware = models.CharField(max_length=100)
     hw_model = models.CharField(max_length=30, blank=True)
     hw_version = models.CharField(max_length=30, blank=True)
     sw_version = models.CharField(max_length=30, blank=True)
-    datasheet = models.CharField(max_length=250, default="<url>", blank=True)
+    manufacturer = models.CharField(max_length=255, default="", blank=True)
+    datasheet = models.CharField(max_length=255, default="", blank=True)
     capabilities = models.ManyToManyField("Capability", blank=True)
 
     class Meta:
         abstract = True
 
 
-class ComputeHardware(CommonHardware):
+class ComputeHardware(AbstractHardware):
     cpu = models.CharField(max_length=30, blank=True)
     cpu_ram = models.CharField(max_length=30, blank=True)
     gpu_ram = models.CharField(max_length=30, blank=True)
@@ -42,7 +43,7 @@ class ComputeHardware(CommonHardware):
         verbose_name_plural = "Compute Hardware"
 
 
-class ResourceHardware(CommonHardware):
+class ResourceHardware(AbstractHardware):
 
     def __str__(self):
         return self.hardware
@@ -51,7 +52,7 @@ class ResourceHardware(CommonHardware):
         verbose_name_plural = "Resource Hardware"
 
 
-class SensorHardware(CommonHardware):
+class SensorHardware(AbstractHardware):
 
     def __str__(self):
         return self.hardware
@@ -82,7 +83,7 @@ class Compute(models.Model):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
     hardware = models.ForeignKey(ComputeHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, default="", blank=True)
-    serial_no = models.CharField(max_length=30, default="<MAC ADDRESS>", blank=True)
+    serial_no = models.CharField(max_length=30, default="", blank=True)
     zone = models.CharField(max_length=30, choices=ZONE_CHOICES, blank=True)
 
     def __str__(self):
@@ -92,7 +93,7 @@ class Compute(models.Model):
         verbose_name_plural = "Compute"
 
 
-class CommonSensor(models.Model):
+class AbstractSensor(models.Model):
     hardware = models.ForeignKey(SensorHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, blank=True)
     labels = models.ManyToManyField("Label", blank=True)
@@ -101,12 +102,12 @@ class CommonSensor(models.Model):
         abstract = True
 
 
-class NodeSensor(CommonSensor):
+class NodeSensor(AbstractSensor):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
     scope = models.CharField(max_length=30, default="global", blank=True)
 
 
-class ComputeSensor(CommonSensor):
+class ComputeSensor(AbstractSensor):
     scope = models.ForeignKey(Compute, on_delete=models.CASCADE, blank=True)
 
 

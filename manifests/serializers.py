@@ -29,6 +29,7 @@ class NodeSerializer(WritableNestedModelSerializer):
             compute_dict["hardware"]["hw_model"] = h.hw_model
             compute_dict["hardware"]["hw_version"] = h.hw_version
             compute_dict["hardware"]["sw_version"] = h.sw_version
+            compute_dict["hardware"]["manufacturer"] = h.manufacturer
             compute_dict["hardware"]["datasheet"] = h.datasheet
             compute_dict["hardware"]["cpu"] = h.cpu
             compute_dict["hardware"]["cpu_ram"] = h.cpu_ram
@@ -66,6 +67,7 @@ class NodeSerializer(WritableNestedModelSerializer):
             sensor_dict["hardware"]["hw_model"] = h.hw_model
             sensor_dict["hardware"]["hw_version"] = h.hw_version
             sensor_dict["hardware"]["sw_version"] = h.sw_version
+            sensor_dict["hardware"]["manufacturer"] = h.manufacturer
             sensor_dict["hardware"]["datasheet"] = h.datasheet
 
             sensor.append(sensor_dict)
@@ -89,6 +91,7 @@ class NodeSerializer(WritableNestedModelSerializer):
             resource_dict["hardware"]["hw_model"] = h.hw_model
             resource_dict["hardware"]["hw_version"] = h.hw_version
             resource_dict["hardware"]["sw_version"] = h.sw_version
+            resource_dict["hardware"]["manufacturer"] = h.manufacturer
             resource_dict["hardware"]["datasheet"] = h.datasheet
 
             resource.append(resource_dict)
