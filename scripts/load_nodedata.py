@@ -59,11 +59,18 @@ with open('scripts/data/nodedata.csv') as file:
             name="gps",
         )
 
-        # 4. usbhub-10port
+        # usbhub-10port
         Resource.objects.create(
             node=n,
             hardware=ResourceHardware.objects.get(hardware="usbhub-10port"),
             name="usbhub",
+        )
+
+        # switch
+        Resource.objects.create(
+            node=n,
+            hardware=ResourceHardware.objects.get(hardware="switch"),
+            name="switch",
         )
 
         # 5. wagman
@@ -80,13 +87,35 @@ with open('scripts/data/nodedata.csv') as file:
         else:
             Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="psu-bbbd"), name="psu")
             Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="wifi"), name="wifi")
+            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="usbhub-2port"), name="usbhub-2")
+
+        if row["modem"] == "yes":
+            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="modem"), name="modem")
+
+
+        modem_sim_hardware_mapping = {
+            "NU-Sage": "modem-sim-nu",
+            "ANL-VTO": "modem-sim-anl-vto",
+            "ANL-DAWN": "modem-sim-anl-dawn",
+            "end-user": "modem-sim-other",
+        }
+
+        matches = {k for k in modem_sim_hardware_mapping.keys() if k in row["modem_sim"]}
+
+        if len(matches) == 0:
+            pass
+        elif len(matches) == 1:
+            hardware = modem_sim_hardware_mapping[list(matches)[0]]
+            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware=hardware), name="modem-sim")
+        else:
+            raise RuntimeError(f"ambiguous modem for {row}")
 
         # infer cameras
         for camera in ["top_camera", "bottom_camera", "left_camera", "right_camera"]:
             if row[camera] == "none":
                 continue
             hardware = infer_camera_hardware_from_name(row[camera].strip())
-            NodeSensor.objects.create(node=n, hardware=SensorHardware.objects.get(hardware=hardware))
+            NodeSensor.objects.create(node=n, hardware=SensorHardware.objects.get(hardware=hardware), name=camera)
 
         # nx_agent
         if row["nx_agent"] == "yes":
@@ -99,15 +128,9 @@ with open('scripts/data/nodedata.csv') as file:
 
         # shield
         if row["shield"] == "yes":
-            if row["flag"] == "group1":
-                rpi4 = ComputeHardware.objects.get(hardware="rpi-4gb")
-                c1 = Compute.objects.create(node=n, hardware=rpi4, zone="shield", name="rpi")
-                ComputeSensor.objects.create(scope=c1, hardware=SensorHardware.objects.get(hardware="bme680"))
-                ComputeSensor.objects.create(scope=c1, hardware=SensorHardware.objects.get(hardware="microphone"))
-                ComputeSensor.objects.create(scope=c1, hardware=SensorHardware.objects.get(hardware="rainguage"))
-            else:
-                rpi8 = ComputeHardware.objects.get(hardware="rpi-8gb")
-                c2 = Compute.objects.create(node=n, hardware=rpi8, zone="shield", name="rpi")
-                ComputeSensor.objects.create(scope=c2, hardware=SensorHardware.objects.get(hardware="bme680"))
-                ComputeSensor.objects.create(scope=c2, hardware=SensorHardware.objects.get(hardware="microphone"))
-                ComputeSensor.objects.create(scope=c2, hardware=SensorHardware.objects.get(hardware="rainguage"))
+            rpi_hardware = "rpi-4gb" if row["flag"] == "group1" else "rpi-8gb"
+            rpi = ComputeHardware.objects.get(hardware=rpi_hardware)
+            compute = Compute.objects.create(node=n, hardware=rpi, zone="shield", name="rpi")
+            ComputeSensor.objects.create(scope=compute, hardware=SensorHardware.objects.get(hardware="bme680"), name="bme680")
+            ComputeSensor.objects.create(scope=compute, hardware=SensorHardware.objects.get(hardware="microphone"), name="microphone")
+            ComputeSensor.objects.create(scope=compute, hardware=SensorHardware.objects.get(hardware="rainguage"), name="raingauge")
