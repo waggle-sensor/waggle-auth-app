@@ -13,6 +13,13 @@ def infer_camera_hardware_from_name(name):
     return SensorHardware.objects.get(hardware=hardware)
 
 
+def gps_coord_or_none(row, k):
+    s = row[k].strip()
+    if not s:
+        return None
+    return float(s)
+
+
 with open('scripts/data/nodedata.csv') as file:
     reader = csv.DictReader(file)
 
@@ -31,8 +38,8 @@ with open('scripts/data/nodedata.csv') as file:
         n = NodeData.objects.create(
             vsn=row["vsn"].strip().upper(),
             name=row["node_id"].strip().upper(),
-            gps_lat=float(row["gps_lat"].strip() or 0),
-            gps_lon=float(row["gps_lon"].strip() or 0),
+            gps_lat=gps_coord_or_none(row, "gps_lat"),
+            gps_lon=gps_coord_or_none(row, "gps_lon"),
         )
 
         # add below hardwares to every node:
