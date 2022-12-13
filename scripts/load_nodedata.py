@@ -37,29 +37,49 @@ with open('scripts/data/nodedata.csv') as file:
 
         # add below hardwares to every node:
         # 1. xaviernx
-        nx = ComputeHardware.objects.get(hardware="xaviernx")
-        n.computes.add(nx)
-        Compute.objects.filter(node=n, hardware=nx).update(zone="core")
-        Compute.objects.filter(node=n, hardware=nx).update(serial_no=row["node_id"][4:])
+        compute = Compute.objects.create(
+            node=n,
+            hardware=ComputeHardware.objects.get(hardware="xaviernx"),
+            name="nxcore",
+            zone="core",
+            serial_no=row["node_id"][4:],
+        )
 
-        # 2. bme280
-        # 3. gps
-        compute = Compute.objects.get(node=n, hardware=nx)
-        ComputeSensor.objects.create(scope=compute, hardware=SensorHardware.objects.get(hardware="bme280"))
-        NodeSensor.objects.create(node=n, hardware=SensorHardware.objects.get(hardware="gps"))
+        # 2. bme280 on nxcore
+        ComputeSensor.objects.create(
+            scope=compute,
+            hardware=SensorHardware.objects.get(hardware="bme280"),
+            name="bme280",
+        )
+
+        # 3. gps on nxcore
+        ComputeSensor.objects.create(
+            scope=compute,
+            hardware=SensorHardware.objects.get(hardware="gps"),
+            name="gps",
+        )
 
         # 4. usbhub-10port
+        Resource.objects.create(
+            node=n,
+            hardware=ResourceHardware.objects.get(hardware="usbhub-10port"),
+            name="usbhub",
+        )
+
         # 5. wagman
-        Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="usbhub-10port"))
-        Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="wagman"))
+        Resource.objects.create(
+            node=n,
+            hardware=ResourceHardware.objects.get(hardware="wagman"),
+            name="wagman",
+        )
 
         # 6. psu: psu-B0BD for nodes before (but not include) W040, psu-BBBD for nodes after W040
         # 7. wifi: for nodes after W040
         if row["flag"] == "group1":
-            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="psu-b0bd"))
+            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="psu-b0bd"), name="psu")
         else:
-            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="psu-bbbd"))
-            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="wifi"))
+            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="psu-bbbd"), name="psu")
+            Resource.objects.create(node=n, hardware=ResourceHardware.objects.get(hardware="wifi"), name="wifi")
 
         # infer cameras
         for camera in ["top_camera", "bottom_camera", "left_camera", "right_camera"]:
@@ -70,27 +90,24 @@ with open('scripts/data/nodedata.csv') as file:
 
         # nx_agent
         if row["nx_agent"] == "yes":
-            poe = ComputeHardware.objects.get(hardware="xaviernx-poe")
-            n.computes.add(poe)
-            Compute.objects.filter(node=n, hardware=poe).update(zone="agent")
+            Compute.objects.create(
+                node=n,
+                hardware=ComputeHardware.objects.get(hardware="xaviernx-poe"),
+                zone="agent",
+                name="nxagent",
+            )
 
         # shield
         if row["shield"] == "yes":
             if row["flag"] == "group1":
                 rpi4 = ComputeHardware.objects.get(hardware="rpi-4gb")
-                c1 = Compute.objects.create(node=n, hardware=rpi4)
-                Compute.objects.filter(node=n, hardware=rpi4).update(zone="shield")
-
+                c1 = Compute.objects.create(node=n, hardware=rpi4, zone="shield", name="rpi")
                 ComputeSensor.objects.create(scope=c1, hardware=SensorHardware.objects.get(hardware="bme680"))
                 ComputeSensor.objects.create(scope=c1, hardware=SensorHardware.objects.get(hardware="microphone"))
                 ComputeSensor.objects.create(scope=c1, hardware=SensorHardware.objects.get(hardware="rainguage"))
             else:
                 rpi8 = ComputeHardware.objects.get(hardware="rpi-8gb")
-                c2 = Compute.objects.create(node=n, hardware=rpi8)
-                Compute.objects.filter(node=n, hardware=rpi8).update(zone="shield")
-
+                c2 = Compute.objects.create(node=n, hardware=rpi8, zone="shield", name="rpi")
                 ComputeSensor.objects.create(scope=c2, hardware=SensorHardware.objects.get(hardware="bme680"))
                 ComputeSensor.objects.create(scope=c2, hardware=SensorHardware.objects.get(hardware="microphone"))
                 ComputeSensor.objects.create(scope=c2, hardware=SensorHardware.objects.get(hardware="rainguage"))
-
-
