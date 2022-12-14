@@ -76,15 +76,16 @@ class Compute(models.Model):
     ZONE_CHOICES = (
         ("core", "core"),
         ("agent", "agent"),
-        ("detector", "detector"),
-        ("shield", "shield")
+        ("shield", "shield"),
+        ("detector", "detector (deprecated! use enclosure instead!)"),
+        ("enclosure", "enclosure"),
     )
 
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
     hardware = models.ForeignKey(ComputeHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, default="", blank=True)
     serial_no = models.CharField(max_length=30, default="", blank=True)
-    zone = models.CharField(max_length=30, choices=ZONE_CHOICES, blank=True)
+    zone = models.CharField(max_length=30, choices=ZONE_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return self.name
