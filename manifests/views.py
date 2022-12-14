@@ -6,7 +6,20 @@ from .serializers import NodeSerializer
 
 
 class NodeList(ListAPIView):
-    queryset = NodeData.objects.all().order_by("vsn")
+    queryset = NodeData.objects.all().prefetch_related(
+        "compute_set__hardware__capabilities",
+
+        "nodesensor_set__hardware__capabilities",
+        "nodesensor_set__labels",
+
+        "compute_set__computesensor_set__scope",
+        "compute_set__computesensor_set__hardware__capabilities",
+        "compute_set__computesensor_set__labels",
+
+        "resource_set__hardware__capabilities",
+
+        "tags",
+    ).order_by("vsn")
     serializer_class = NodeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
