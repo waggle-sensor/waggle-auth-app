@@ -9,7 +9,7 @@ class ManifestInitialTest(TestCase):
         tag1 = Tag.objects.create(tag="t1")
         self.Node.tags.set([tag1.pk])
 
-        compute1 = Hardware.objects.create(hardware="h1")
+        compute1 = ComputeHardware.objects.create(hardware="h1")
         self.Node.computes.set([compute1.pk])
 
     def test_node_creation(self):
@@ -28,9 +28,12 @@ class ManifestInitialTest(TestCase):
 class ManifestTest(TestCase):
 
     def test_get_manifest(self):
-        self.createHardware([
+        self.createComputeHardware([
             {"hardware": "nx1", "hw_model": "Nvidia Jetson Xavier"},
             {"hardware": "rpi4", "hw_model": "Raspberry PI 4"},
+        ])
+
+        self.createSensorHardware([
             {"hardware": "bme280", "hw_model": "BME280"},
             {"hardware": "bme680", "hw_model": "BME680"},
         ])
@@ -102,12 +105,19 @@ class ManifestTest(TestCase):
             ],
         })
 
-    def createHardware(self, hardware):
+    def createComputeHardware(self, hardware):
         """
-        Helper function which populates hardware test data.
+        Helper function which populates compute hardware test data.
         """
         for item in hardware:
-            Hardware.objects.create(hardware=item["hardware"], hw_model=item["hw_model"])
+            ComputeHardware.objects.create(hardware=item["hardware"], hw_model=item["hw_model"])
+
+    def createSensorHardware(self, hardware):
+        """
+        Helper function which populates sensor hardware test data.
+        """
+        for item in hardware:
+            SensorHardware.objects.create(hardware=item["hardware"], hw_model=item["hw_model"])
 
     def createManifests(self, manifests):
         """
@@ -122,12 +132,12 @@ class ManifestTest(TestCase):
             for compute in manifest["computes"]:
                 compute_obj = Compute.objects.create(
                     node=node_obj,
-                    hardware=Hardware.objects.get(hardware=compute["hardware"]),
+                    hardware=ComputeHardware.objects.get(hardware=compute["hardware"]),
                     name=compute["name"],
                 )
                 for sensor in compute["sensors"]:
                     ComputeSensor.objects.create(
-                        hardware=Hardware.objects.get(hardware=sensor),
+                        hardware=SensorHardware.objects.get(hardware=sensor),
                         scope=compute_obj,
                     )
 

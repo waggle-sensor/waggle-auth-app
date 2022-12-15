@@ -1,22 +1,14 @@
 from django.db import models
 
 
-class NodeDataManager(models.Manager):
-
-    def get_by_natural_key(self, vsn):
-        return self.get(vsn=vsn)
-
-
 class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
     name = models.CharField(max_length=30)
     tags = models.ManyToManyField("Tag", blank=True)
-    computes = models.ManyToManyField("Hardware", through="Compute", related_name="computes")
-    resources = models.ManyToManyField("Hardware", through="Resource", related_name="resources")
+    computes = models.ManyToManyField("ComputeHardware", through="Compute", related_name="computes")
+    resources = models.ManyToManyField("ResourceHardware", through="Resource", related_name="resources")
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
-
-    objects = NodeDataManager()
 
     def __str__(self):
          return self.vsn
@@ -25,34 +17,48 @@ class NodeData(models.Model):
         verbose_name_plural = "Nodes"
 
 
-class HardwareManager(models.Manager):
-
-    def get_by_natural_key(self, hardware):
-        return self.get(hardware=hardware)
-
-
-class Hardware(models.Model):
-    hardware = models.CharField(max_length=30, unique=True)
+class AbstractHardware(models.Model):
+    hardware = models.CharField(max_length=100)
     hw_model = models.CharField(max_length=30, blank=True)
     hw_version = models.CharField(max_length=30, blank=True)
     sw_version = models.CharField(max_length=30, blank=True)
-    datasheet = models.CharField(max_length=30, default="<url>", blank=True)
+    manufacturer = models.CharField(max_length=255, default="", blank=True)
+    datasheet = models.CharField(max_length=255, default="", blank=True)
+    capabilities = models.ManyToManyField("Capability", blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class ComputeHardware(AbstractHardware):
     cpu = models.CharField(max_length=30, blank=True)
     cpu_ram = models.CharField(max_length=30, blank=True)
     gpu_ram = models.CharField(max_length=30, blank=True)
     shared_ram = models.BooleanField(default=False, blank=True)
-    capabilities = models.ManyToManyField("Capability", blank=True)
-
-    objects = HardwareManager()
-
-    def natural_key(self):
-        return self.hardware
 
     def __str__(self):
-         return self.hardware
+        return self.hardware
 
     class Meta:
-        verbose_name_plural = "Hardware"
+        verbose_name_plural = "Compute Hardware"
+
+
+class ResourceHardware(AbstractHardware):
+
+    def __str__(self):
+        return self.hardware
+
+    class Meta:
+        verbose_name_plural = "Resource Hardware"
+
+
+class SensorHardware(AbstractHardware):
+
+    def __str__(self):
+        return self.hardware
+
+    class Meta:
+        verbose_name_plural = "Sensor Hardware"
 
 
 class Capability(models.Model):
@@ -70,25 +76,26 @@ class Compute(models.Model):
     ZONE_CHOICES = (
         ("core", "core"),
         ("agent", "agent"),
-        ("detector", "detector")
+        ("shield", "shield"),
+        ("detector", "detector (deprecated! use enclosure instead!)"),
+        ("enclosure", "enclosure"),
     )
 
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
-    hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE, blank=True)
+    hardware = models.ForeignKey(ComputeHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, default="", blank=True)
-    serial_no = models.CharField(max_length=30, default="<MAC ADDRESS>", blank=True)
-    zone = models.CharField(max_length=30, choices=ZONE_CHOICES, blank=True)
+    serial_no = models.CharField(max_length=30, default="", blank=True)
+    zone = models.CharField(max_length=30, choices=ZONE_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
         verbose_name_plural = "Compute"
-        unique_together = [["node", "hardware", "name"]]
 
 
-class CommonSensor(models.Model):
-    hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE, blank=True)
+class AbstractSensor(models.Model):
+    hardware = models.ForeignKey(SensorHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, blank=True)
     labels = models.ManyToManyField("Label", blank=True)
 
@@ -96,18 +103,18 @@ class CommonSensor(models.Model):
         abstract = True
 
 
-class NodeSensor(CommonSensor):
+class NodeSensor(AbstractSensor):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
     scope = models.CharField(max_length=30, default="global", blank=True)
 
 
-class ComputeSensor(CommonSensor):
+class ComputeSensor(AbstractSensor):
     scope = models.ForeignKey(Compute, on_delete=models.CASCADE, blank=True)
 
 
 class Resource(models.Model):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
-    hardware = models.ForeignKey(Hardware, on_delete=models.CASCADE, blank=True)
+    hardware = models.ForeignKey(ResourceHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, blank=True)
 
     def __str__(self):
