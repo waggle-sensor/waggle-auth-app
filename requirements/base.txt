@@ -5,4 +5,4 @@ django-prometheus==2.2.*
 globus-sdk==3.13.*
 django-cors-headers==3.13.*
 django-slack==5.18.*
-django-nested-inline==0.4.*
+django-nested-admin==4.0.*

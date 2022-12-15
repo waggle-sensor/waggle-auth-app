@@ -1,9 +1,14 @@
-from .models import *
-from collections import defaultdict
 from rest_framework import serializers
+from .models import *
 
 
-class NodeSerializer(serializers.ModelSerializer):
+class SensorHardwareSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SensorHardware
+        exclude = ["id"]
+
+
+class ManifestSerializer(serializers.ModelSerializer):
     computes = serializers.SerializerMethodField("get_computes")
     resources = serializers.SerializerMethodField("get_resources")
     tags = serializers.StringRelatedField(many=True)
