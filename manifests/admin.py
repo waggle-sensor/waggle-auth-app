@@ -39,6 +39,8 @@ class NodeMetaData(NestedModelAdmin):
 
     # display in admin panel
     list_display = ('vsn', 'name','gps_lat', 'gps_lon', 'get_tags', 'get_computes')
+    search_fields = ("vsn", "name")
+    ordering = ("vsn",)
 
     fieldsets = (
         (None, {"fields": ("vsn", "name", "tags")}),
