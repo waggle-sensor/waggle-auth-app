@@ -1,9 +1,9 @@
-from dataclasses import fields
 from django.contrib import admin
-from .models import *
 from django.core import serializers
 from django.http import HttpResponse
-from nested_inline.admin import NestedStackedInline, NestedModelAdmin
+import nested_admin
+from .models import *
+
 
 # admin page actions
 @admin.action(description='Export as JSON')
@@ -12,29 +12,35 @@ def export_as_json(modeladmin, request, queryset):
     serializers.serialize("json", queryset, stream=response, use_natural_foreign_keys=True)
     return response
 
+
 # Register your models here.
-class ResourceInline(NestedStackedInline):
+class ResourceInline(nested_admin.NestedStackedInline):
     model = Resource
     extra = 0
     fk_name = 'node'
 
-class ComputeSensorInline(NestedStackedInline):
+
+class ComputeSensorInline(nested_admin.NestedStackedInline):
     model = ComputeSensor
     extra = 0
     fk_name = 'scope'
 
-class ComputeInline(NestedStackedInline):
+
+class ComputeInline(nested_admin.NestedStackedInline):
     model = Compute
     extra = 0
     fk_name = 'node'
     inlines = [ComputeSensorInline]
 
-class NodeSensorInline(NestedStackedInline):
+
+class NodeSensorInline(nested_admin.NestedStackedInline):
     model = NodeSensor
     extra = 0
     fk_name = 'node'
 
-class NodeMetaData(NestedModelAdmin):
+
+@admin.register(NodeData)
+class NodeMetaData(nested_admin.NestedModelAdmin):
     actions = [export_as_json]
 
     # display in admin panel
@@ -62,7 +68,6 @@ class NodeMetaData(NestedModelAdmin):
     ]
 
 
-admin.site.register(NodeData, NodeMetaData)
 admin.site.register(Label)
 admin.site.register(Tag)
 admin.site.register(ComputeHardware, list_display=["hardware", "hw_model", "manufacturer"])
