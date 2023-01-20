@@ -53,6 +53,8 @@ def serialize_common_sensor(s):
         "name": s.name,
         "scope": str(s.scope),
         "labels": [l.label for l in s.labels.all()],
+        "serial_no": s.serial_no,
+        "uri": s.uri,
         "hardware": serialize_common_hardware(s.hardware)
     }
 

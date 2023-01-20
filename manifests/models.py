@@ -98,6 +98,8 @@ class AbstractSensor(models.Model):
     hardware = models.ForeignKey(SensorHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, blank=True)
     labels = models.ManyToManyField("Label", blank=True)
+    serial_no = models.CharField(max_length=30, default="", blank=True)
+    uri = models.CharField(max_length=256, default="", blank=True)
 
     class Meta:
         abstract = True
