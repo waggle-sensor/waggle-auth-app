@@ -10,12 +10,11 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.authtoken.models import Token
-from rest_framework import status
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .serializers import UserSerializer, UserProfileSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
-from .permissions import IsSelf
+from .permissions import IsSelf, IsMatchingUsername
 from django_slack import slack_message
 
 User = get_user_model()
@@ -99,7 +98,7 @@ class TokenInfoView(APIView):
 
 
 class UserAccessView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsMatchingUsername]
 
     def get(self, request: Request, username: str, format=None) -> Response:
         try:

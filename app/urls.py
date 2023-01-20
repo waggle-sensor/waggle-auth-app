@@ -23,7 +23,7 @@ urlpatterns = [
     path("users/<str:username>", views.UserDetailView.as_view(), name="user-detail"),
     path("users/<str:username>/access", views.UserAccessView.as_view(), name="user-access"),
     # keeping old profiles/ path for now. replaced by users/.
-    path("profiles/<str:username>/access", views.UserAccessView.as_view(permission_classes=[AllowAny]), name="user-access"),
+    path("profiles/<str:username>/access", views.UserAccessView.as_view(permission_classes=[AllowAny]), name="user-access-old"),
     # keeping compatbility with existing portal user profiles
     path("user_profile/<str:username>", views.UserProfileView.as_view()),
 ])

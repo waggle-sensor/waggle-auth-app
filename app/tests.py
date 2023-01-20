@@ -332,47 +332,73 @@ class TestUserProfileView(TestCase):
 class TestAccessView(TestCase):
 
     def setUp(self):
-        self.admin = create_random_admin_user()
-        self.user = create_random_user()
+        profile_membership = [
+            ("ada", "sage", {"can_develop": True}),
+            ("ada", "dawn", {"can_develop": True, "can_schedule": True}),
 
-        self.admin_token = Token.objects.create(user=self.admin)
-        self.user_token = Token.objects.create(user=self.user)
+            ("jed", "sage", {"can_schedule": True, "can_develop": True}),
+
+            ("tom", "sage", {"can_develop": True, "can_schedule": True}),
+            ("tom", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
+        ]
+
+        node_membership = [
+            ("sage", "W000", {}),
+            ("sage", "W001", {"can_schedule": True}),
+            ("sage", "W002", {"can_develop": True}),
+            ("sage", "W003", {"can_schedule": True, "can_develop": True}),
+
+            ("dawn", "W000", {}),
+            ("dawn", "W001", {"can_schedule": True, "can_develop": True, "can_access_files": True}),
+        ]
+
+        # create all user memberships
+        for username, projectname, access in profile_membership:
+            user, _ = User.objects.get_or_create(username=username)
+            project, _ = Project.objects.get_or_create(name=projectname)
+            UserMembership.objects.get_or_create(user=user, project=project, **access)
+
+        # create all project memberships
+        for projectname, vsn, access in node_membership:
+            node, _ = Node.objects.get_or_create(vsn=vsn)
+            project, _ = Project.objects.get_or_create(name=projectname)
+            NodeMembership.objects.get_or_create(node=node, project=project, **access)
+
+    def testAnonymousNotAllowed(self):
+        for username in ["ada", "jed", "tom"]:
+            r = self.client.get(f"/users/{username}/access")
+            self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def testSelfAllowed(self):
+        for username in ["ada", "jed", "tom"]:
+            self.client.force_login(User.objects.get(username=username))
+            r = self.client.get(f"/users/{username}/access")
+            self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testOtherNotAllowed(self):
+        self.client.force_login(User.objects.get(username="ada"))
+
+        for username in ["jed", "tom"]:
+            r = self.client.get(f"/users/{username}/access")
+            self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    def testAdminAllowed(self):
+        self.client.force_login(create_random_admin_user())
+
+        for username in ["ada", "jed", "tom"]:
+            r = self.client.get(f"/users/{username}/access")
+            self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def testAccessNotExist(self):
+        self.client.force_login(create_random_admin_user())
+        r = self.client.get("/profiles/nothere/access")
+        self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
 
     def testListUserAccess(self):
-        admin_token = self.setUpToken("admin", is_admin=True)
-        user_token = self.setUpToken("user", is_admin=False)
-
-        self.setUpMembershipData(
-            profile_membership=[
-                ("ada", "sage", {"can_develop": True}),
-                ("ada", "dawn", {"can_develop": True, "can_schedule": True}),
-
-                ("jed", "sage", {"can_schedule": True, "can_develop": True}),
-
-                ("tom", "sage", {"can_develop": True, "can_schedule": True}),
-                ("tom", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
-            ],
-            node_membership = [
-                ("sage", "W000", {}),
-                ("sage", "W001", {"can_schedule": True}),
-                ("sage", "W002", {"can_develop": True}),
-                ("sage", "W003", {"can_schedule": True, "can_develop": True}),
-
-                ("dawn", "W000", {}),
-                ("dawn", "W001", {"can_schedule": True, "can_develop": True, "can_access_files": True}),
-            ],
-        )
-
-        # require auth for this endpoint
-        r = self.client.get("/users/ada/access")
-        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        # require admin permissions for this endpoint
-        r = self.client.get("/users/ada/access", HTTP_AUTHORIZATION=f"Sage {user_token}")
-        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+        self.client.force_login(create_random_admin_user())
 
         # check responses
-        r = self.client.get("/users/ada/access", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        r = self.client.get("/users/ada/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertEqual(r.json(), [
             {"vsn": "W001", "access": ["develop", "schedule"]},
@@ -380,7 +406,7 @@ class TestAccessView(TestCase):
             {"vsn": "W003", "access": ["develop"]},
         ])
 
-        r = self.client.get("/users/jed/access", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        r = self.client.get("/users/jed/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertEqual(r.json(), [
             {"vsn": "W001", "access": ["schedule"]},
@@ -388,7 +414,7 @@ class TestAccessView(TestCase):
             {"vsn": "W003", "access": ["develop", "schedule"]},
         ])
 
-        r = self.client.get("/users/tom/access", HTTP_AUTHORIZATION=f"Sage {admin_token}")
+        r = self.client.get("/users/tom/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertEqual(r.json(), [
             {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
@@ -396,37 +422,8 @@ class TestAccessView(TestCase):
             {"vsn": "W003", "access": ["develop", "schedule"]},
         ])
 
-    def testAccessNotExist(self):
-        user = User.objects.create_user(username="admin", is_staff=True)
-        token = Token.objects.create(user=user)
-
-        r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
-        self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
-
-    def testListProfileAccess(self):
-        # NOTE this is a regression test to ensure /profiles/ is left open to avoid breaking current scheduler behavior
-        self.setUpMembershipData(
-            profile_membership=[
-                ("ada", "sage", {"can_develop": True}),
-                ("ada", "dawn", {"can_develop": True, "can_schedule": True}),
-
-                ("jed", "sage", {"can_schedule": True, "can_develop": True}),
-
-                ("tom", "sage", {"can_develop": True, "can_schedule": True}),
-                ("tom", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
-            ],
-            node_membership = [
-                ("sage", "W000", {}),
-                ("sage", "W001", {"can_schedule": True}),
-                ("sage", "W002", {"can_develop": True}),
-                ("sage", "W003", {"can_schedule": True, "can_develop": True}),
-
-                ("dawn", "W000", {}),
-                ("dawn", "W001", {"can_schedule": True, "can_develop": True, "can_access_files": True}),
-            ],
-        )
-
-        # check responses
+    def testProfilesListProfileAccess(self):
+        # regression test to make sure /profiles/ is backwards compatible with schedule auth requirements. (deprecate this!)
         r = self.client.get("/profiles/ada/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertEqual(r.json(), [
@@ -451,27 +448,10 @@ class TestAccessView(TestCase):
             {"vsn": "W003", "access": ["develop", "schedule"]},
         ])
 
-    def testAccessNotExist(self):
-        user = User.objects.create_user(username="admin", is_staff=True)
-        token = Token.objects.create(user=user)
-
-        r = self.client.get("/profiles/nothere/access", HTTP_AUTHORIZATION=f"Sage {token}")
+    def testProfilesAccessNotExist(self):
+        # regression test to make sure /profiles/ is backwards compatible with schedule auth requirements. (deprecate this!)
+        r = self.client.get("/profiles/nothere/access")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
-
-    def setUpMembershipData(self, profile_membership, node_membership):
-        for username, projectname, access in profile_membership:
-            user, _ = User.objects.get_or_create(username=username)
-            project, _ = Project.objects.get_or_create(name=projectname)
-            UserMembership.objects.get_or_create(user=user, project=project, **access)
-
-        for projectname, vsn, access in node_membership:
-            node, _ = Node.objects.get_or_create(vsn=vsn)
-            project, _ = Project.objects.get_or_create(name=projectname)
-            NodeMembership.objects.get_or_create(node=node, project=project, **access)
-
-    def setUpToken(self, username, is_admin):
-        user = User.objects.create_user(username=username, is_staff=is_admin, is_superuser=is_admin)
-        return Token.objects.create(user=user)
 
 
 class TestAuth(TestCase):
