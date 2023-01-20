@@ -8,8 +8,6 @@ class IsSelf(permissions.BasePermission):
 
 
 class IsMatchingUsername(permissions.BasePermission):
-    # TODO Figure out how to do this in general. This is a hack to apply permissions
-    # to the user access view based on username in the URL.
 
     def has_permission(self, request, view):
         username = view.kwargs.get("username")
