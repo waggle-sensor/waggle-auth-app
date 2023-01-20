@@ -166,3 +166,25 @@ class ManifestTest(TestCase):
             self.assertAlmostEqual(item, expect)
         else:
             self.assertEqual(item, expect)
+
+
+class SensorHardwareViewsTest(TestCase):
+
+    def setUp(self):
+        SensorHardware.objects.create(hardware="gps", hw_model="A GPS")
+        SensorHardware.objects.create(hardware="raingauge", hw_model="RG-15")
+
+    def test_list_view(self):
+        r = self.client.get("/sensors/")
+        self.assertEqual(r.status_code, 200)
+        items = r.json()
+        self.assertCountEqual([item["hardware"] for item in items], ["gps", "raingauge"])
+
+    def test_detail_view(self):
+        r = self.client.get("/sensors/gps/")
+        self.assertEqual(r.status_code, 200)
+        item = r.json()
+        self.assertDictContainsSubset({
+            "hardware": "gps",
+            "hw_model": "A GPS",
+        }, item)
