@@ -20,10 +20,10 @@ class UserAdmin(auth_admin.UserAdmin):
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         ("Personal info", {"fields": ("name", "email", "organization", "department", "bio", "ssh_public_keys")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "is_approved", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
-    list_display = ("username", "name", "email", "is_superuser")
+    list_display = ("username", "name", "email", "is_superuser", "is_approved")
     search_fields = ("username", "name")
     inlines = (UserMembershipInline,)
 
