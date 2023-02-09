@@ -341,6 +341,9 @@ class TestAccessView(TestCase):
 
             ("tom", "sage", {"can_develop": True, "can_schedule": True}),
             ("tom", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
+
+            ("notapproved", "sage", {"can_develop": True, "can_schedule": True}),
+            ("notapproved", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
         ]
 
         node_membership = [
@@ -364,6 +367,12 @@ class TestAccessView(TestCase):
             node, _ = Node.objects.get_or_create(vsn=vsn)
             project, _ = Project.objects.get_or_create(name=projectname)
             NodeMembership.objects.get_or_create(node=node, project=project, **access)
+
+        # approve some of our users
+        for username in ["ada", "jed", "tom"]:
+            user = User.objects.get(username=username)
+            user.is_approved = True
+            user.save()
 
     def testAnonymousNotAllowed(self):
         for username in ["ada", "jed", "tom"]:
@@ -423,6 +432,10 @@ class TestAccessView(TestCase):
             {"vsn": "W003", "access": ["develop", "schedule"]},
         ])
 
+        r = self.client.get("/users/notapproved/access")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r.json(), [])
+
     def testProfilesListProfileAccess(self):
         # regression test to make sure /profiles/ is backwards compatible with schedule auth requirements. (deprecate this!)
         r = self.client.get("/profiles/ada/access")
@@ -448,6 +461,10 @@ class TestAccessView(TestCase):
             {"vsn": "W002", "access": ["develop"]},
             {"vsn": "W003", "access": ["develop", "schedule"]},
         ])
+
+        r = self.client.get("/profiles/notapproved/access")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r.json(), [])
 
     def testProfilesAccessNotExist(self):
         # regression test to make sure /profiles/ is backwards compatible with schedule auth requirements. (deprecate this!)
