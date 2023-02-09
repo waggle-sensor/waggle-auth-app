@@ -105,6 +105,10 @@ class UserAccessView(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise Http404
+        
+        # users who are not approved should not have any access
+        if not user.is_approved:
+            return Response([])
 
         access_by_vsn = {}
 
