@@ -13,6 +13,7 @@ urlpatterns = [
     path("login/", oidc_views.LoginView.as_view(complete_login_url="app:complete-login"), name="login"),
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("portal-logout/", views.LogoutView.as_view(redirect_field_name="callback")), # for portal compatibility
+    path("nodes/<str:vsn>/authorized_keys", views.NodeAuthorizedKeysView.as_view()),
 ] + format_suffix_patterns([
     # token views
     path("token", views.TokenView.as_view(), name="my-token"),
