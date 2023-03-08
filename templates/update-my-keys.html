@@ -13,40 +13,29 @@
     <button type="submit">Update</button>
 </form>
 
-<h2>Finish setting up node access</h2>
+<h2>Update your SSH config file</h2>
 
-<p>Once you've updated your SSH public key above, you'll need to do the following steps:</p>
-
-<h3>1. Request dev key</h3>
-
-<p>
-First, <a href="https://docs.waggle-edge.ai/docs/contact-us">email us</a> with subject "Dev Key Request", along with your name and organization so that we can provide you with
-an SSH key. You should save the key to <code>~/.ssh/ecdsa_waggle_dev</code>.
-</p>
-
-<p><em>This is a legacy step which will no longer be required in the future.</em></p>
-
-<h3>2. Update SSH config</h3>
-
-<p>Next, you'll need to update your <code>~/.ssh/config</code> file to include the following lines:</p>
+<p>Once you've added your SSH public key above, you'll need to update your <code>~/.ssh/config</code> file to include:</p>
 
 <pre>
 Host waggle-dev-sshd
     HostName 192.5.86.5
     Port 49190
     User waggle
-    IdentityFile ~/.ssh/id_ed25519 # <<< your personal key
+    IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes
 
 Host waggle-dev-node-*
     ProxyCommand ssh waggle-dev-sshd connect-to-node $(echo %h | sed "s/waggle-dev-node-//" )
     User waggle
-    IdentityFile ~/.ssh/ecdsa_waggle_dev # <<< dev key from previous step
+    IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes
     StrictHostKeyChecking no
 </pre>
 
-<h3>3. SSH to node</h3>
+<p><em>The example assumes your key file is <code>~/.ssh/id_ed25519</code>. Please update the config above to match your own settings.</em></p>
+
+<h2>Connect to node</h2>
 
 You can access a specific node by its VSN, if you have permissions.
 
