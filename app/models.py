@@ -31,7 +31,7 @@ class User(AbstractUser):
     bio = models.TextField(blank=True, max_length=2000)
     ssh_public_keys = models.TextField("SSH public keys", blank=True,
         validators=[validate_ssh_public_key_list])
-    is_approved = models.BooleanField("Approval status", help_text="Designates whether the user is approved to perform basic tasks such as submitting apps to ECR.", default=False)
+    is_approved = models.BooleanField("Approval status", default=False, help_text="Designates whether the user is approved to perform basic tasks such as submitting apps to ECR.")
 
     def get_absolute_url(self):
         return reverse("app:user-detail", kwargs={"username": self.username})

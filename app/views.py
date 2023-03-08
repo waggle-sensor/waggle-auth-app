@@ -8,14 +8,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django_slack import slack_message
 from .serializers import UserSerializer, UserProfileSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
-from django_slack import slack_message
+from .models import Node
 
 User = get_user_model()
 
@@ -105,7 +106,7 @@ class UserAccessView(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise Http404
-        
+
         # users who are not approved should not have any access
         if not user.is_approved:
             return Response([])
@@ -126,6 +127,31 @@ class UserAccessView(APIView):
         data = [{"vsn": vsn, "access": sorted(access)} for vsn, access in sorted(access_by_vsn.items())]
 
         return Response(data)
+
+
+class NodeAuthorizedKeysView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self, request: Request, vsn: str) -> Response:
+        try:
+            node = Node.objects.get(vsn=vsn)
+        except Node.DoesNotExist:
+            raise Http404
+
+        user_ssh_public_keys = node.project_set.filter(
+            usermembership__can_develop=True,
+            nodemembership__can_develop=True,
+        ).values_list("users__ssh_public_keys", flat=True)
+
+        keys = []
+
+        for s in user_ssh_public_keys:
+            keys += s.splitlines()
+
+        return HttpResponse("\n".join(keys), content_type="text/plain")
+        # TODO(sean) figure out correct way to get rest framework to return plain text
+        # return Response("\n".join(keys), content_type="text/plain")
 
 
 class UpdateSSHPublicKeysView(LoginRequiredMixin, FormView):

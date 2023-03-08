@@ -593,6 +593,12 @@ class TestAuth(TestCase):
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, "https://portal.sagecontinuum.org")
 
+    # TODO(sean) fix /admin/ redirect
+    # def testAdminLoginRedirect(self):
+    #     r = self.client.get("/admin/")
+    #     self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+    #     self.assertEqual(r.url, "/login/")
+
     def testMissingUserInfo(self):
         r = self.client.get("/complete-login/")
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
@@ -637,6 +643,38 @@ class TestAuthSettings(TestCase):
         token = Token.objects.create(user=create_random_user())
         r = self.client.get(self.endpoint, HTTP_AUTHORIZATION=f"Sage {token.key}")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+
+class TestNodeAuthorizedKeysView(TestCase):
+
+    def setUp(self):
+        allowed = create_random_user()
+        allowed.ssh_public_keys = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDpsV/R93C5TfTO2kXdjOxwXNLbsowpztcUnkLH9T/4\n"
+        allowed.save()
+
+        member = create_random_user()
+        member.ssh_public_keys = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF8DWBuwUiNbw1OzPWQCmSQFvwVRdU29joY4YKkzvljV\n"
+        member.save()
+
+        not_allowed = create_random_user()
+        not_allowed.ssh_public_keys = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINjaz/l4due6Z+WzbV/YyjO8RVKuO7ThTa19QvcLfgif\n"
+        not_allowed.save()
+
+        project = Project.objects.create(name="DEV")
+
+        node = Node.objects.create(vsn="W123")
+
+        UserMembership.objects.create(user=allowed, project=project, can_develop=True)
+        UserMembership.objects.create(user=member, project=project, can_develop=False)
+        NodeMembership.objects.create(project=project, node=node, can_develop=True)
+
+    def testAnonymousNotAllowed(self):
+        r = self.client.get("/nodes/W123/authorized_keys")
+        text = r.content.decode()
+
+        self.assertCountEqual(text.splitlines(), [
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDpsV/R93C5TfTO2kXdjOxwXNLbsowpztcUnkLH9T/4",
+        ])
 
 
 class TestPortalCompatibility(TestCase):
