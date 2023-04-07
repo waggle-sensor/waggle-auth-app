@@ -25,6 +25,7 @@ class AbstractHardware(models.Model):
     manufacturer = models.CharField(max_length=255, default="", blank=True)
     datasheet = models.CharField(max_length=255, default="", blank=True)
     capabilities = models.ManyToManyField("Capability", blank=True)
+    description = models.TextField(blank=True)
 
     class Meta:
         abstract = True

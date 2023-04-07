@@ -75,6 +75,7 @@ def serialize_common_hardware(h):
         "manufacturer": h.manufacturer,
         "datasheet": h.datasheet,
         "capabilities": [cap.capability for cap in h.capabilities.all()],
+        "description": h.description,
     }
 
 
