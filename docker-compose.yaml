@@ -31,9 +31,9 @@ services:
       - "MYSQL_PASSWORD=waggle"
       - "MYSQL_DATABASE=waggle"
       # Globus oauth2 / oidc settings (optional - see readme)
-      - "OIDC_CLIENT_ID=${OIDC_CLIENT_ID}"
-      - "OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}"
-      - "OIDC_REDIRECT_PATH=${OIDC_REDIRECT_PATH}"
+      - "OIDC_CLIENT_ID"
+      - "OIDC_CLIENT_SECRET"
+      - "OIDC_REDIRECT_PATH"
     volumes:
       - ./:/app:ro
       - static-root:/var/www/static:rw
