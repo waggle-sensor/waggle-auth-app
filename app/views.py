@@ -1,6 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import login, get_user_model
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, Http404
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseRedirect,
+    HttpResponseBadRequest,
+    Http404,
+)
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -65,10 +71,12 @@ class TokenView(APIView):
 
     def get(self, request: Request, format=None) -> Response:
         token, _ = Token.objects.get_or_create(user=request.user)
-        return Response({
-            "user_uuid": str(request.user.id),
-            "token": token.key,
-        })
+        return Response(
+            {
+                "user_uuid": str(request.user.id),
+                "token": token.key,
+            }
+        )
 
     def delete(self, request: Request, format=None) -> Response:
         Token.objects.filter(user=request.user).delete()
@@ -89,13 +97,15 @@ class TokenInfoView(APIView):
 
         token = get_object_or_404(Token, key=token_key)
 
-        return Response({
-            "active": True,
-            "scope": "default",
-            "client_id": "some-client-id",
-            "username": token.user.username,
-            "exp": 0,
-        })
+        return Response(
+            {
+                "active": True,
+                "scope": "default",
+                "client_id": "some-client-id",
+                "username": token.user.username,
+                "exp": 0,
+            }
+        )
 
 
 class UserAccessView(APIView):
@@ -114,23 +124,27 @@ class UserAccessView(APIView):
         access_by_vsn = {}
 
         for access in ["develop", "schedule", "access_files"]:
-            vsns = user.project_set.filter(**{
-                f"usermembership__can_{access}": True,
-                f"nodemembership__can_{access}": True,
-            }).values_list("nodes__vsn", flat=True)
+            vsns = user.project_set.filter(
+                **{
+                    f"usermembership__can_{access}": True,
+                    f"nodemembership__can_{access}": True,
+                }
+            ).values_list("nodes__vsn", flat=True)
 
             for vsn in vsns:
                 if vsn not in access_by_vsn:
                     access_by_vsn[vsn] = set()
                 access_by_vsn[vsn].add(access)
 
-        data = [{"vsn": vsn, "access": sorted(access)} for vsn, access in sorted(access_by_vsn.items())]
+        data = [
+            {"vsn": vsn, "access": sorted(access)}
+            for vsn, access in sorted(access_by_vsn.items())
+        ]
 
         return Response(data)
 
 
 class NodeAuthorizedKeysView(APIView):
-
     permission_classes = [AllowAny]
 
     def get(self, request: Request, vsn: str) -> Response:
@@ -156,13 +170,11 @@ class NodeAuthorizedKeysView(APIView):
 
 class UpdateSSHPublicKeysView(LoginRequiredMixin, FormView):
     form_class = UpdateSSHPublicKeysForm
-    template_name="update-my-keys.html"
+    template_name = "update-my-keys.html"
     success_url = "/"
 
     def get_initial(self):
-        return {
-            "ssh_public_keys": self.request.user.ssh_public_keys
-        }
+        return {"ssh_public_keys": self.request.user.ssh_public_keys}
 
     def form_valid(self, form) -> HttpResponse:
         cleaned_data = form.cleaned_data
@@ -173,7 +185,6 @@ class UpdateSSHPublicKeysView(LoginRequiredMixin, FormView):
 
 
 class CompleteLoginView(FormView):
-
     form_class = CompleteLoginForm
     template_name = None
 
@@ -189,7 +200,9 @@ class CompleteLoginView(FormView):
         try:
             sub = user_info["sub"]
         except KeyError:
-            return HttpResponseBadRequest("missing oidc user info subject from session data")
+            return HttpResponseBadRequest(
+                "missing oidc user info subject from session data"
+            )
 
         try:
             user = User.objects.get(id=sub)
@@ -212,16 +225,21 @@ class CompleteLoginView(FormView):
         )
 
         # notify channel of new user
-        slack_message("new-user.slack", {
-            "user": user,
-        })
+        slack_message(
+            "new-user.slack",
+            {
+                "user": user,
+            },
+        )
 
         return self.login_and_redirect(user)
 
     def login_and_redirect(self, user):
         login(self.request, user)
 
-        response = redirect(self.request.session.get("oidc_auth_next", settings.LOGIN_REDIRECT_URL))
+        response = redirect(
+            self.request.session.get("oidc_auth_next", settings.LOGIN_REDIRECT_URL)
+        )
 
         token, _ = Token.objects.get_or_create(user=user)
 
@@ -235,7 +253,6 @@ class CompleteLoginView(FormView):
 
 
 class LogoutView(auth_views.LogoutView):
-
     success_url_allowed_hosts = settings.SUCCESS_URL_ALLOWED_HOSTS
 
     def dispatch(self, *args, **kwargs):

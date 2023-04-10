@@ -23,11 +23,12 @@ def get_redirect_uri(request):
 
 
 def get_auth_client():
-    return globus_sdk.ConfidentialAppAuthClient(settings.OIDC_CLIENT_ID, settings.OIDC_CLIENT_SECRET)
+    return globus_sdk.ConfidentialAppAuthClient(
+        settings.OIDC_CLIENT_ID, settings.OIDC_CLIENT_SECRET
+    )
 
 
 class LoginView(View):
-
     complete_login_url = None
 
     def get(self, request: HttpRequest) -> HttpResponse:
@@ -35,19 +36,22 @@ class LoginView(View):
         request.session["oidc_auth_next"] = next_url
 
         if request.user.is_authenticated:
-            logger.info("user %s attempted to login but was already logged in", request.user)
+            logger.info(
+                "user %s attempted to login but was already logged in", request.user
+            )
             return redirect(self.complete_login_url)
 
         state = token_urlsafe(32)
         request.session["oidc_auth_state"] = state
 
         client = get_auth_client()
-        client.oauth2_start_flow(get_redirect_uri(request), "openid profile email", state=state)
+        client.oauth2_start_flow(
+            get_redirect_uri(request), "openid profile email", state=state
+        )
         return redirect(client.oauth2_get_authorize_url())
 
 
 class RedirectView(View):
-
     complete_login_url = None
 
     def get(self, request: HttpRequest) -> HttpResponse:
@@ -55,7 +59,10 @@ class RedirectView(View):
             code = request.GET["code"]
             state = request.GET["state"]
         except KeyError as key:
-            return JsonResponse({"error": f"missing {key} param from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
+            return JsonResponse(
+                {"error": f"missing {key} param from authorization server"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
 
         try:
             state_token = request.session["oidc_auth_state"]
@@ -73,7 +80,10 @@ class RedirectView(View):
                 tokens = client.oauth2_exchange_code_for_tokens(code)
                 access_token = tokens["access_token"]
             except Exception:
-                return JsonResponse({"error": "failed to exchange code for access token"}, status=status.HTTP_502_BAD_GATEWAY)
+                return JsonResponse(
+                    {"error": "failed to exchange code for access token"},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
 
             # since we only use the access token to lookup identity info for login, ensure we revoke it immediately afterwards
             # this should change in the future since we probably want to use globus access tokens everywhere instead of native tokens
@@ -82,10 +92,16 @@ class RedirectView(View):
             try:
                 user_info = get_user_info(access_token)
             except Exception:
-                return JsonResponse({"error": "failed to get user info from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
+                return JsonResponse(
+                    {"error": "failed to get user info from authorization server"},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
 
             if "sub" not in user_info:
-                return JsonResponse({"error": "missing user info subject from authorization server"}, status=status.HTTP_502_BAD_GATEWAY)
+                return JsonResponse(
+                    {"error": "missing user info subject from authorization server"},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
 
             request.session["oidc_auth_user_info"] = user_info
 
@@ -93,7 +109,8 @@ class RedirectView(View):
 
 
 def get_user_info(access_token: str):
-    r = requests.get(settings.OAUTH2_USERINFO_ENDPOINT,
+    r = requests.get(
+        settings.OAUTH2_USERINFO_ENDPOINT,
         headers={
             "Accept": "application/json",
             "Authorization": f"Bearer {access_token}",

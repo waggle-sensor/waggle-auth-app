@@ -6,20 +6,20 @@ from .serializers import ManifestSerializer, SensorHardwareSerializer
 
 
 class NodeList(ListAPIView):
-    queryset = NodeData.objects.all().prefetch_related(
-        "compute_set__hardware__capabilities",
-
-        "nodesensor_set__hardware__capabilities",
-        "nodesensor_set__labels",
-
-        "compute_set__computesensor_set__scope",
-        "compute_set__computesensor_set__hardware__capabilities",
-        "compute_set__computesensor_set__labels",
-
-        "resource_set__hardware__capabilities",
-
-        "tags",
-    ).order_by("vsn")
+    queryset = (
+        NodeData.objects.all()
+        .prefetch_related(
+            "compute_set__hardware__capabilities",
+            "nodesensor_set__hardware__capabilities",
+            "nodesensor_set__labels",
+            "compute_set__computesensor_set__scope",
+            "compute_set__computesensor_set__hardware__capabilities",
+            "compute_set__computesensor_set__labels",
+            "resource_set__hardware__capabilities",
+            "tags",
+        )
+        .order_by("vsn")
+    )
     serializer_class = ManifestSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -27,16 +27,12 @@ class NodeList(ListAPIView):
 class NodeFilterList(RetrieveAPIView):
     queryset = NodeData.objects.all().prefetch_related(
         "compute_set__hardware__capabilities",
-
         "nodesensor_set__hardware__capabilities",
         "nodesensor_set__labels",
-
         "compute_set__computesensor_set__scope",
         "compute_set__computesensor_set__hardware__capabilities",
         "compute_set__computesensor_set__labels",
-
         "resource_set__hardware__capabilities",
-
         "tags",
     )
     serializer_class = ManifestSerializer

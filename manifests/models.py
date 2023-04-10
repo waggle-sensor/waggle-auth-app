@@ -5,13 +5,17 @@ class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
     name = models.CharField(max_length=30)
     tags = models.ManyToManyField("Tag", blank=True)
-    computes = models.ManyToManyField("ComputeHardware", through="Compute", related_name="computes")
-    resources = models.ManyToManyField("ResourceHardware", through="Resource", related_name="resources")
+    computes = models.ManyToManyField(
+        "ComputeHardware", through="Compute", related_name="computes"
+    )
+    resources = models.ManyToManyField(
+        "ResourceHardware", through="Resource", related_name="resources"
+    )
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
 
     def __str__(self):
-         return self.vsn
+        return self.vsn
 
     class Meta:
         verbose_name_plural = "Nodes"
@@ -45,7 +49,6 @@ class ComputeHardware(AbstractHardware):
 
 
 class ResourceHardware(AbstractHardware):
-
     def __str__(self):
         return self.hardware
 
@@ -54,7 +57,6 @@ class ResourceHardware(AbstractHardware):
 
 
 class SensorHardware(AbstractHardware):
-
     def __str__(self):
         return self.hardware
 
@@ -66,14 +68,13 @@ class Capability(models.Model):
     capability = models.CharField(max_length=30)
 
     def __str__(self):
-         return self.capability
+        return self.capability
 
     class Meta:
         verbose_name_plural = "Capabilities"
 
 
 class Compute(models.Model):
-
     ZONE_CHOICES = (
         ("core", "core"),
         ("agent", "agent"),

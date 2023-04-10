@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('manifests', '0002_alter_compute_zone'),
+        ("manifests", "0002_alter_compute_zone"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='computesensor',
-            name='serial_no',
-            field=models.CharField(blank=True, default='', max_length=30),
+            model_name="computesensor",
+            name="serial_no",
+            field=models.CharField(blank=True, default="", max_length=30),
         ),
         migrations.AddField(
-            model_name='computesensor',
-            name='uri',
-            field=models.CharField(blank=True, default='', max_length=256),
+            model_name="computesensor",
+            name="uri",
+            field=models.CharField(blank=True, default="", max_length=256),
         ),
         migrations.AddField(
-            model_name='nodesensor',
-            name='serial_no',
-            field=models.CharField(blank=True, default='', max_length=30),
+            model_name="nodesensor",
+            name="serial_no",
+            field=models.CharField(blank=True, default="", max_length=30),
         ),
         migrations.AddField(
-            model_name='nodesensor',
-            name='uri',
-            field=models.CharField(blank=True, default='', max_length=256),
+            model_name="nodesensor",
+            name="uri",
+            field=models.CharField(blank=True, default="", max_length=256),
         ),
     ]

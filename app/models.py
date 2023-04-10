@@ -12,10 +12,15 @@ ssh_public_key_re = re.compile("^ssh-(\S+) (\S+)")
 def validate_ssh_public_key_list(value: str):
     lines = value.splitlines()
     if len(lines) > 5:
-        raise ValidationError(f"You may only have up to five keys.", params={"value": value})
+        raise ValidationError(
+            f"You may only have up to five keys.", params={"value": value}
+        )
     for line in lines:
         if not ssh_public_key_re.match(line):
-            raise ValidationError(f"Enter a valid list of newline delimited SSH public keys.", params={"value": value})
+            raise ValidationError(
+                f"Enter a valid list of newline delimited SSH public keys.",
+                params={"value": value},
+            )
 
 
 class User(AbstractUser):
@@ -29,9 +34,14 @@ class User(AbstractUser):
     organization = models.CharField(blank=True, max_length=255)
     department = models.CharField(blank=True, max_length=255)
     bio = models.TextField(blank=True, max_length=2000)
-    ssh_public_keys = models.TextField("SSH public keys", blank=True,
-        validators=[validate_ssh_public_key_list])
-    is_approved = models.BooleanField("Approval status", default=False, help_text="Designates whether the user is approved to perform basic tasks such as submitting apps to ECR.")
+    ssh_public_keys = models.TextField(
+        "SSH public keys", blank=True, validators=[validate_ssh_public_key_list]
+    )
+    is_approved = models.BooleanField(
+        "Approval status",
+        default=False,
+        help_text="Designates whether the user is approved to perform basic tasks such as submitting apps to ECR.",
+    )
 
     def get_absolute_url(self):
         return reverse("app:user-detail", kwargs={"username": self.username})
@@ -64,24 +74,20 @@ class UserMembership(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     can_schedule = models.BooleanField(
-        "Schedule?",
-        default=False,
-        help_text="Designates whether user can schedule."
+        "Schedule?", default=False, help_text="Designates whether user can schedule."
     )
     can_develop = models.BooleanField(
         "Develop?",
         default=False,
-        help_text="Designates whether user has developer access."
+        help_text="Designates whether user has developer access.",
     )
     can_access_files = models.BooleanField(
-        "Files?",
-        default=False,
-        help_text="Designates whether user has file access."
+        "Files?", default=False, help_text="Designates whether user has file access."
     )
     allow_view = models.BooleanField(
         "View?",
         default=False,
-        help_text="Designates whether user has view access to project."
+        help_text="Designates whether user has view access to project.",
     )
 
     def __str__(self):
@@ -100,17 +106,15 @@ class NodeMembership(models.Model):
     can_schedule = models.BooleanField(
         "Schedule?",
         default=False,
-        help_text="Designates whether node allows scheduling."
+        help_text="Designates whether node allows scheduling.",
     )
     can_develop = models.BooleanField(
         "Develop?",
         default=False,
-        help_text="Designates whether node allows developer access."
+        help_text="Designates whether node allows developer access.",
     )
     can_access_files = models.BooleanField(
-        "Files?",
-        default=False,
-        help_text="Designates whether node allows file access."
+        "Files?", default=False, help_text="Designates whether node allows file access."
     )
 
     def __str__(self):

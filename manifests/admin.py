@@ -6,10 +6,12 @@ from .models import *
 
 
 # admin page actions
-@admin.action(description='Export as JSON')
+@admin.action(description="Export as JSON")
 def export_as_json(modeladmin, request, queryset):
     response = HttpResponse(content_type="application/json")
-    serializers.serialize("json", queryset, stream=response, use_natural_foreign_keys=True)
+    serializers.serialize(
+        "json", queryset, stream=response, use_natural_foreign_keys=True
+    )
     return response
 
 
@@ -17,26 +19,26 @@ def export_as_json(modeladmin, request, queryset):
 class ResourceInline(nested_admin.NestedStackedInline):
     model = Resource
     extra = 0
-    fk_name = 'node'
+    fk_name = "node"
 
 
 class ComputeSensorInline(nested_admin.NestedStackedInline):
     model = ComputeSensor
     extra = 0
-    fk_name = 'scope'
+    fk_name = "scope"
 
 
 class ComputeInline(nested_admin.NestedStackedInline):
     model = Compute
     extra = 0
-    fk_name = 'node'
+    fk_name = "node"
     inlines = [ComputeSensorInline]
 
 
 class NodeSensorInline(nested_admin.NestedStackedInline):
     model = NodeSensor
     extra = 0
-    fk_name = 'node'
+    fk_name = "node"
 
 
 @admin.register(NodeData)
@@ -44,7 +46,7 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
     actions = [export_as_json]
 
     # display in admin panel
-    list_display = ('vsn', 'name','gps_lat', 'gps_lon', 'get_tags', 'get_computes')
+    list_display = ("vsn", "name", "gps_lat", "gps_lon", "get_tags", "get_computes")
     search_fields = ("vsn", "name")
     ordering = ("vsn",)
 
@@ -53,24 +55,26 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
         ("Location", {"fields": ("gps_lat", "gps_lon")}),
     )
 
-    @admin.display(description='Tags')
+    @admin.display(description="Tags")
     def get_tags(self, obj):
         return ", ".join([t.tag for t in obj.tags.all()])
 
-    @admin.display(description='Computes')
+    @admin.display(description="Computes")
     def get_computes(self, obj):
         return ", ".join([c.hardware for c in obj.computes.all()])
 
-    inlines = [
-        ComputeInline,
-        NodeSensorInline,
-        ResourceInline
-    ]
+    inlines = [ComputeInline, NodeSensorInline, ResourceInline]
 
 
 admin.site.register(Label)
 admin.site.register(Tag)
-admin.site.register(ComputeHardware, list_display=["hardware", "hw_model", "manufacturer"])
-admin.site.register(SensorHardware, list_display=["hardware", "hw_model", "manufacturer"])
-admin.site.register(ResourceHardware, list_display=["hardware", "hw_model", "manufacturer"])
+admin.site.register(
+    ComputeHardware, list_display=["hardware", "hw_model", "manufacturer"]
+)
+admin.site.register(
+    SensorHardware, list_display=["hardware", "hw_model", "manufacturer"]
+)
+admin.site.register(
+    ResourceHardware, list_display=["hardware", "hw_model", "manufacturer"]
+)
 admin.site.register(Capability)

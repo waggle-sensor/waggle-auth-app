@@ -36,7 +36,16 @@ class ManifestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NodeData
-        fields = ('vsn', 'name', 'gps_lat', 'gps_lon', 'tags', 'computes', 'sensors', 'resources', )
+        fields = (
+            "vsn",
+            "name",
+            "gps_lat",
+            "gps_lon",
+            "tags",
+            "computes",
+            "sensors",
+            "resources",
+        )
 
 
 def serialize_compute(c):
@@ -55,7 +64,7 @@ def serialize_common_sensor(s):
         "labels": [l.label for l in s.labels.all()],
         "serial_no": s.serial_no,
         "uri": s.uri,
-        "hardware": serialize_common_hardware(s.hardware)
+        "hardware": serialize_common_hardware(s.hardware),
     }
 
 

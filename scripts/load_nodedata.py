@@ -69,15 +69,34 @@ def add_wsn(row, node):
     # 6. psu: psu-B0BD for nodes before (but not include) W040, psu-BBBD for nodes after W040
     # 7. wifi: for nodes after W040
     if row["flag"] == "group1":
-        Resource.objects.create(node=node, hardware=ResourceHardware.objects.get(hardware="psu-b0bd"), name="psu")
+        Resource.objects.create(
+            node=node,
+            hardware=ResourceHardware.objects.get(hardware="psu-b0bd"),
+            name="psu",
+        )
     else:
-        Resource.objects.create(node=node, hardware=ResourceHardware.objects.get(hardware="psu-bbbd"), name="psu")
-        Resource.objects.create(node=node, hardware=ResourceHardware.objects.get(hardware="wifi"), name="wifi")
-        Resource.objects.create(node=node, hardware=ResourceHardware.objects.get(hardware="usbhub-2port"), name="usbhub-2")
+        Resource.objects.create(
+            node=node,
+            hardware=ResourceHardware.objects.get(hardware="psu-bbbd"),
+            name="psu",
+        )
+        Resource.objects.create(
+            node=node,
+            hardware=ResourceHardware.objects.get(hardware="wifi"),
+            name="wifi",
+        )
+        Resource.objects.create(
+            node=node,
+            hardware=ResourceHardware.objects.get(hardware="usbhub-2port"),
+            name="usbhub-2",
+        )
 
     if row["modem"] == "yes":
-        Resource.objects.create(node=node, hardware=ResourceHardware.objects.get(hardware="modem"), name="modem")
-
+        Resource.objects.create(
+            node=node,
+            hardware=ResourceHardware.objects.get(hardware="modem"),
+            name="modem",
+        )
 
     modem_sim_hardware_mapping = {
         "NU-Sage": "modem-sim-nu",
@@ -92,7 +111,11 @@ def add_wsn(row, node):
         pass
     elif len(matches) == 1:
         hardware = modem_sim_hardware_mapping[list(matches)[0]]
-        Resource.objects.create(node=node, hardware=ResourceHardware.objects.get(hardware=hardware), name="modem-sim")
+        Resource.objects.create(
+            node=node,
+            hardware=ResourceHardware.objects.get(hardware=hardware),
+            name="modem-sim",
+        )
     else:
         raise RuntimeError(f"ambiguous modem for {row}")
 
@@ -101,7 +124,11 @@ def add_wsn(row, node):
         if row[camera] == "none":
             continue
         hardware = infer_camera_hardware_from_name(row[camera].strip())
-        NodeSensor.objects.create(node=node, hardware=SensorHardware.objects.get(hardware=hardware), name=camera)
+        NodeSensor.objects.create(
+            node=node,
+            hardware=SensorHardware.objects.get(hardware=hardware),
+            name=camera,
+        )
 
     # nx_agent
     if row["nx_agent"] == "yes":
@@ -116,11 +143,24 @@ def add_wsn(row, node):
     if row["shield"] == "yes":
         rpi_hardware = "rpi-4gb" if row["flag"] == "group1" else "rpi-8gb"
         rpi = ComputeHardware.objects.get(hardware=rpi_hardware)
-        compute = Compute.objects.create(node=node, hardware=rpi, zone="shield", name="rpi")
-        ComputeSensor.objects.create(scope=compute, hardware=SensorHardware.objects.get(hardware="bme680"), name="bme680")
-        ComputeSensor.objects.create(scope=compute, hardware=SensorHardware.objects.get(hardware="microphone"), name="microphone")
-        ComputeSensor.objects.create(scope=compute, hardware=SensorHardware.objects.get(hardware="rainguage"), name="raingauge")
-
+        compute = Compute.objects.create(
+            node=node, hardware=rpi, zone="shield", name="rpi"
+        )
+        ComputeSensor.objects.create(
+            scope=compute,
+            hardware=SensorHardware.objects.get(hardware="bme680"),
+            name="bme680",
+        )
+        ComputeSensor.objects.create(
+            scope=compute,
+            hardware=SensorHardware.objects.get(hardware="microphone"),
+            name="microphone",
+        )
+        ComputeSensor.objects.create(
+            scope=compute,
+            hardware=SensorHardware.objects.get(hardware="rainguage"),
+            name="raingauge",
+        )
 
 
 def add_blade(row, node):
@@ -133,7 +173,7 @@ def add_blade(row, node):
     )
 
 
-with open('scripts/data/nodedata.csv') as file:
+with open("scripts/data/nodedata.csv") as file:
     reader = csv.DictReader(file)
 
     # skip the data type row
@@ -150,7 +190,7 @@ with open('scripts/data/nodedata.csv') as file:
 
         for k in row.keys():
             row[k] = row[k].strip()
-        
+
         for k in ["vsn", "node_id"]:
             row[k] = row[k].upper()
 

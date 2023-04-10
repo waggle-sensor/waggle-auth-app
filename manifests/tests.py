@@ -4,7 +4,9 @@ from .models import *
 
 class ManifestInitialTest(TestCase):
     def setUp(self):
-        self.Node = NodeData.objects.create(vsn="A", name="A_name", gps_lat=50.00, gps_lon=50.00)
+        self.Node = NodeData.objects.create(
+            vsn="A", name="A_name", gps_lat=50.00, gps_lon=50.00
+        )
 
         tag1 = Tag.objects.create(tag="t1")
         self.Node.tags.set([tag1.pk])
@@ -26,45 +28,50 @@ class ManifestInitialTest(TestCase):
 
 
 class ManifestTest(TestCase):
-
     def test_get_manifest(self):
-        self.createComputeHardware([
-            {"hardware": "nx1", "hw_model": "Nvidia Jetson Xavier"},
-            {"hardware": "rpi4", "hw_model": "Raspberry PI 4"},
-        ])
+        self.createComputeHardware(
+            [
+                {"hardware": "nx1", "hw_model": "Nvidia Jetson Xavier"},
+                {"hardware": "rpi4", "hw_model": "Raspberry PI 4"},
+            ]
+        )
 
-        self.createSensorHardware([
-            {"hardware": "bme280", "hw_model": "BME280"},
-            {"hardware": "bme680", "hw_model": "BME680"},
-        ])
+        self.createSensorHardware(
+            [
+                {"hardware": "bme280", "hw_model": "BME280"},
+                {"hardware": "bme680", "hw_model": "BME680"},
+            ]
+        )
 
-        self.createManifests([
-            {
-                "vsn": "W123",
-                "gps_lat": 41.881832,
-                "gps_lon": -87.623177,
-                "computes": [
-                    {
-                        "name": "nxcore",
-                        "hardware": "nx1",
-                        "sensors": ["bme280"],
-                        "zone": "core",
-                    },
-                    {
-                        "name": "nxagent",
-                        "hardware": "nx1",
-                        "sensors": [],
-                        "zone": "agent",
-                    },
-                    {
-                        "name": "rpi",
-                        "hardware": "rpi4",
-                        "sensors": ["bme680"],
-                        "zone": "shield",
-                    },
-                ]
-            },
-        ])
+        self.createManifests(
+            [
+                {
+                    "vsn": "W123",
+                    "gps_lat": 41.881832,
+                    "gps_lon": -87.623177,
+                    "computes": [
+                        {
+                            "name": "nxcore",
+                            "hardware": "nx1",
+                            "sensors": ["bme280"],
+                            "zone": "core",
+                        },
+                        {
+                            "name": "nxagent",
+                            "hardware": "nx1",
+                            "sensors": [],
+                            "zone": "agent",
+                        },
+                        {
+                            "name": "rpi",
+                            "hardware": "rpi4",
+                            "sensors": ["bme680"],
+                            "zone": "shield",
+                        },
+                    ],
+                },
+            ]
+        )
 
         # TODO(sean) move to own check
         r = self.client.get("/manifests/")
@@ -76,48 +83,55 @@ class ManifestTest(TestCase):
         self.assertEqual(r.status_code, 200)
         manifest = r.json()
 
-        self.assertManifestContainsSubset(manifest, {
-            "vsn": "W123",
-            "gps_lat": 41.881832,
-            "gps_lon": -87.623177,
-            "computes": [
-                {
-                    "name": "nxcore",
-                    "hardware": {
-                        "hardware": "nx1",
-                        "hw_model": "Nvidia Jetson Xavier",
-                    }
-                },
-                {
-                    "name": "nxagent",
-                    "hardware": {
-                        "hardware": "nx1",
-                        "hw_model": "Nvidia Jetson Xavier",
-                    }
-                },
-                {
-                    "name": "rpi",
-                    "hardware": {
-                        "hardware": "rpi4",
-                        "hw_model": "Raspberry PI 4",
-                    }
-                },
-            ],
-        })
+        self.assertManifestContainsSubset(
+            manifest,
+            {
+                "vsn": "W123",
+                "gps_lat": 41.881832,
+                "gps_lon": -87.623177,
+                "computes": [
+                    {
+                        "name": "nxcore",
+                        "hardware": {
+                            "hardware": "nx1",
+                            "hw_model": "Nvidia Jetson Xavier",
+                        },
+                    },
+                    {
+                        "name": "nxagent",
+                        "hardware": {
+                            "hardware": "nx1",
+                            "hw_model": "Nvidia Jetson Xavier",
+                        },
+                    },
+                    {
+                        "name": "rpi",
+                        "hardware": {
+                            "hardware": "rpi4",
+                            "hw_model": "Raspberry PI 4",
+                        },
+                    },
+                ],
+            },
+        )
 
     def createComputeHardware(self, hardware):
         """
         Helper function which populates compute hardware test data.
         """
         for item in hardware:
-            ComputeHardware.objects.create(hardware=item["hardware"], hw_model=item["hw_model"])
+            ComputeHardware.objects.create(
+                hardware=item["hardware"], hw_model=item["hw_model"]
+            )
 
     def createSensorHardware(self, hardware):
         """
         Helper function which populates sensor hardware test data.
         """
         for item in hardware:
-            SensorHardware.objects.create(hardware=item["hardware"], hw_model=item["hw_model"])
+            SensorHardware.objects.create(
+                hardware=item["hardware"], hw_model=item["hw_model"]
+            )
 
     def createManifests(self, manifests):
         """
@@ -169,7 +183,6 @@ class ManifestTest(TestCase):
 
 
 class SensorHardwareViewsTest(TestCase):
-
     def setUp(self):
         SensorHardware.objects.create(hardware="gps", hw_model="A GPS")
         SensorHardware.objects.create(hardware="raingauge", hw_model="RG-15")
@@ -178,13 +191,18 @@ class SensorHardwareViewsTest(TestCase):
         r = self.client.get("/sensors/")
         self.assertEqual(r.status_code, 200)
         items = r.json()
-        self.assertCountEqual([item["hardware"] for item in items], ["gps", "raingauge"])
+        self.assertCountEqual(
+            [item["hardware"] for item in items], ["gps", "raingauge"]
+        )
 
     def test_detail_view(self):
         r = self.client.get("/sensors/gps/")
         self.assertEqual(r.status_code, 200)
         item = r.json()
-        self.assertDictContainsSubset({
-            "hardware": "gps",
-            "hw_model": "A GPS",
-        }, item)
+        self.assertDictContainsSubset(
+            {
+                "hardware": "gps",
+                "hw_model": "A GPS",
+            },
+            item,
+        )

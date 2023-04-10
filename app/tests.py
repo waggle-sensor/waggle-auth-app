@@ -154,7 +154,10 @@ class TestTokenInfoView(TestCase):
         token = Token.objects.create(user=user)
 
         # define helper funcs
-        def post_json(data): return self.client.post("/token_info/", data, content_type="application/json")
+        def post_json(data):
+            return self.client.post(
+                "/token_info/", data, content_type="application/json"
+            )
 
         # endpoint should deny unauthorized request
         r = post_json({"token": token.key})
@@ -166,13 +169,16 @@ class TestTokenInfoView(TestCase):
         # should show token info
         r = post_json({"token": token.key})
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictEqual({
-            "active": True,
-            "scope": "default",
-            "client_id": "some-client-id",
-            "username": user.username,
-            "exp": 0,
-        }, r.json())
+        self.assertDictEqual(
+            {
+                "active": True,
+                "scope": "default",
+                "client_id": "some-client-id",
+                "username": user.username,
+                "exp": 0,
+            },
+            r.json(),
+        )
 
         # should show 404 for nonexistant token
         r = post_json({"token": "notarealtoken"})
@@ -189,7 +195,6 @@ class TestTokenInfoView(TestCase):
 
 
 class TestUserListView(TestCase):
-
     def setUp(self):
         self.admin = create_random_admin_user()
         self.users = [create_random_user() for _ in range(3)] + [self.admin]
@@ -213,7 +218,6 @@ class TestUserListView(TestCase):
 
 
 class TestUserDetailView(TestCase):
-
     def setUp(self):
         self.user = create_random_user()
         self.url = f"/users/{self.user.username}"
@@ -245,7 +249,6 @@ class TestUserDetailView(TestCase):
 
 
 class TestUserSelfDetailView(TestCase):
-
     def testGetAsAnon(self):
         r = self.client.get("/users/~self")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -255,13 +258,16 @@ class TestUserSelfDetailView(TestCase):
         self.client.force_login(user)
         r = self.client.get("/users/~self")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset({
-            "username": user.username,
-            "name": user.name,
-            "is_staff": user.is_staff,
-            "is_superuser": user.is_superuser,
-            "is_approved": user.is_approved,
-        }, r.json())
+        self.assertDictContainsSubset(
+            {
+                "username": user.username,
+                "name": user.name,
+                "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
+                "is_approved": user.is_approved,
+            },
+            r.json(),
+        )
 
 
 class TestUserProfileView(TestCase):
@@ -321,29 +327,36 @@ class TestUserProfileView(TestCase):
 
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual({
-            "username": self.user.username,
-            "organization": user.organization,
-            "department": user.department,
-            "bio": user.bio,
-            "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK0LT3jNyfUtkJwxiv/7YfPU4PIOsQzeCVKlLCAfwlg3",
-        }, r.json())
+        self.assertEqual(
+            {
+                "username": self.user.username,
+                "organization": user.organization,
+                "department": user.department,
+                "bio": user.bio,
+                "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK0LT3jNyfUtkJwxiv/7YfPU4PIOsQzeCVKlLCAfwlg3",
+            },
+            r.json(),
+        )
 
 
 class TestAccessView(TestCase):
-
     def setUp(self):
         profile_membership = [
             ("ada", "sage", {"can_develop": True}),
             ("ada", "dawn", {"can_develop": True, "can_schedule": True}),
-
             ("jed", "sage", {"can_schedule": True, "can_develop": True}),
-
             ("tom", "sage", {"can_develop": True, "can_schedule": True}),
-            ("tom", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
-
+            (
+                "tom",
+                "dawn",
+                {"can_develop": True, "can_schedule": True, "can_access_files": True},
+            ),
             ("notapproved", "sage", {"can_develop": True, "can_schedule": True}),
-            ("notapproved", "dawn", {"can_develop": True, "can_schedule": True, "can_access_files": True}),
+            (
+                "notapproved",
+                "dawn",
+                {"can_develop": True, "can_schedule": True, "can_access_files": True},
+            ),
         ]
 
         node_membership = [
@@ -351,9 +364,12 @@ class TestAccessView(TestCase):
             ("sage", "W001", {"can_schedule": True}),
             ("sage", "W002", {"can_develop": True}),
             ("sage", "W003", {"can_schedule": True, "can_develop": True}),
-
             ("dawn", "W000", {}),
-            ("dawn", "W001", {"can_schedule": True, "can_develop": True, "can_access_files": True}),
+            (
+                "dawn",
+                "W001",
+                {"can_schedule": True, "can_develop": True, "can_access_files": True},
+            ),
         ]
 
         # create all user memberships
@@ -410,27 +426,36 @@ class TestAccessView(TestCase):
         # check responses
         r = self.client.get("/users/ada/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual(r.json(), [
-            {"vsn": "W001", "access": ["develop", "schedule"]},
-            {"vsn": "W002", "access": ["develop"]},
-            {"vsn": "W003", "access": ["develop"]},
-        ])
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W001", "access": ["develop", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop"]},
+            ],
+        )
 
         r = self.client.get("/users/jed/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual(r.json(), [
-            {"vsn": "W001", "access": ["schedule"]},
-            {"vsn": "W002", "access": ["develop"]},
-            {"vsn": "W003", "access": ["develop", "schedule"]},
-        ])
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W001", "access": ["schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
+            ],
+        )
 
         r = self.client.get("/users/tom/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual(r.json(), [
-            {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
-            {"vsn": "W002", "access": ["develop"]},
-            {"vsn": "W003", "access": ["develop", "schedule"]},
-        ])
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
+            ],
+        )
 
         r = self.client.get("/users/notapproved/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
@@ -440,27 +465,36 @@ class TestAccessView(TestCase):
         # regression test to make sure /profiles/ is backwards compatible with schedule auth requirements. (deprecate this!)
         r = self.client.get("/profiles/ada/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual(r.json(), [
-            {"vsn": "W001", "access": ["develop", "schedule"]},
-            {"vsn": "W002", "access": ["develop"]},
-            {"vsn": "W003", "access": ["develop"]},
-        ])
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W001", "access": ["develop", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop"]},
+            ],
+        )
 
         r = self.client.get("/profiles/jed/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual(r.json(), [
-            {"vsn": "W001", "access": ["schedule"]},
-            {"vsn": "W002", "access": ["develop"]},
-            {"vsn": "W003", "access": ["develop", "schedule"]},
-        ])
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W001", "access": ["schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
+            ],
+        )
 
         r = self.client.get("/profiles/tom/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual(r.json(), [
-            {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
-            {"vsn": "W002", "access": ["develop"]},
-            {"vsn": "W003", "access": ["develop", "schedule"]},
-        ])
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
+            ],
+        )
 
         r = self.client.get("/profiles/notapproved/access")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
@@ -499,19 +533,25 @@ class TestAuth(TestCase):
         self.assertEqual(r.status_code, status.HTTP_200_OK)
 
         # should not login if form data is invalid
-        r = self.client.post("/complete-login/", {
-            "username": "someuser",
-            "confirm_username": "nomatch",
-        })
+        r = self.client.post(
+            "/complete-login/",
+            {
+                "username": "someuser",
+                "confirm_username": "nomatch",
+            },
+        )
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertFalse(r.wsgi_request.user.is_authenticated)
 
         # upon successfully logging, we should be logged in as our user with
         # fields initially populated from the oidc data
-        r = self.client.post("/complete-login/", {
-            "username": "someuser",
-            "confirm_username": "someuser",
-        })
+        r = self.client.post(
+            "/complete-login/",
+            {
+                "username": "someuser",
+                "confirm_username": "someuser",
+            },
+        )
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, settings.LOGIN_REDIRECT_URL)
         user = r.wsgi_request.user
@@ -580,10 +620,13 @@ class TestAuth(TestCase):
         session.save()
 
         # manually redirect to complete login, do valid login and then check redirect
-        r = self.client.post("/complete-login/", {
-            "username": "someuser",
-            "confirm_username": "someuser",
-        })
+        r = self.client.post(
+            "/complete-login/",
+            {
+                "username": "someuser",
+                "confirm_username": "someuser",
+            },
+        )
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, "https://app-portal.org/")
         self.assertTrue(r.wsgi_request.user.is_authenticated)
@@ -629,6 +672,7 @@ class TestAuthSettings(TestCase):
 
     def testBasicAuthEnabled(self):
         import base64
+
         user = User.objects.create_user(username="user", password="averygoodpassword")
         auth = base64.b64encode(b"user:averygoodpassword").decode()
         r = self.client.get(self.endpoint, HTTP_AUTHORIZATION=f"Basic {auth}")
@@ -646,7 +690,6 @@ class TestAuthSettings(TestCase):
 
 
 class TestNodeAuthorizedKeysView(TestCase):
-
     def setUp(self):
         allowed = create_random_user()
         allowed.ssh_public_keys = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDpsV/R93C5TfTO2kXdjOxwXNLbsowpztcUnkLH9T/4\n"
@@ -672,9 +715,12 @@ class TestNodeAuthorizedKeysView(TestCase):
         r = self.client.get("/nodes/W123/authorized_keys")
         text = r.content.decode()
 
-        self.assertCountEqual(text.splitlines(), [
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDpsV/R93C5TfTO2kXdjOxwXNLbsowpztcUnkLH9T/4",
-        ])
+        self.assertCountEqual(
+            text.splitlines(),
+            [
+                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIDpsV/R93C5TfTO2kXdjOxwXNLbsowpztcUnkLH9T/4",
+            ],
+        )
 
 
 class TestPortalCompatibility(TestCase):
@@ -702,6 +748,7 @@ class TestPortalCompatibility(TestCase):
 def create_random_user(**kwargs) -> User:
     from random import choice, randint
     from string import ascii_letters, printable
+
     return User.objects.create_user(
         username="".join(choice(ascii_letters) for _ in range(randint(43, 64))),
         name="".join(choice(printable) for _ in range(randint(4, 24))),
