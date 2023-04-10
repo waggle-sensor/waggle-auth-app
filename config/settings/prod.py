@@ -11,8 +11,6 @@ CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", bool, True)
 
 DATABASES = {"default": env.db()}
 
-STATIC_ROOT = "/var/www/static"
-
 # Important! We have made these configuration choices assuming that our app will be behind
 # a reverse proxy like an nginx ingress controller.
 #
