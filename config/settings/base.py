@@ -29,6 +29,7 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -37,6 +38,12 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -96,13 +103,9 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-# url to use for static files
+# Static files
+STATIC_ROOT = env("STATIC_ROOT", Path, BASE_DIR / "staticfiles")
 STATIC_URL = "static/"
-
-# project directories to search for static files
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Default primary key field type
@@ -130,3 +133,41 @@ OIDC_REDIRECT_PATH = env("OIDC_REDIRECT_PATH", str, "globus-auth-redirect/")
 SAGE_COOKIE_DOMAIN = env("SAGE_COOKIE_DOMAIN", None, None)
 
 SUCCESS_URL_ALLOWED_HOSTS = env("SUCCESS_URL_ALLOWED_HOSTS", list, [])
+
+# Slack messaging configuration
+# TODO(sean) see if we need to put any kind of timeout on this in case slack is unresponsive
+SLACK_TOKEN = env("SLACK_TOKEN", str, "")
+
+if SLACK_TOKEN == "":
+    SLACK_TOKEN = "xoxb-debug"
+    SLACK_BACKEND = "django_slack.backends.DisabledBackend"
+else:
+    SLACK_CHANNEL = env("SLACK_CHANNEL")
+    SLACK_USERNAME = env("SLACK_USERNAME")
+
+# Logging configuration
+LOGGING = {
+    "version": 1,
+    "handlers": {
+        "slack_admins": {
+            "level": "ERROR",
+            "filters": [],
+            "class": "django_slack.log.SlackExceptionHandler",
+        },
+    },
+    "loggers": {
+        "django": {
+            "level": "ERROR",
+            "handlers": ["slack_admins"],
+        },
+    },
+}
+
+# Security settings
+ALLOWED_HOSTS = env("ALLOWED_HOSTS", list, [])
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS", list, [])
+CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS", list, [])
+CORS_ALLOWED_ORIGIN_REGEXES = env("CORS_ALLOWED_ORIGIN_REGEXES", list, [])
+CORS_ALLOW_ALL_ORIGINS = env("CORS_ALLOW_ALL_ORIGINS", bool, False)
+SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", bool, True)
+CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", bool, True)

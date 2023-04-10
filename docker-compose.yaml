@@ -1,12 +1,4 @@
 services:
-  nginx:
-    image: nginx
-    restart: always
-    ports:
-      - 127.0.0.1:8000:80
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - static-root:/var/www/static:ro
   mysql:
     image: mysql
     restart: always
@@ -17,7 +9,9 @@ services:
     image: django
     build: .
     restart: always
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:80 --reload
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:80 --reload --workers=3
+    ports:
+      - 127.0.0.1:8000:80
     environment:
       - "DJANGO_SETTINGS_MODULE=config.settings.prod"
       # Security settings. NEVER USE THESE SETTINGS IN PRODUCTION! THEY ARE FOR LOCAL TESTING ONLY!
@@ -29,11 +23,10 @@ services:
       - "SUCCESS_URL_ALLOWED_HOSTS=portal.sagecontinuum.org"
       # Database settings. We use the root user to allow django to setup / teardown test databases.
       - "DATABASE_URL=mysql://root:waggle@mysql/waggle"
+      # Static file settings.
+      - "STATIC_ROOT=/app/staticfiles"
       # Globus oauth2 / oidc settings (optional - see readme)
       - "OIDC_CLIENT_ID"
       - "OIDC_CLIENT_SECRET"
     volumes:
       - ./:/app:ro
-      - static-root:/var/www/static:rw
-volumes:
-  static-root:
