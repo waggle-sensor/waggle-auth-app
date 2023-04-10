@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
@@ -631,6 +631,7 @@ class TestAuth(TestCase):
         self.assertEqual(r.url, "https://app-portal.org/")
         self.assertTrue(r.wsgi_request.user.is_authenticated)
 
+    @override_settings(SUCCESS_URL_ALLOWED_HOSTS=["portal.sagecontinuum.org"])
     def testLogoutNext(self):
         r = self.client.get("/logout/?next=https://portal.sagecontinuum.org")
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
@@ -735,6 +736,7 @@ class TestPortalCompatibility(TestCase):
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
         self.assertEqual(r.url, "/login/?next=https://my.site.org/")
 
+    @override_settings(SUCCESS_URL_ALLOWED_HOSTS=["portal.sagecontinuum.org"])
     def testLogoutCallback(self):
         # TODO migrate portal to using /logout/?next=...
         r = self.client.get("/portal-logout/?callback=https://portal.sagecontinuum.org")

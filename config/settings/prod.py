@@ -1,27 +1,17 @@
 from .base import *
-import os
 
-DEBUG = False
+DEBUG = env("DEBUG", bool, False)
+SECRET_KEY = env("SECRET_KEY")
+ALLOWED_HOSTS = env("ALLOWED_HOSTS", list, [])
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS", list, [])
+CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS", list, [])
+CORS_ALLOWED_ORIGIN_REGEXES = env("CORS_ALLOWED_ORIGIN_REGEXES", list, [])
+SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", bool, True)
+CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", bool, True)
 
-SECRET_KEY = os.environ["SECRET_KEY"]
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split()
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split()
-SESSION_COOKIE_SECURE = True
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "HOST": os.environ["MYSQL_HOST"],
-        "USER": os.environ["MYSQL_USER"],
-        "PASSWORD": os.environ["MYSQL_PASSWORD"],
-        "NAME": os.environ["MYSQL_DATABASE"],
-    }
-}
+DATABASES = {"default": env.db()}
 
 STATIC_ROOT = "/var/www/static"
-
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split()
-CORS_ALLOWED_ORIGIN_REGEXES = os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").split()
 
 # Important! We have made these configuration choices assuming that our app will be behind
 # a reverse proxy like an nginx ingress controller.
@@ -32,13 +22,14 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Slack messaging configuration
 # TODO(sean) see if we need to put any kind of timeout on this in case slack is unresponsive
-if "SLACK_TOKEN" in os.environ:
-    SLACK_TOKEN = os.environ.get("SLACK_TOKEN")
-    SLACK_CHANNEL = os.environ.get("SLACK_CHANNEL")
-    SLACK_USERNAME = os.environ.get("SLACK_USERNAME")
-else:
+SLACK_TOKEN = env("SLACK_TOKEN", str, "")
+
+if SLACK_TOKEN == "":
     SLACK_TOKEN = "xoxb-debug"
     SLACK_BACKEND = "django_slack.backends.DisabledBackend"
+else:
+    SLACK_CHANNEL = env("SLACK_CHANNEL")
+    SLACK_USERNAME = env("SLACK_USERNAME")
 
 # Logging configuration
 LOGGING = {
