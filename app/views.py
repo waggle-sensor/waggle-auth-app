@@ -253,7 +253,8 @@ class CompleteLoginView(FormView):
 
 
 class LogoutView(auth_views.LogoutView):
-    success_url_allowed_hosts = settings.SUCCESS_URL_ALLOWED_HOSTS
+    def get_success_url_allowed_hosts(self):
+        return settings.SUCCESS_URL_ALLOWED_HOSTS
 
     def dispatch(self, *args, **kwargs):
         response = super().dispatch(*args, **kwargs)
