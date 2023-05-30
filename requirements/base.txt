@@ -1,5 +1,5 @@
-django==4.2.*
-djangorestframework==3.14.*
+django==4.2.1
+djangorestframework==3.14.0
 requests==2.28.*
 django-prometheus==2.2.*
 globus-sdk==3.13.*
@@ -7,4 +7,4 @@ django-cors-headers==3.13.*
 django-slack==5.18.*
 django-nested-admin==4.0.*
 django-environ==0.10.*
-whitenoise==6.4.*
+whitenoise==6.4.0
