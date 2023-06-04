@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import RegexValidator
 
 
 class NodeData(models.Model):
@@ -38,14 +39,29 @@ class Modem(models.Model):
     node = models.OneToOneField(
         NodeData, blank=True, null=True, on_delete=models.SET_NULL
     )
-    imei = models.CharField("IMEI", max_length=64, unique=True)
-    imsi = models.CharField("IMSI", max_length=64)
-    iccid = models.CharField("ICCID", max_length=64)
+    imei = models.CharField(
+        "IMEI",
+        max_length=64,
+        unique=True,
+        validators=[
+            RegexValidator("^[0-9]{15}$"),
+        ],
+    )
+    imsi = models.CharField(
+        "IMSI",
+        max_length=64,
+        validators=[RegexValidator("^[0-9]{15}$")],
+    )
+    iccid = models.CharField(
+        "ICCID",
+        max_length=64,
+        validators=[RegexValidator("^[0-9]{20}$")],
+    )
     model = models.CharField(
-        "Model", max_length=32, choices=ModemModels, default="mtcm2"
+        "Model", max_length=64, choices=ModemModels, default="mtcm2"
     )
     sim_type = models.CharField(
-        "SIM Type", max_length=32, choices=ModemSIMs, default="other"
+        "SIM Type", max_length=64, choices=ModemSIMs, default="other"
     )
 
     def __str__(self):
