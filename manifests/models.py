@@ -21,6 +21,37 @@ class NodeData(models.Model):
         verbose_name_plural = "Nodes"
 
 
+ModemModels = [
+    ("mtcm2", "Multi-Tech MTCM2-L4G1-B03-KIT"),
+    ("other", "Other"),
+]
+
+ModemSIMs = [
+    ("anl-nu", "Northwestern"),
+    ("anl-dawn", "ANL-DAWN"),
+    ("anl-vto", "ANL-VTO"),
+    ("other", "Other"),
+]
+
+
+class Modem(models.Model):
+    node = models.OneToOneField(
+        NodeData, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    imei = models.CharField("IMEI", max_length=64, unique=True)
+    imsi = models.CharField("IMSI", max_length=64)
+    iccid = models.CharField("ICCID", max_length=64)
+    model = models.CharField(
+        "Model", max_length=32, choices=ModemModels, default="mtcm2"
+    )
+    sim_type = models.CharField(
+        "SIM Type", max_length=32, choices=ModemSIMs, default="other"
+    )
+
+    def __str__(self):
+        return self.imei
+
+
 class AbstractHardware(models.Model):
     hardware = models.CharField(max_length=100)
     hw_model = models.CharField(max_length=30, blank=True)

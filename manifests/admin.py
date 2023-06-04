@@ -41,12 +41,25 @@ class NodeSensorInline(nested_admin.NestedStackedInline):
     fk_name = "node"
 
 
+class ModemInline(nested_admin.NestedStackedInline):
+    model = Modem
+    fk_name = "node"
+    extra = 0
+
+
 @admin.register(NodeData)
 class NodeMetaData(nested_admin.NestedModelAdmin):
     actions = [export_as_json]
 
     # display in admin panel
-    list_display = ("vsn", "name", "gps_lat", "gps_lon", "get_tags", "get_computes")
+    list_display = (
+        "vsn",
+        "name",
+        "gps_lat",
+        "gps_lon",
+        "get_tags",
+        "get_computes",
+    )
     search_fields = ("vsn", "name")
     ordering = ("vsn",)
 
@@ -63,9 +76,14 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
     def get_computes(self, obj):
         return ", ".join([c.hardware for c in obj.computes.all()])
 
-    inlines = [ComputeInline, NodeSensorInline, ResourceInline]
+    inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
 
 
+admin.site.register(
+    Modem,
+    list_display=["imei", "imsi", "iccid", "node", "sim_type", "model"],
+    search_fields=["imei", "imsi", "iccid", "node__vsn", "sim_type"],
+)
 admin.site.register(Label)
 admin.site.register(Tag)
 admin.site.register(
