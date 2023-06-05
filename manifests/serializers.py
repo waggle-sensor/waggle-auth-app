@@ -8,7 +8,14 @@ class SensorHardwareSerializer(serializers.ModelSerializer):
         exclude = ["id"]
 
 
+class ModemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Modem
+        fields = ["model", "sim_type", "carrier"]
+
+
 class ManifestSerializer(serializers.ModelSerializer):
+    modem = ModemSerializer()
     computes = serializers.SerializerMethodField("get_computes")
     resources = serializers.SerializerMethodField("get_resources")
     tags = serializers.StringRelatedField(many=True)
@@ -41,6 +48,7 @@ class ManifestSerializer(serializers.ModelSerializer):
             "name",
             "gps_lat",
             "gps_lon",
+            "modem",
             "tags",
             "computes",
             "sensors",

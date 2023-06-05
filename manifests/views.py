@@ -9,6 +9,7 @@ class NodeList(ListAPIView):
     queryset = (
         NodeData.objects.all()
         .prefetch_related(
+            "modem",
             "compute_set__hardware__capabilities",
             "nodesensor_set__hardware__capabilities",
             "nodesensor_set__labels",
@@ -26,6 +27,7 @@ class NodeList(ListAPIView):
 
 class NodeFilterList(RetrieveAPIView):
     queryset = NodeData.objects.all().prefetch_related(
+        "modem",
         "compute_set__hardware__capabilities",
         "nodesensor_set__hardware__capabilities",
         "nodesensor_set__labels",

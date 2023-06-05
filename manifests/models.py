@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import RegexValidator
 
 
 class NodeData(models.Model):
@@ -19,6 +20,63 @@ class NodeData(models.Model):
 
     class Meta:
         verbose_name_plural = "Nodes"
+
+
+ModemModels = [
+    ("mtcm2", "Multi-Tech MTCM2-L4G1-B03-KIT"),
+    ("other", "Other"),
+]
+
+ModemSIMs = [
+    ("anl-nu", "Northwestern"),
+    ("anl-dawn", "ANL-DAWN"),
+    ("anl-vto", "ANL-VTO"),
+    ("other", "Other"),
+]
+
+
+class Modem(models.Model):
+    node = models.OneToOneField(
+        NodeData, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    imei = models.CharField(
+        "IMEI",
+        max_length=64,
+        unique=True,
+        validators=[
+            RegexValidator("^[0-9]{15}$"),
+        ],
+    )
+    imsi = models.CharField(
+        "IMSI",
+        max_length=64,
+        blank=True,
+        default="",
+        validators=[RegexValidator("^[0-9]{15}$")],
+    )
+    iccid = models.CharField(
+        "ICCID",
+        max_length=64,
+        blank=True,
+        default="",
+        validators=[RegexValidator("^[0-9]{20}$")],
+    )
+    carrier = models.CharField(
+        "Carrier Code",
+        blank=True,
+        default="",
+        max_length=64,
+        validators=[RegexValidator("^[0-9]{,20}$")],
+    )
+    model = models.CharField(
+        "Model", max_length=64, choices=ModemModels, default="mtcm2"
+    )
+    sim_type = models.CharField(
+        "SIM Type", max_length=64, choices=ModemSIMs, default="other"
+    )
+
+    def __str__(self):
+        return self.imei
 
 
 class AbstractHardware(models.Model):
