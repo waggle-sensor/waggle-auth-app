@@ -79,12 +79,14 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
 
 
-admin.site.register(
-    Modem,
-    list_display=["imei", "imsi", "iccid", "node", "sim_type", "model"],
-    list_filter=["sim_type", "model", "carrier"],
-    search_fields=["imei", "imsi", "iccid", "node__vsn", "sim_type"],
-)
+@admin.register(Modem)
+class ModemAdmin(admin.ModelAdmin):
+    list_display = ["imei", "imsi", "iccid", "node", "sim_type", "model"]
+    list_filter = ["sim_type", "model", "carrier"]
+    search_fields = ["imei", "imsi", "iccid", "node__vsn", "sim_type"]
+    autocomplete_fields = ["node"]
+
+
 admin.site.register(Label)
 admin.site.register(Tag)
 admin.site.register(

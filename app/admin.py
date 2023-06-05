@@ -7,12 +7,14 @@ class UserMembershipInline(admin.TabularInline):
     ordering = ("user__username",)
     model = UserMembership
     extra = 0
+    autocomplete_fields = ["user", "project"]
 
 
 class NodeMembershipInline(admin.TabularInline):
     ordering = ("node__vsn",)
     model = NodeMembership
     extra = 0
+    autocomplete_fields = ["node", "project"]
 
 
 @admin.register(User)
