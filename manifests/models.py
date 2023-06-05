@@ -50,13 +50,18 @@ class Modem(models.Model):
     imsi = models.CharField(
         "IMSI",
         max_length=64,
+        blank=True,
+        default="",
         validators=[RegexValidator("^[0-9]{15}$")],
     )
     iccid = models.CharField(
         "ICCID",
         max_length=64,
+        blank=True,
+        default="",
         validators=[RegexValidator("^[0-9]{20}$")],
     )
+    carrier = models.CharField("Carrier Code", blank=True, default="", max_length=64)
     model = models.CharField(
         "Model", max_length=64, choices=ModemModels, default="mtcm2"
     )

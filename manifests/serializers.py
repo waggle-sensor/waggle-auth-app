@@ -11,7 +11,7 @@ class SensorHardwareSerializer(serializers.ModelSerializer):
 class ModemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Modem
-        fields = ["model", "sim_type"]
+        fields = ["model", "sim_type", "carrier"]
 
 
 class ManifestSerializer(serializers.ModelSerializer):
