@@ -103,9 +103,10 @@ class ModemAdmin(admin.ModelAdmin):
 
     def get_urls(self) -> List[URLPattern]:
         urls = super().get_urls()
-        return [
-            path("upload-csv/", self.upload_csv),
-        ] + urls
+        extra_urls = [
+            path("upload-csv/", self.admin_site.admin_view(self.upload_csv)),
+        ]
+        return extra_urls + urls
 
     def changelist_view(self, request, extra_context=None):
         extra = extra_context or {}
