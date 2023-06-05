@@ -7,6 +7,7 @@ from django.shortcuts import redirect
 from django import forms
 from django.contrib import messages
 from django.urls.resolvers import URLPattern
+from django.core.exceptions import ValidationError
 import csv
 from io import StringIO
 import nested_admin
@@ -130,7 +131,15 @@ class ModemAdmin(admin.ModelAdmin):
         reader = csv.DictReader(StringIO(decoded_file))
 
         for r in reader:
-            modem, _ = Modem.objects.get_or_create(imei=r["imei"])
+            imei = r["imei"]
+
+            # get existing modem or start a new model
+            try:
+                modem = Modem.objects.get(imei=imei)
+            except Modem.DoesNotExist:
+                modem = Modem(imei=imei)
+
+            # populate fields as available
             if "vsn" in r:
                 try:
                     modem.node = NodeData.objects.get(vsn=r["vsn"].upper())
@@ -138,7 +147,7 @@ class ModemAdmin(admin.ModelAdmin):
                     self.message_user(
                         request,
                         f"Node {r['vsn']} does not exist.",
-                        level=messages.WARNING,
+                        level=messages.ERROR,
                     )
             if "imsi" in r:
                 modem.imsi = r["imsi"]
@@ -146,7 +155,17 @@ class ModemAdmin(admin.ModelAdmin):
                 modem.iccid = r["iccid"]
             if "carrier" in r:
                 modem.carrier = r["carrier"]
-            modem.save()
+
+            # validate and save model
+            try:
+                modem.full_clean()
+                modem.save()
+            except ValidationError as exc:
+                self.message_user(
+                    request,
+                    f"Invalid data for modem {imei}: {exc}",
+                    level=messages.ERROR,
+                )
 
         return redirect("..")
 
