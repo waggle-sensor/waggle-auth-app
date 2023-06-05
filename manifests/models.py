@@ -61,7 +61,13 @@ class Modem(models.Model):
         default="",
         validators=[RegexValidator("^[0-9]{20}$")],
     )
-    carrier = models.CharField("Carrier Code", blank=True, default="", max_length=64)
+    carrier = models.CharField(
+        "Carrier Code",
+        blank=True,
+        default="",
+        max_length=64,
+        validators=[RegexValidator("^[0-9]{,20}$")],
+    )
     model = models.CharField(
         "Model", max_length=64, choices=ModemModels, default="mtcm2"
     )
