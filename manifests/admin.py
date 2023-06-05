@@ -82,6 +82,7 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
 admin.site.register(
     Modem,
     list_display=["imei", "imsi", "iccid", "node", "sim_type", "model"],
+    list_filter=["sim_type", "model", "carrier"],
     search_fields=["imei", "imsi", "iccid", "node__vsn", "sim_type"],
 )
 admin.site.register(Label)
