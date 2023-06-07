@@ -1,0 +1,22 @@
+{% extends 'admin/change_list.html' %}
+{% block content %}
+{{ block.super }}
+
+<h2>Bulk CSV Upload</h2>
+
+<p>Supported CSV columns:</p>
+
+<ul>
+    <li><tt>imei</tt> (<strong>required</strong>)</li>
+    <li><tt>imsi</tt> (<em>optional</em>)</li>
+    <li><tt>iccid</tt> (<em>optional</em>)</li>
+    <li><tt>carrier</tt> (<em>optional</em>)</li>
+    <li><tt>vsn</tt> (<em>optional</em>)</li>
+</ul>
+
+<form action="upload-csv/" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ csv_upload_form }}
+    <div><input type="submit" value="Upload"></div>
+</form>
+{% endblock %}
