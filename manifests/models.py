@@ -164,6 +164,9 @@ class AbstractSensor(models.Model):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return self.name
+
 
 class NodeSensor(AbstractSensor):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
@@ -178,9 +181,6 @@ class Resource(models.Model):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
     hardware = models.ForeignKey(ResourceHardware, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=30, blank=True)
-
-    def __str__(self):
-        return self.name
 
 
 class Tag(models.Model):

@@ -171,15 +171,30 @@ class ModemAdmin(admin.ModelAdmin):
         return redirect("..")
 
 
+@admin.register(Compute)
+class ComputeAdmin(admin.ModelAdmin):
+    list_display = ["name", "node", "hardware", "serial_no", "zone"]
+    list_filter = ["hardware", "zone"]
+    search_fields = ["name", "node__vsn", "hardware__hardware", "serial_no", "zone"]
+    autocomplete_fields = ["node", "hardware"]
+
+
+admin.site.register(
+    ComputeHardware,
+    list_display=["hardware", "hw_model", "manufacturer"],
+    search_fields=["name"],
+)
+admin.site.register(
+    SensorHardware,
+    list_display=["hardware", "hw_model", "manufacturer"],
+    search_fields=["name"],
+)
+admin.site.register(
+    ResourceHardware,
+    list_display=["hardware", "hw_model", "manufacturer"],
+    search_fields=["name"],
+)
+
 admin.site.register(Label)
 admin.site.register(Tag)
-admin.site.register(
-    ComputeHardware, list_display=["hardware", "hw_model", "manufacturer"]
-)
-admin.site.register(
-    SensorHardware, list_display=["hardware", "hw_model", "manufacturer"]
-)
-admin.site.register(
-    ResourceHardware, list_display=["hardware", "hw_model", "manufacturer"]
-)
 admin.site.register(Capability)
