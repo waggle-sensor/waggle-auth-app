@@ -57,7 +57,7 @@ class ModemInline(nested_admin.NestedStackedInline):
 
 
 @admin.register(NodeData)
-class NodeMetaData(nested_admin.NestedModelAdmin):
+class NodeAdmin(nested_admin.NestedModelAdmin):
     actions = [export_as_json]
 
     # display in admin panel
@@ -69,7 +69,7 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
         "get_tags",
         "get_computes",
     )
-    search_fields = ("vsn", "name")
+    search_fields = ("vsn", "name", "compute__name")
     ordering = ("vsn",)
 
     fieldsets = (
@@ -79,11 +79,11 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
 
     @admin.display(description="Tags")
     def get_tags(self, obj):
-        return ", ".join([t.tag for t in obj.tags.all()])
+        return ",".join(obj.tags.values_list("tag", flat=True).order_by("tag"))
 
     @admin.display(description="Computes")
     def get_computes(self, obj):
-        return ", ".join([c.hardware for c in obj.computes.all()])
+        return ",".join(obj.compute_set.values_list("name", flat=True).order_by("name"))
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
 
@@ -171,15 +171,51 @@ class ModemAdmin(admin.ModelAdmin):
         return redirect("..")
 
 
+@admin.register(Compute)
+class ComputeAdmin(nested_admin.NestedModelAdmin):
+    list_display = [
+        "name",
+        "node",
+        "hardware",
+        "serial_no",
+        "zone",
+        "get_sensors",
+    ]
+    list_filter = ["hardware", "zone"]
+    search_fields = [
+        "name",
+        "node__vsn",
+        "hardware__hardware",
+        "serial_no",
+        "zone",
+        "computesensor__name",
+    ]
+    autocomplete_fields = ["node", "hardware"]
+    inlines = [ComputeSensorInline]
+
+    @admin.display(description="Sensors")
+    def get_sensors(self, obj):
+        return ",".join(
+            obj.computesensor_set.values_list("name", flat=True).order_by("name")
+        )
+
+
+admin.site.register(
+    ComputeHardware,
+    list_display=["hardware", "hw_model", "manufacturer"],
+    search_fields=["name"],
+)
+admin.site.register(
+    SensorHardware,
+    list_display=["hardware", "hw_model", "manufacturer"],
+    search_fields=["name"],
+)
+admin.site.register(
+    ResourceHardware,
+    list_display=["hardware", "hw_model", "manufacturer"],
+    search_fields=["name"],
+)
+
 admin.site.register(Label)
 admin.site.register(Tag)
-admin.site.register(
-    ComputeHardware, list_display=["hardware", "hw_model", "manufacturer"]
-)
-admin.site.register(
-    SensorHardware, list_display=["hardware", "hw_model", "manufacturer"]
-)
-admin.site.register(
-    ResourceHardware, list_display=["hardware", "hw_model", "manufacturer"]
-)
 admin.site.register(Capability)
