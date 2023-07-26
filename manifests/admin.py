@@ -69,7 +69,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         "get_tags",
         "get_computes",
     )
-    search_fields = ("vsn", "name")
+    search_fields = ("vsn", "name", "compute__name")
     ordering = ("vsn",)
 
     fieldsets = (
@@ -182,7 +182,14 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
         "get_sensors",
     ]
     list_filter = ["hardware", "zone"]
-    search_fields = ["name", "node__vsn", "hardware__hardware", "serial_no", "zone"]
+    search_fields = [
+        "name",
+        "node__vsn",
+        "hardware__hardware",
+        "serial_no",
+        "zone",
+        "computesensor__name",
+    ]
     autocomplete_fields = ["node", "hardware"]
     inlines = [ComputeSensorInline]
 
