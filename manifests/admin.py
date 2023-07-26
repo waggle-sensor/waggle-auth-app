@@ -57,7 +57,7 @@ class ModemInline(nested_admin.NestedStackedInline):
 
 
 @admin.register(NodeData)
-class NodeMetaData(nested_admin.NestedModelAdmin):
+class NodeAdmin(nested_admin.NestedModelAdmin):
     actions = [export_as_json]
 
     # display in admin panel
@@ -79,11 +79,11 @@ class NodeMetaData(nested_admin.NestedModelAdmin):
 
     @admin.display(description="Tags")
     def get_tags(self, obj):
-        return ", ".join([t.tag for t in obj.tags.all()])
+        return ",".join(obj.tags.values_list("tag", flat=True).order_by("tag"))
 
     @admin.display(description="Computes")
     def get_computes(self, obj):
-        return ", ".join([c.hardware for c in obj.computes.all()])
+        return ",".join(obj.compute_set.values_list("name", flat=True).order_by("name"))
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
 
@@ -172,11 +172,25 @@ class ModemAdmin(admin.ModelAdmin):
 
 
 @admin.register(Compute)
-class ComputeAdmin(admin.ModelAdmin):
-    list_display = ["name", "node", "hardware", "serial_no", "zone"]
+class ComputeAdmin(nested_admin.NestedModelAdmin):
+    list_display = [
+        "name",
+        "node",
+        "hardware",
+        "serial_no",
+        "zone",
+        "get_sensors",
+    ]
     list_filter = ["hardware", "zone"]
     search_fields = ["name", "node__vsn", "hardware__hardware", "serial_no", "zone"]
     autocomplete_fields = ["node", "hardware"]
+    inlines = [ComputeSensorInline]
+
+    @admin.display(description="Sensors")
+    def get_sensors(self, obj):
+        return ",".join(
+            obj.computesensor_set.values_list("name", flat=True).order_by("name")
+        )
 
 
 admin.site.register(
