@@ -46,6 +46,8 @@ class ManifestSerializer(serializers.ModelSerializer):
         fields = (
             "vsn",
             "name",
+            "phase",
+            "address",
             "gps_lat",
             "gps_lon",
             "modem",

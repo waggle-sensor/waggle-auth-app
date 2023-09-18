@@ -64,17 +64,19 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
     list_display = (
         "vsn",
         "name",
+        "phase",
+        "address",
         "gps_lat",
         "gps_lon",
-        "get_tags",
         "get_computes",
     )
-    search_fields = ("vsn", "name", "compute__name")
+    list_filter = ("phase",)
+    search_fields = ("vsn", "name", "phase", "notes", "address", "compute__name")
     ordering = ("vsn",)
 
     fieldsets = (
-        (None, {"fields": ("vsn", "name", "tags")}),
-        ("Location", {"fields": ("gps_lat", "gps_lon")}),
+        (None, {"fields": ("vsn", "name", "phase", "notes", "tags")}),
+        ("Location", {"fields": ("address", "gps_lat", "gps_lon")}),
     )
 
     @admin.display(description="Tags")

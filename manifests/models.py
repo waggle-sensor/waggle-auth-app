@@ -2,10 +2,22 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 
+class NodePhase(models.TextChoices):
+    DEPLOYED = "Deployed"
+    MAINTENANCE = "Maintenance"
+    STANDBY = "Standby"
+    AWAITING_DEPLOYMENT = "Awaiting Deployment"
+    SHIPMENT_PENDING = "Shipment Pending"
+
+
 class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
-    name = models.CharField(max_length=30)
+    name = models.CharField("Node ID", max_length=30)
+    phase = models.CharField(
+        "Phase", max_length=30, null=True, choices=NodePhase.choices
+    )
     tags = models.ManyToManyField("Tag", blank=True)
+    notes = models.TextField(blank=True)
     computes = models.ManyToManyField(
         "ComputeHardware", through="Compute", related_name="computes"
     )
@@ -14,6 +26,7 @@ class NodeData(models.Model):
     )
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
+    address = models.TextField("Address", blank=True)
 
     def __str__(self):
         return self.vsn
