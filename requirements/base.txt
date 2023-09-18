@@ -1,4 +1,4 @@
-django==4.2.4
+django==4.2.5
 djangorestframework==3.14.0
 requests==2.31.0
 django-prometheus==2.3.1
