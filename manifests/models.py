@@ -12,9 +12,9 @@ class NodePhase(models.TextChoices):
 
 class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
-    name = models.CharField("Node ID", max_length=30)
+    name = models.CharField("Node ID", max_length=30, blank=True)
     phase = models.CharField(
-        "Phase", max_length=30, null=True, choices=NodePhase.choices
+        "Phase", max_length=30, null=True, choices=NodePhase.choices, blank=True
     )
     tags = models.ManyToManyField("Tag", blank=True)
     notes = models.TextField(blank=True)
