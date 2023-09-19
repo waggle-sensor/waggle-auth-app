@@ -27,7 +27,7 @@ class NodeData(models.Model):
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
     address = models.TextField("Address", blank=True)
-    registered_at = models.DateTimeField(null=True)
+    registered_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.vsn

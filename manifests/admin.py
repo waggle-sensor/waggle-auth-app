@@ -76,7 +76,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
     ordering = ("vsn",)
 
     fieldsets = (
-        (None, {"fields": ("vsn", "name", "phase", "notes", "tags")}),
+        (None, {"fields": ("vsn", "name", "phase", "notes", "tags", "registered_at")}),
         ("Location", {"fields": ("address", "gps_lat", "gps_lon")}),
     )
 
