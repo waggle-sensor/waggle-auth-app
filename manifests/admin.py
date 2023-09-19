@@ -69,8 +69,9 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         "gps_lat",
         "gps_lon",
         "get_computes",
+        "registered_at",
     )
-    list_filter = ("phase",)
+    list_filter = ("phase", "registered_at")
     search_fields = ("vsn", "name", "phase", "notes", "address", "compute__name")
     ordering = ("vsn",)
 
