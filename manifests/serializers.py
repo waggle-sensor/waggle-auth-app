@@ -106,3 +106,27 @@ def serialize_compute_hardware(h):
         "gpu_ram": h.gpu_ram,
         "shared_ram": h.shared_ram,
     }
+
+
+class NodeBuildSerializer(serializers.ModelSerializer):
+    top_camera = serializers.CharField(source="top_camera.hardware", allow_null=True)
+    bottom_camera = serializers.CharField(
+        source="bottom_camera.hardware", allow_null=True
+    )
+    left_camera = serializers.CharField(source="left_camera.hardware", allow_null=True)
+    right_camera = serializers.CharField(
+        source="right_camera.hardware", allow_null=True
+    )
+
+    class Meta:
+        model = NodeBuild
+        fields = [
+            "vsn",
+            "top_camera",
+            "bottom_camera",
+            "left_camera",
+            "right_camera",
+            "shield",
+            "modem",
+            "modem_sim_type",
+        ]

@@ -235,8 +235,8 @@ class NodeBuild(models.Model):
         "Modem",
         default=False,
     )
-    sim_type = models.CharField(
-        "SIM Type",
+    modem_sim_type = models.CharField(
+        "Modem SIM Type",
         max_length=64,
         blank=True,
         null=True,
@@ -275,7 +275,7 @@ class NodeBuild(models.Model):
     def clean(self):
         super().clean()
 
-        if self.modem is False and self.sim_type is not None:
+        if self.modem is False and self.modem_sim_type is not None:
             raise ValidationError(
                 {
                     "modem": "Modem must be set to True if SIM Type is specified.",

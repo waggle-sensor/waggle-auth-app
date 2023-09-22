@@ -80,6 +80,10 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         ("Location", {"fields": ("address", "gps_lat", "gps_lon")}),
     )
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.prefetch_related("modem", "tags", "computes")
+
     @admin.display(description="Tags")
     def get_tags(self, obj):
         return ",".join(obj.tags.values_list("tag", flat=True).order_by("tag"))
@@ -208,11 +212,22 @@ admin.site.register(
     list_display=["hardware", "hw_model", "manufacturer"],
     search_fields=["name"],
 )
-admin.site.register(
-    SensorHardware,
-    list_display=["hardware", "hw_model", "manufacturer"],
-    search_fields=["name"],
-)
+
+
+@admin.register(SensorHardware)
+class SensorHardwareAdmin(admin.ModelAdmin):
+    list_display = ["hardware", "hw_model", "manufacturer", "is_camera"]
+    search_fields = ["name"]
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.prefetch_related("capabilities")
+
+    @admin.display(description="Camera?", boolean=True)
+    def is_camera(self, obj):
+        return obj.capabilities.filter(capability="camera").exists()
+
+
 admin.site.register(
     ResourceHardware,
     list_display=["hardware", "hw_model", "manufacturer"],
@@ -228,24 +243,24 @@ admin.site.register(Capability)
 class NodeBuildAdmin(admin.ModelAdmin):
     list_display = [
         "vsn",
-        "shield",
-        "modem",
-        "sim_type",
         "top_camera",
         "bottom_camera",
         "left_camera",
         "right_camera",
+        "shield",
+        "modem",
+        "modem_sim_type",
     ]
 
     list_filter = [
         "shield",
         "modem",
-        "sim_type",
+        "modem_sim_type",
     ]
 
     search_fields = [
         "vsn",
-        "sim_type",
+        "modem_sim_type",
         "top_camera__hardware",
         "bottom_camera__hardware",
         "left_camera__hardware",
