@@ -222,3 +222,44 @@ admin.site.register(
 admin.site.register(Label)
 admin.site.register(Tag)
 admin.site.register(Capability)
+
+
+@admin.register(NodeBuild)
+class NodeBuildAdmin(admin.ModelAdmin):
+    list_display = [
+        "vsn",
+        "shield",
+        "modem",
+        "sim_type",
+        "top_camera",
+        "bottom_camera",
+        "left_camera",
+        "right_camera",
+    ]
+
+    list_filter = [
+        "shield",
+        "modem",
+        "sim_type",
+    ]
+
+    search_fields = [
+        "vsn",
+        "sim_type",
+        "top_camera__hardware",
+        "bottom_camera__hardware",
+        "left_camera__hardware",
+        "right_camera__hardware",
+    ]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in [
+            "top_camera",
+            "bottom_camera",
+            "left_camera",
+            "right_camera",
+        ]:
+            kwargs["queryset"] = SensorHardware.objects.filter(
+                capabilities__capability="camera",
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)

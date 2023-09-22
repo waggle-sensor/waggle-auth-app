@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 
 class NodePhase(models.TextChoices):
@@ -215,3 +216,69 @@ class Label(models.Model):
 
     def natural_key(self):
         return self.label
+
+
+class NodeBuild(models.Model):
+    class Meta:
+        verbose_name_plural = "Node Builds"
+
+    vsn = models.CharField(
+        "VSN",
+        max_length=10,
+        unique=True,
+    )
+    shield = models.BooleanField(
+        "Shield",
+        default=False,
+    )
+    modem = models.BooleanField(
+        "Modem",
+        default=False,
+    )
+    sim_type = models.CharField(
+        "SIM Type",
+        max_length=64,
+        blank=True,
+        null=True,
+        choices=ModemSIMs,
+        default=None,
+    )
+    top_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    bottom_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    left_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    right_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
+    def clean(self):
+        super().clean()
+
+        if self.modem is False and self.sim_type is not None:
+            raise ValidationError(
+                {
+                    "modem": "Modem must be set to True if SIM Type is specified.",
+                    "sim_type": "SIM Type should be empty if Modem is False.",
+                }
+            )
