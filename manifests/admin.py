@@ -247,12 +247,14 @@ class NodeBuildAdmin(admin.ModelAdmin):
         "bottom_camera",
         "left_camera",
         "right_camera",
+        "agent",
         "shield",
         "modem",
         "modem_sim_type",
     ]
 
     list_filter = [
+        "agent",
         "shield",
         "modem",
         "modem_sim_type",

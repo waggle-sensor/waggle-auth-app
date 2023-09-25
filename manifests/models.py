@@ -227,6 +227,10 @@ class NodeBuild(models.Model):
         max_length=10,
         unique=True,
     )
+    agent = models.BooleanField(
+        "Agent",
+        default=False,
+    )
     shield = models.BooleanField(
         "Shield",
         default=False,
