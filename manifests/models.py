@@ -11,6 +11,11 @@ class NodePhase(models.TextChoices):
     SHIPMENT_PENDING = "Shipment Pending"
 
 
+class NodeType(models.TextChoices):
+    BLADE = "Blade", "Blade"
+    WSN = "WSN", "WSN"
+
+
 class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
     name = models.CharField("Node ID", max_length=30, blank=True)
@@ -226,6 +231,12 @@ class NodeBuild(models.Model):
         "VSN",
         max_length=10,
         unique=True,
+    )
+    type = models.CharField(
+        "Type",
+        max_length=10,
+        choices=NodeType.choices,
+        default=NodeType.WSN,
     )
     agent = models.BooleanField(
         "Agent",

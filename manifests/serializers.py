@@ -122,6 +122,7 @@ class NodeBuildSerializer(serializers.ModelSerializer):
         model = NodeBuild
         fields = [
             "vsn",
+            "type",
             "top_camera",
             "bottom_camera",
             "left_camera",

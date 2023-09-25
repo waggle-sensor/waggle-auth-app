@@ -243,6 +243,7 @@ admin.site.register(Capability)
 class NodeBuildAdmin(admin.ModelAdmin):
     list_display = [
         "vsn",
+        "type",
         "top_camera",
         "bottom_camera",
         "left_camera",
@@ -254,6 +255,7 @@ class NodeBuildAdmin(admin.ModelAdmin):
     ]
 
     list_filter = [
+        "type",
         "agent",
         "shield",
         "modem",
@@ -262,6 +264,7 @@ class NodeBuildAdmin(admin.ModelAdmin):
 
     search_fields = [
         "vsn",
+        "type",
         "modem_sim_type",
         "top_camera__hardware",
         "bottom_camera__hardware",
