@@ -210,8 +210,9 @@ class SensorHardwareViewsTest(TestCase):
 
 class NodeBuildsTest(TestCase):
     def test_list(self):
+        project = NodeBuildProject.objects.create(name="Test")
         NodeBuild.objects.create(vsn="W001", shield=True, modem=False)
-        NodeBuild.objects.create(vsn="W002", agent=True)
+        NodeBuild.objects.create(vsn="W002", agent=True, project=project)
 
         r = self.client.get("/node-builds/")
         self.assertEqual(r.status_code, 200)
@@ -220,6 +221,7 @@ class NodeBuildsTest(TestCase):
         self.assertDictContainsSubset(
             {
                 "vsn": "W001",
+                "project": None,
                 "top_camera": None,
                 "bottom_camera": None,
                 "left_camera": None,
@@ -235,6 +237,7 @@ class NodeBuildsTest(TestCase):
         self.assertDictContainsSubset(
             {
                 "vsn": "W002",
+                "project": "Test",
                 "top_camera": None,
                 "bottom_camera": None,
                 "left_camera": None,

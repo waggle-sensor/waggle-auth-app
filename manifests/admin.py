@@ -291,12 +291,15 @@ admin.site.register(Label)
 admin.site.register(Tag)
 admin.site.register(Capability)
 
+admin.site.register(NodeBuildProject)
+
 
 @admin.register(NodeBuild)
 class NodeBuildAdmin(admin.ModelAdmin):
     list_display = [
         "vsn",
         "type",
+        "project",
         "top_camera",
         "bottom_camera",
         "left_camera",
@@ -309,6 +312,7 @@ class NodeBuildAdmin(admin.ModelAdmin):
 
     list_filter = [
         "type",
+        "project",
         "agent",
         "shield",
         "modem",
@@ -318,6 +322,7 @@ class NodeBuildAdmin(admin.ModelAdmin):
     search_fields = [
         "vsn",
         "type",
+        "project__name",
         "modem_sim_type",
         "top_camera__hardware",
         "bottom_camera__hardware",

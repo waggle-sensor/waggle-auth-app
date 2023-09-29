@@ -124,6 +124,7 @@ class ComputeSerializer(serializers.ModelSerializer):
 
 
 class NodeBuildSerializer(serializers.ModelSerializer):
+    project = serializers.CharField(source="project.name", allow_null=True)
     top_camera = serializers.CharField(source="top_camera.hardware", allow_null=True)
     bottom_camera = serializers.CharField(
         source="bottom_camera.hardware", allow_null=True
@@ -138,6 +139,7 @@ class NodeBuildSerializer(serializers.ModelSerializer):
         fields = [
             "vsn",
             "type",
+            "project",
             "top_camera",
             "bottom_camera",
             "left_camera",

@@ -223,6 +223,16 @@ class Label(models.Model):
         return self.label
 
 
+class NodeBuildProject(models.Model):
+    class Meta:
+        verbose_name_plural = "Node Build Projects"
+
+    name = models.CharField("Name", max_length=64)
+
+    def __str__(self):
+        return self.name
+
+
 class NodeBuild(models.Model):
     class Meta:
         verbose_name_plural = "Node Builds"
@@ -237,6 +247,12 @@ class NodeBuild(models.Model):
         max_length=10,
         choices=NodeType.choices,
         default=NodeType.WSN,
+    )
+    project = models.ForeignKey(
+        NodeBuildProject,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
     )
     agent = models.BooleanField(
         "Agent",
