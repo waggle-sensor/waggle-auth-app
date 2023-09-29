@@ -108,6 +108,21 @@ def serialize_compute_hardware(h):
     }
 
 
+class ComputeSerializer(serializers.ModelSerializer):
+    node = serializers.CharField(source="node.vsn")
+    hardware = serializers.CharField(source="hardware.hardware")
+
+    class Meta:
+        model = Compute
+        fields = [
+            "node",
+            "hardware",
+            "name",
+            "serial_no",
+            "zone",
+        ]
+
+
 class NodeBuildSerializer(serializers.ModelSerializer):
     top_camera = serializers.CharField(source="top_camera.hardware", allow_null=True)
     bottom_camera = serializers.CharField(

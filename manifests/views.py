@@ -1,5 +1,4 @@
 from django.contrib.auth.models import *
-from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from .models import *
@@ -7,6 +6,7 @@ from .serializers import (
     ManifestSerializer,
     SensorHardwareSerializer,
     NodeBuildSerializer,
+    ComputeSerializer,
 )
 
 
@@ -28,6 +28,12 @@ class ManifestViewSet(ReadOnlyModelViewSet):
     )
     serializer_class = ManifestSerializer
     lookup_field = "vsn"
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+class ComputeViewSet(ReadOnlyModelViewSet):
+    queryset = Compute.objects.all().order_by("node__vsn")
+    serializer_class = ComputeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 

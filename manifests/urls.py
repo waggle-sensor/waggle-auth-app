@@ -1,13 +1,19 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ManifestViewSet, SensorHardwareViewSet, NodeBuildViewSet
+from .views import (
+    ManifestViewSet,
+    SensorHardwareViewSet,
+    NodeBuildViewSet,
+    ComputeViewSet,
+)
 
 app_name = "manifests"
 
 router = DefaultRouter()
-router.register("manifests", ManifestViewSet)
-router.register("sensors", SensorHardwareViewSet)
-router.register("node-builds", NodeBuildViewSet)
+router.register(r"manifests", ManifestViewSet)
+router.register(r"computes", ComputeViewSet)
+router.register(r"sensors", SensorHardwareViewSet)
+router.register(r"node-builds", NodeBuildViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
