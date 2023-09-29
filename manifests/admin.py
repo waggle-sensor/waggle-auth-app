@@ -178,6 +178,58 @@ class ModemAdmin(admin.ModelAdmin):
         return redirect("..")
 
 
+@admin.action(description="Add default devices using zone")
+def add_default_devices_using_zone(modeladmin, request, queryset):
+    nxcore_hw = [
+        ComputeHardware.objects.get(hardware="xaviernx"),
+    ]
+    rpi_hw = [
+        ComputeHardware.objects.get(hardware="rpi-4gb"),
+        ComputeHardware.objects.get(hardware="rpi-8gb"),
+    ]
+
+    bme280 = SensorHardware.objects.get(hardware="bme280")
+    bme680 = SensorHardware.objects.get(hardware="bme680")
+    gps = SensorHardware.objects.get(hardware="gps")
+    raingauge = SensorHardware.objects.get(hardware="raingauge")
+    microphone = SensorHardware.objects.get(hardware="microphone")
+
+    for compute in queryset:
+        if compute.zone == "core" and compute.hardware in nxcore_hw:
+            ComputeSensor.objects.get_or_create(
+                scope=compute,
+                hardware=bme280,
+                name="bme280",
+            )
+            ComputeSensor.objects.get_or_create(
+                scope=compute,
+                hardware=gps,
+                name="gps",
+            )
+        elif compute.zone == "shield" and compute.hardware in rpi_hw:
+            ComputeSensor.objects.get_or_create(
+                scope=compute,
+                hardware=bme680,
+                name="bme680",
+            )
+            ComputeSensor.objects.get_or_create(
+                scope=compute,
+                hardware=raingauge,
+                name="raingauge",
+            )
+            ComputeSensor.objects.get_or_create(
+                scope=compute,
+                hardware=microphone,
+                name="microphone",
+            )
+        elif compute.zone in ["enclosure", "detector"] and compute.hardware in rpi_hw:
+            ComputeSensor.objects.get_or_create(
+                scope=compute,
+                hardware=bme680,
+                name="bme680",
+            )
+
+
 @admin.register(Compute)
 class ComputeAdmin(nested_admin.NestedModelAdmin):
     list_display = [
@@ -199,6 +251,7 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
     ]
     autocomplete_fields = ["node", "hardware"]
     inlines = [ComputeSensorInline]
+    actions = [add_default_devices_using_zone]
 
     @admin.display(description="Sensors")
     def get_sensors(self, obj):
