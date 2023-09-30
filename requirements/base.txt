@@ -9,3 +9,5 @@ django-nested-admin==4.0.2
 django-environ==0.10.0
 whitenoise==6.4.0
 pandas==2.1.0
+sage-data-client==0.7.1
+ipython==8.13.2
