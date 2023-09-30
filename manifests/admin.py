@@ -12,16 +12,9 @@ import csv
 from io import StringIO
 import nested_admin
 from .models import *
-
-
-# admin page actions
-@admin.action(description="Export as JSON")
-def export_as_json(modeladmin, request, queryset):
-    response = HttpResponse(content_type="application/json")
-    serializers.serialize(
-        "json", queryset, stream=response, use_natural_foreign_keys=True
-    )
-    return response
+import requests
+import pandas as pd
+import sage_data_client
 
 
 # Register your models here.
@@ -58,8 +51,6 @@ class ModemInline(nested_admin.NestedStackedInline):
 
 @admin.register(NodeData)
 class NodeAdmin(nested_admin.NestedModelAdmin):
-    actions = [export_as_json]
-
     # display in admin panel
     list_display = (
         "vsn",
@@ -80,6 +71,10 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         ("Location", {"fields": ("address", "gps_lat", "gps_lon")}),
     )
 
+    inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
+
+    actions = ["autopopulate_from_beekeeper_and_data", "export_as_json"]
+
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         return queryset.prefetch_related("modem", "tags", "computes")
@@ -92,7 +87,134 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
     def get_computes(self, obj):
         return ",".join(obj.compute_set.values_list("name", flat=True).order_by("name"))
 
-    inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
+    @admin.action(description="Autopopulate nodes using beekeeper and data")
+    def autopopulate_from_beekeeper_and_data(self, request, queryset):
+        r = requests.get("https://api.sagecontinuum.org/api/state", timeout=5)
+        r.raise_for_status()
+
+        # get latest beekeeper state by vsn
+        df = pd.DataFrame(r.json()["data"])
+        df.rename(columns={"id": "node_id"}, inplace=True)
+        df["registration_event"] = pd.to_datetime(df["registration_event"], utc=True)
+        df = df[["vsn", "node_id", "registration_event"]]
+        latest_state = df.groupby("vsn").apply(
+            lambda df: df.loc[df["registration_event"].idxmax()]
+        )
+
+        # get recently publishing devices
+        df = sage_data_client.query(start="-1h", tail=1, filter={"name": "sys.uptime"})
+        df.rename(columns={"meta.vsn": "vsn", "meta.host": "host"}, inplace=True)
+        df[["serial_no", "device"]] = df["host"].str.extract(r"^([0-9a-f]+)\.(.*)$")
+        df["serial_no"] = df["serial_no"].str.upper().str[-12:]
+        uptimes = df[["vsn", "serial_no", "device", "timestamp"]]
+
+        # TODO(sean) how to handle adding extra devices if recently swapped?
+        # TODO(sean) what we probably should do is actually have the node publish
+        # a discovered manifest periodically. then we can use this to populate this
+
+        sbcore_hw = ComputeHardware.objects.get(hardware="dell-xr2")
+        nxcore_hw = ComputeHardware.objects.get(hardware="xaviernx")
+        nxagent_hw = ComputeHardware.objects.get(hardware="xaviernx-poe")
+        rpi_hw = ComputeHardware.objects.get(hardware="rpi-8gb")
+
+        for node in queryset:
+            node: NodeData
+            try:
+                r = latest_state.loc[node.vsn]
+            except KeyError:
+                continue
+
+            try:
+                build = NodeBuild.objects.get(vsn=node.vsn)
+            except NodeBuild.DoesNotExist:
+                continue
+
+            if (
+                node.registered_at is None
+                or (r.registration_event > node.registered_at)
+                or (
+                    r.registration_event >= node.registered_at
+                    and r.node_id != node.name
+                )
+            ):
+                node.registered_at = r.registration_event
+                node.name = r.node_id
+                node.save()
+
+            # filter for the n most recent items depending on device
+            node_uptimes = uptimes[uptimes.vsn == node.vsn]
+            num_rpis = int(build.shield) + int(build.extra_rpi)
+            num_agents = int(build.agent)
+            latest_uptimes = pd.concat(
+                [
+                    node_uptimes[node_uptimes.device == "sb-core"]
+                    .sort_values("timestamp")
+                    .tail(1),
+                    node_uptimes[node_uptimes.device == "ws-nxcore"]
+                    .sort_values("timestamp")
+                    .tail(1),
+                    node_uptimes[node_uptimes.device == "ws-nxagent"]
+                    .sort_values("timestamp")
+                    .tail(num_agents),
+                    node_uptimes[node_uptimes.device == "ws-rpi"]
+                    .sort_values("timestamp")
+                    .tail(num_rpis),
+                ]
+            )
+
+            for r in latest_uptimes.itertuples():
+                if r.device == "sb-core":
+                    name = "sbcore"
+                    hardware = sbcore_hw
+                    zone = "core"
+                elif r.device == "ws-nxcore":
+                    name = "nxcore"
+                    hardware = nxcore_hw
+                    zone = "core"
+                elif r.device == "ws-nxagent":
+                    name = "nxagent"
+                    hardware = nxagent_hw
+                    zone = "agent"
+                elif r.device == "ws-rpi":
+                    name = "rpi"
+                    hardware = rpi_hw
+                    zone = (
+                        "shield"
+                        if compute.zone is None and build.shield and not build.extra_rpi
+                        else None
+                    )
+                else:
+                    # TODO alert admin of unknown device type
+                    continue
+
+                # create compute if needed and update unset fields
+                try:
+                    compute = node.compute_set.get(serial_no=r.serial_no)
+                    if not compute.name:
+                        compute.name = name
+                    if not compute.hardware:
+                        compute.hardware = hardware
+                    if not compute.zone:
+                        compute.zone = zone
+                    compute.save()
+                except Compute.DoesNotExist:
+                    compute = node.compute_set.create(
+                        name=name,
+                        hardware=hardware,
+                        serial_no=r.serial_no,
+                        zone=zone,
+                    )
+
+            # add default devices when possible too
+            add_default_devices_using_zone(self, request, node.compute_set.all())
+
+    @admin.action(description="Export as JSON")
+    def export_as_json(self, request, queryset):
+        response = HttpResponse(content_type="application/json")
+        serializers.serialize(
+            "json", queryset, stream=response, use_natural_foreign_keys=True
+        )
+        return response
 
 
 class CSVUploadForm(forms.Form):
@@ -306,6 +428,7 @@ class NodeBuildAdmin(admin.ModelAdmin):
         "right_camera",
         "agent",
         "shield",
+        "extra_rpi",
         "modem",
         "modem_sim_type",
     ]
@@ -315,6 +438,7 @@ class NodeBuildAdmin(admin.ModelAdmin):
         "project",
         "agent",
         "shield",
+        "extra_rpi",
         "modem",
         "modem_sim_type",
     ]

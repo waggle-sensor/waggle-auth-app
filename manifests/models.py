@@ -262,6 +262,10 @@ class NodeBuild(models.Model):
         "Shield",
         default=False,
     )
+    extra_rpi = models.BooleanField(
+        "Extra RPi",
+        default=False,
+    )
     modem = models.BooleanField(
         "Modem",
         default=False,
