@@ -178,11 +178,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 elif r.device == "ws-rpi":
                     name = "rpi"
                     hardware = rpi_hw
-                    zone = (
-                        "shield"
-                        if compute.zone is None and build.shield and not build.extra_rpi
-                        else None
-                    )
+                    zone = "shield" if build.shield and not build.extra_rpi else None
                 else:
                     # TODO alert admin of unknown device type
                     continue
