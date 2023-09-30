@@ -146,6 +146,7 @@ class NodeBuildSerializer(serializers.ModelSerializer):
             "right_camera",
             "agent",
             "shield",
+            "extra_rpi",
             "modem",
             "modem_sim_type",
         ]
