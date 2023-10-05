@@ -377,6 +377,22 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
             obj.computesensor_set.values_list("name", flat=True).order_by("name")
         )
 
+@admin.register(LoRaWANDevice)
+class LoRaWANDeviceAdmin(nested_admin.NestedModelAdmin):
+    list_display = [
+        "device_name",
+        "device_id",
+        "node",
+        "created_at",
+        "Lastseen_at",
+        "battery_level",
+        "margin"
+    ]
+    list_filter = ["node", "device_name"]
+    search_fields = [
+        "device_name",
+        "device_id"
+    ]
 
 admin.site.register(
     ComputeHardware,
@@ -408,6 +424,8 @@ admin.site.register(
 admin.site.register(Label)
 admin.site.register(Tag)
 admin.site.register(Capability)
+admin.site.register(LoRaWANDevice)
+
 
 admin.site.register(NodeBuildProject)
 
