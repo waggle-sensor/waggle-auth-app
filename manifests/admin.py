@@ -424,8 +424,6 @@ admin.site.register(
 admin.site.register(Label)
 admin.site.register(Tag)
 admin.site.register(Capability)
-admin.site.register(LoRaWANDevice)
-
 
 admin.site.register(NodeBuildProject)
 
