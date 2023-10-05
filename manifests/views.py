@@ -1,4 +1,5 @@
 from django.contrib.auth.models import *
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from .models import *
@@ -53,3 +54,7 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     serializer_class = NodeBuildSerializer
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+class CreateLoRaWANSensorAPIView(CreateAPIView):
+    queryset = LoRaWANSensor.objects.all()
+    serializer_class = LoRaWANSensorSerializer
