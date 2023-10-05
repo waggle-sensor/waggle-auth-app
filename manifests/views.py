@@ -8,7 +8,8 @@ from .serializers import (
     SensorHardwareSerializer,
     NodeBuildSerializer,
     ComputeSerializer,
-)
+    LoRaWANDeviceSerializer
+) 
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
