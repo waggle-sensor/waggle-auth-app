@@ -150,3 +150,8 @@ class NodeBuildSerializer(serializers.ModelSerializer):
             "modem",
             "modem_sim_type",
         ]
+        
+class LoRaWANSensorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoRaWANSensor
+        fields = '__all__'
