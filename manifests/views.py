@@ -55,6 +55,6 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-class CreateLoRaWANSensorAPIView(CreateAPIView):
-    queryset = LoRaWANSensor.objects.all()
-    serializer_class = LoRaWANSensorSerializer
+class CreateLoRaWANDeviceAPIView(CreateAPIView):
+    queryset = LoRaWANDevice.objects.all()
+    serializer_class = LoRaWANDeviceSerializer
