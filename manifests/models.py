@@ -317,3 +317,12 @@ class NodeBuild(models.Model):
                     "sim_type": "SIM Type should be empty if Modem is False.",
                 }
             )
+            
+class LoRaWANDevice(models.Model):
+    device_id = models.CharField(max_length=100)
+    device_name = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    Lastseen_at = models.DateTimeField(null=True, blank=True)
+    battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    ##add any other fields later - Flozano
