@@ -319,6 +319,7 @@ class NodeBuild(models.Model):
             )
             
 class LoRaWANDevice(models.Model):
+    node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawandevices', blank=False)
     device_id = models.CharField(max_length=100)
     device_name = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -326,3 +327,9 @@ class LoRaWANDevice(models.Model):
     battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     ##add any other fields later - Flozano
+
+    def __str__(self):
+        return str(self.device_name) + '-' + str(self.device_id)
+
+    def natural_key(self):
+        return self.device_id
