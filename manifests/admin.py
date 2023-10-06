@@ -384,7 +384,7 @@ class LoRaWANDeviceAdmin(nested_admin.NestedModelAdmin):
         "device_id",
         "node",
         "created_at",
-        "Lastseen_at",
+        "last_seen_at",
         "battery_level",
         "margin"
     ]
