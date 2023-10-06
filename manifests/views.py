@@ -56,6 +56,20 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-class CreateLoRaWANDeviceAPIView(CreateAPIView):
-    queryset = LoRaWANDevice.objects.all()
-    serializer_class = LoRaWANDeviceSerializer
+@api_view(['POST'])
+class CreateLoRaWANDevice(CreateAPIView):
+    serializer = LoRaWANDeviceSerializer(data=request.data)
+    if serializer.is_valid():
+        # Create a LoRaWANDevice object based on serializer data and save to db
+        lorawan_device = LoRaWANDevice.objects.create(
+            node = serializer.validated_data['node'],
+            device_id = serializer.validated_data['device_id'],
+            device_name = serializer.validated_data['device_name'],
+            last_seen_at = serializer.validated_data['last_seen_at'],
+            battery_level = serializer.validated_data['battery_level'],
+            margin=data.get('margin')
+        )
+        # Save the object to the database
+        # Return a response
+        return Response({'message': 'LoRaWANDevice created successfully'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
