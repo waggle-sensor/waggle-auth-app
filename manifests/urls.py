@@ -17,4 +17,8 @@ router.register(r"node-builds", NodeBuildViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
+    path(
+        'lorawandevices/create/', 
+        views.CreateLoRaWANDevice.as_view(), 
+        name='create_lorawan_device')
 ]
