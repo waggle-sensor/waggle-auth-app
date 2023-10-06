@@ -10,7 +10,6 @@ from .serializers import (
     ComputeSerializer,
     LoRaWANDeviceSerializer
 ) 
-from rest_framework.decorators import api_view
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
@@ -57,7 +56,6 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-@api_view(['POST'])
 class CreateLoRaWANDevice(CreateAPIView):
     serializer_class = LoRaWANDeviceSerializer
 
