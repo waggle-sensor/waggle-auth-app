@@ -328,6 +328,10 @@ class LoRaWANDevice(models.Model):
     margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     ##add any other fields later - Flozano
 
+    class Meta:
+        verbose_name = "LoRaWAN Device"
+        verbose_name_plural = "LoRaWAN Devices"
+
     def __str__(self):
         return str(self.device_name) + '-' + str(self.device_id)
 
