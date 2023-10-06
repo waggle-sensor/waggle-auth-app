@@ -10,6 +10,8 @@ from .serializers import (
     ComputeSerializer,
     LoRaWANDeviceSerializer
 ) 
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
@@ -65,11 +67,12 @@ class CreateLoRaWANDevice(CreateAPIView):
             # Create a LoRaWANDevice object based on serializer data and save to the database
             lorawan_device = LoRaWANDevice.objects.create(
                 node=serializer.validated_data['node'],
-                device_id=serializer.validated_data['device_id'],
+                DevEUI=serializer.validated_data['DevEUI'],
                 device_name=serializer.validated_data['device_name'],
                 last_seen_at=serializer.validated_data['last_seen_at'],
                 battery_level=serializer.validated_data['battery_level'],
-                margin=request.data.get('margin')
+                margin=request.data.get('margin'),
+                expected_uplink_interval_sec = request.data.get('expected_uplink_interval_sec')
             )
             # Return a response
             return Response({'message': 'LoRaWANDevice created successfully'}, status=status.HTTP_201_CREATED)

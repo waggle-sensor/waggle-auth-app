@@ -320,20 +320,21 @@ class NodeBuild(models.Model):
             
 class LoRaWANDevice(models.Model):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawandevices', blank=False)
-    device_id = models.CharField(max_length=100)
+    DevEUI = models.UUIDField(unique=True)
     device_name = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
     battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    ##add any other fields later - Flozano
+    expected_uplink_interval_sec = models.IntegerField(blank=True, null=True)
+    # add more fields later like device class, using OTAA or ADB, app name, app key, etc- Flozano
 
     class Meta:
         verbose_name = "LoRaWAN Device"
         verbose_name_plural = "LoRaWAN Devices"
 
     def __str__(self):
-        return str(self.device_name) + '-' + str(self.device_id)
+        return str(self.device_name) + '-' + str(self.DevEUI)
 
     def natural_key(self):
-        return self.device_id
+        return self.DevEUI
