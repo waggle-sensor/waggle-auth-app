@@ -381,17 +381,16 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
 class LoRaWANDeviceAdmin(nested_admin.NestedModelAdmin):
     list_display = [
         "device_name",
-        "device_id",
+        "DevEUI",
         "node",
         "created_at",
         "last_seen_at",
-        "battery_level",
-        "margin"
+        "battery_level"
     ]
-    list_filter = ["node", "device_name"]
+    list_filter = ["node", "DevEUI"]
     search_fields = [
         "device_name",
-        "device_id"
+        "DevEUI"
     ]
 
 admin.site.register(
