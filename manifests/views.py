@@ -10,6 +10,7 @@ from .serializers import (
     ComputeSerializer,
     LoRaWANDeviceSerializer
 ) 
+from rest_framework.decorators import api_view
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
