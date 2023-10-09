@@ -64,23 +64,22 @@ class CreateLoRaWANDevice(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            new_record={}
             # Retrieve the associated Node based on the 'vsn' provided in the serializer data
-            vsn_data = serializer.validated_data['node']
+            vsn_data = serializer.validated_data.pop('node')
             vsn = vsn_data['vsn']
             try:
                 node = NodeData.objects.get(vsn=vsn)
             except NodeData.DoesNotExist:
                 return Response({'message': f'Node with vsn {vsn} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                new_record['node']=node
+
             # Create a LoRaWANDevice object based on serializer data and save to the database
-            lorawan_device = LoRaWANDevice.objects.create(
-                node=node,
-                DevEUI=serializer.validated_data['DevEUI'],
-                device_name=serializer.validated_data['device_name'],
-                last_seen_at=serializer.validated_data['last_seen_at'],
-                battery_level=serializer.validated_data['battery_level'],
-                margin=request.data.get('margin'),
-                expected_uplink_interval_sec = request.data.get('expected_uplink_interval_sec')
-            )
+            for attr,value in serializer.validated_data.items():
+                new_record[attr]=value
+            lorawan_device = LoRaWANDevice.objects.create(**new_record)
+
             # Return a response
             return Response({'message': 'LoRaWANDevice created successfully'}, status=status.HTTP_201_CREATED)
         else:
