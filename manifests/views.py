@@ -64,9 +64,16 @@ class CreateLoRaWANDevice(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            # Retrieve the associated Node based on the 'vsn' provided in the serializer data
+            vsn_data = serializer.validated_data['node']
+            vsn = vsn_data['vsn']
+            try:
+                node = NodeData.objects.get(vsn=vsn)
+            except NodeData.DoesNotExist:
+                return Response({'message': f'Node with vsn {vsn} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
             # Create a LoRaWANDevice object based on serializer data and save to the database
             lorawan_device = LoRaWANDevice.objects.create(
-                node=serializer.validated_data['node'],
+                node=node,
                 DevEUI=serializer.validated_data['DevEUI'],
                 device_name=serializer.validated_data['device_name'],
                 last_seen_at=serializer.validated_data['last_seen_at'],

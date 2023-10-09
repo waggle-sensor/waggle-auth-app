@@ -152,6 +152,7 @@ class NodeBuildSerializer(serializers.ModelSerializer):
         ]
         
 class LoRaWANDeviceSerializer(serializers.ModelSerializer):
+    node = serializers.CharField(source='node.vsn')  # Use the 'vsn' field as the source for node field
     class Meta:
         model = LoRaWANDevice
         fields = '__all__'
