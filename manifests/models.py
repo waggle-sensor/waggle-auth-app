@@ -319,8 +319,8 @@ class NodeBuild(models.Model):
             )
             
 class LoRaWANDevice(models.Model):
-    node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawandevices', null=False, blank=False)
-    DevEUI = models.UUIDField(editable=False, unique=True, null=False, blank=False)
+    node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawandevices', null=False,blank=False)
+    DevEUI = models.CharField(max_length=16, primary_key=True, unique=True, null=False, blank=False)
     device_name = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
