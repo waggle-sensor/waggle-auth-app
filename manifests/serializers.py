@@ -13,6 +13,12 @@ class ModemSerializer(serializers.ModelSerializer):
         model = Modem
         fields = ["model", "sim_type", "carrier"]
 
+class LoRaWANDeviceSerializer(serializers.ModelSerializer):
+    node = serializers.CharField(source='node.vsn')  # Use the 'vsn' field as the source for node field
+    class Meta:
+        model = LoRaWANDevice
+        fields = '__all__'
+
 
 class ManifestSerializer(serializers.ModelSerializer):
     modem = ModemSerializer()
@@ -20,6 +26,7 @@ class ManifestSerializer(serializers.ModelSerializer):
     resources = serializers.SerializerMethodField("get_resources")
     tags = serializers.StringRelatedField(many=True)
     sensors = serializers.SerializerMethodField("get_sensors")
+    lorawandevices = serializers.SerializerMethodField("get_lorawan_devices")
 
     def get_computes(self, obj: NodeData):
         return [serialize_compute(c) for c in obj.compute_set.all()]
@@ -41,6 +48,9 @@ class ManifestSerializer(serializers.ModelSerializer):
     def get_resources(self, obj: NodeData):
         return [serialize_resource(r) for r in obj.resource_set.all()]
 
+    def get_lorawan_devices(self, obj: NodeData):
+        return [serialize_lorawan_devices(l) for l in obj.lorawandevices.all()]
+
     class Meta:
         model = NodeData
         fields = (
@@ -55,6 +65,7 @@ class ManifestSerializer(serializers.ModelSerializer):
             "computes",
             "sensors",
             "resources",
+            "lorawandevices"
         )
 
 
@@ -96,7 +107,6 @@ def serialize_common_hardware(h):
         "capabilities": [cap.capability for cap in h.capabilities.all()],
         "description": h.description,
     }
-
 
 def serialize_compute_hardware(h):
     return {
@@ -151,8 +161,13 @@ class NodeBuildSerializer(serializers.ModelSerializer):
             "modem_sim_type",
         ]
         
-class LoRaWANDeviceSerializer(serializers.ModelSerializer):
-    node = serializers.CharField(source='node.vsn')  # Use the 'vsn' field as the source for node field
-    class Meta:
-        model = LoRaWANDevice
-        fields = '__all__'
+def serialize_lorawan_devices(l):
+    return {
+        "DevEUI": l.DevEUI,
+        "device_name": l.device_name,
+        "created_at": l.created_at,
+        "last_seen_at": l.last_seen_at,
+        "battery_level": l.battery_level,
+        "margin": l.margin,
+        "expected_uplink_interval_sec": l.expected_uplink_interval_sec,
+    }
