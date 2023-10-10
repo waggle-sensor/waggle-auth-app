@@ -60,6 +60,8 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
 
 class LorawanDeviceView(CreateAPIView, UpdateAPIView):
     serializer_class = LorawanDeviceSerializer
+    queryset = LoRaWANDevice.objects.all()
+    lookup_field = 'DevEUI'
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -86,28 +88,29 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
-        queryset = LoRaWANDevice.objects.all()
-        lookup_field = 'DevEUI'
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
 
         if serializer.is_valid():
             updated_data={}
-            # Retrieve the associated Node based on the 'vsn' provided in the serializer data
-            vsn_data = serializer.validated_data.pop('node')
-            vsn = vsn_data['vsn']
-            try:
-                node = NodeData.objects.get(vsn=vsn)
-            except NodeData.DoesNotExist:
-                return Response({'message': f'Node with vsn {vsn} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                updated_data['node']=node
             
             #update the LoRaWAN object based on serializer data
             for attr,value in serializer.validated_data.items():
-                updated_data[attr]=value
-            serializer.save(**new_record)
+
+                if attr == 'node': # Retrieve the associated Node based on the 'vsn' provided in the serializer data
+                    vsn_data = value
+                    vsn = vsn_data['vsn']
+                    try:
+                        node = NodeData.objects.get(vsn=vsn)
+                    except NodeData.DoesNotExist:
+                        return Response({'message': f'Node with vsn {vsn} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        updated_data['node']=node
+                else:
+                    updated_data[attr]=value
+
+            serializer.save(**updated_data)
 
             # Return a response
             return Response({'message': 'LoRaWANDevice updated successfully'}, status=status.HTTP_200_OK)
