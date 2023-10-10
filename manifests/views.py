@@ -1,5 +1,5 @@
 from django.contrib.auth.models import *
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from .models import *
@@ -8,7 +8,7 @@ from .serializers import (
     SensorHardwareSerializer,
     NodeBuildSerializer,
     ComputeSerializer,
-    LoRaWANDeviceSerializer
+    LorawanDeviceSerializer
 ) 
 from rest_framework.response import Response
 from rest_framework import status
@@ -58,8 +58,8 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-class CreateLoRaWANDevice(CreateAPIView):
-    serializer_class = LoRaWANDeviceSerializer
+class LorawanDeviceView(CreateAPIView, UpdateAPIView):
+    serializer_class = LorawanDeviceSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -82,5 +82,34 @@ class CreateLoRaWANDevice(CreateAPIView):
 
             # Return a response
             return Response({'message': 'LoRaWANDevice created successfully'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        queryset = LoRaWANDevice.objects.all()
+        lookup_field = 'DevEUI'
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        if serializer.is_valid():
+            updated_data={}
+            # Retrieve the associated Node based on the 'vsn' provided in the serializer data
+            vsn_data = serializer.validated_data.pop('node')
+            vsn = vsn_data['vsn']
+            try:
+                node = NodeData.objects.get(vsn=vsn)
+            except NodeData.DoesNotExist:
+                return Response({'message': f'Node with vsn {vsn} does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                updated_data['node']=node
+            
+            #update the LoRaWAN object based on serializer data
+            for attr,value in serializer.validated_data.items():
+                updated_data[attr]=value
+            serializer.save(**new_record)
+
+            # Return a response
+            return Response({'message': 'LoRaWANDevice updated successfully'}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

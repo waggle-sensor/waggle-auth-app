@@ -19,6 +19,10 @@ urlpatterns = [
     path("", include(router.urls)),
     path(
         'lorawandevices/create/', 
-        views.CreateLoRaWANDevice.as_view(), 
-        name='create_lorawan_device')
+        views.LorawanDeviceView.as_view(), 
+        name='create_lorawan_device'),
+    path(
+        'lorawandevices/update/<str:DevEUI>/',
+        views.LorawanDeviceView.as_view(),
+        name='update_lorawan_device'),
 ]

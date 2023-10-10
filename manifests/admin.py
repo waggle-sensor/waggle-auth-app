@@ -378,7 +378,7 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
         )
 
 @admin.register(LoRaWANDevice)
-class LoRaWANDeviceAdmin(nested_admin.NestedModelAdmin):
+class LorawanDeviceAdmin(nested_admin.NestedModelAdmin):
     list_display = [
         "device_name",
         "DevEUI",
