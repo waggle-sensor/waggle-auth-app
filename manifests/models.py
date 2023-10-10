@@ -327,7 +327,7 @@ class LoRaWANDevice(models.Model):
     battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     expected_uplink_interval_sec = models.IntegerField(blank=True, null=True)
-    # add more fields later like device class, using OTAA or ADB, app name, app key, etc- Flozano
+    # add more fields later like device class, using OTAA or ADB, app name, app key, datasheet etc- Flozano
 
     class Meta:
         verbose_name = "LoRaWAN Device"
