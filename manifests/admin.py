@@ -387,7 +387,7 @@ class LorawanDeviceAdmin(nested_admin.NestedModelAdmin):
         "last_seen_at",
         "battery_level"
     ]
-    list_filter = ["node", "DevEUI"]
+    list_filter = ["node"]
     search_fields = [
         "device_name",
         "DevEUI"
