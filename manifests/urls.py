@@ -5,7 +5,9 @@ from .views import (
     SensorHardwareViewSet,
     NodeBuildViewSet,
     ComputeViewSet,
+    LorawanDeviceView
 )
+from . import views
 
 app_name = "manifests"
 
