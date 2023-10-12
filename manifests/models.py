@@ -320,7 +320,7 @@ class NodeBuild(models.Model):
             
 class LoRaWANDevice(models.Model):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawandevices', null=False,blank=False)
-    DevEUI = models.CharField(max_length=16, primary_key=True, unique=True, null=False, blank=False)
+    deveui = models.CharField(max_length=16, primary_key=True, unique=True, null=False, blank=False)
     device_name = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
@@ -334,7 +334,7 @@ class LoRaWANDevice(models.Model):
         verbose_name_plural = "LoRaWAN Devices"
 
     def __str__(self):
-        return str(self.device_name) + '-' + str(self.DevEUI)
+        return str(self.device_name) + '-' + str(self.deveui)
 
     def natural_key(self):
-        return self.DevEUI
+        return self.deveui

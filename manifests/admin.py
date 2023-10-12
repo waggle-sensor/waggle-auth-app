@@ -381,7 +381,7 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
 class LorawanDeviceAdmin(nested_admin.NestedModelAdmin):
     list_display = [
         "device_name",
-        "DevEUI",
+        "deveui",
         "node",
         "created_at",
         "last_seen_at",
@@ -390,7 +390,7 @@ class LorawanDeviceAdmin(nested_admin.NestedModelAdmin):
     list_filter = ["node"]
     search_fields = [
         "device_name",
-        "DevEUI"
+        "deveui"
     ]
 
 admin.site.register(

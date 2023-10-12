@@ -163,7 +163,7 @@ class NodeBuildSerializer(serializers.ModelSerializer):
         
 def serialize_lorawan_devices(l):
     return {
-        "DevEUI": l.DevEUI,
+        "deveui": l.deveui,
         "device_name": l.device_name,
         "created_at": l.created_at,
         "last_seen_at": l.last_seen_at,

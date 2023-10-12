@@ -61,7 +61,7 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
 class LorawanDeviceView(CreateAPIView, UpdateAPIView):
     serializer_class = LorawanDeviceSerializer
     queryset = LoRaWANDevice.objects.all()
-    lookup_field = 'DevEUI'
+    lookup_field = 'deveui'
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

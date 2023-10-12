@@ -24,7 +24,7 @@ urlpatterns = [
         views.LorawanDeviceView.as_view(), 
         name='create_lorawan_device'),
     path(
-        'lorawandevices/update/<str:DevEUI>/',
+        'lorawandevices/update/<str:deveui>/',
         views.LorawanDeviceView.as_view(),
         name='update_lorawan_device'),
 ]
