@@ -8,7 +8,8 @@ from .serializers import (
     SensorHardwareSerializer,
     NodeBuildSerializer,
     ComputeSerializer,
-    LorawanDeviceSerializer
+    LorawanDeviceSerializer,
+    LorawanConnectionSerializer
 ) 
 from rest_framework.response import Response
 from rest_framework import status
