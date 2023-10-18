@@ -318,23 +318,36 @@ class NodeBuild(models.Model):
                 }
             )
             
-class LoRaWANDevice(models.Model):
-    node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawandevices', null=False,blank=False)
+class LorawanDevice(models.Model):
     deveui = models.CharField(max_length=16, primary_key=True, unique=True, null=False, blank=False)
     device_name = models.CharField(max_length=100, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_seen_at = models.DateTimeField(null=True, blank=True)
-    battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    expected_uplink_interval_sec = models.IntegerField(blank=True, null=True)
-    # add more fields later like device class, using OTAA or ADB, app name, app key, datasheet etc- Flozano
+    # add more fields later like compatible device classes, compatible connection type, datasheet etc- Flozano
 
     class Meta:
-        verbose_name = "LoRaWAN Device"
-        verbose_name_plural = "LoRaWAN Devices"
+        verbose_name = "Lorawan Device"
+        verbose_name_plural = "Lorawan Devices"
 
     def __str__(self):
         return str(self.device_name) + '-' + str(self.deveui)
 
     def natural_key(self):
         return self.deveui
+
+class LorawanConnections(model.Model):
+    node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawanconnections', null=False,blank=False)
+    lorawan_device = models.ForeignKey(LorawanDevice, on_delete=models.CASCADE, related_name='lorawanconnections', null=False,blank=False)
+    Connection_name = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+    battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    expected_uplink_interval_sec = models.IntegerField(blank=True, null=True)
+     # add more fields later like device class, using OTAA or ADB, app name, app key etc- Flozano
+
+    class Meta:
+        verbose_name = "Lorawan Connection"
+        verbose_name_plural = "Lorawan Connections"
+
+    def __str__(self):
+        return str(self.node) + '-' + str(self.lorawan_device)
+
