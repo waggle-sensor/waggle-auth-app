@@ -126,7 +126,8 @@ def serialize_compute_hardware(h):
 def serialize_lorawan_devices(l):
     return {
         "deveui": l.deveui,
-        "device_name": l.device_name
+        "device_name": l.device_name,
+        "battery_level": l.battery_level,
     }
 
 def serialize_lorawan_connections(l):
@@ -134,7 +135,6 @@ def serialize_lorawan_connections(l):
         "connection_name": l.connection_name,
         "created_at": l.created_at,
         "last_seen_at": l.last_seen_at,
-        "battery_level": l.battery_level,
         "margin": l.margin,
         "expected_uplink_interval_sec": l.expected_uplink_interval_sec,
         "lorawandevice": serialize_lorawan_devices(l.lorawan_device),
