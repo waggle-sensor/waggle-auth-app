@@ -60,7 +60,7 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
 
 class LorawanDeviceView(CreateAPIView, UpdateAPIView):
     serializer_class = LorawanDeviceSerializer
-    queryset = LoranwanDevice.objects.all()
+    queryset = LorawanDevice.objects.all()
     lookup_field = 'deveui'
 
     def create(self, request, *args, **kwargs):

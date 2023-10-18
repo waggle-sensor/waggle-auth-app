@@ -333,7 +333,7 @@ class LorawanDevice(models.Model):
     def natural_key(self):
         return self.deveui
 
-class LorawanConnection(model.Model):
+class LorawanConnection(models.Model):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawanconnections', null=False,blank=False)
     lorawan_device = models.ForeignKey(LorawanDevice, on_delete=models.CASCADE, related_name='lorawanconnections', null=False,blank=False)
     Connection_name = models.CharField(max_length=100, null=True, blank=True)
