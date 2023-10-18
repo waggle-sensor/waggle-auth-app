@@ -16,7 +16,7 @@ class ModemSerializer(serializers.ModelSerializer):
 class LorawanDeviceSerializer(serializers.ModelSerializer):
     node = serializers.CharField(source='node.vsn')  # Use the 'vsn' field as the source for node field
     class Meta:
-        model = LoRaWANDevice
+        model = LorawanDevice
         fields = '__all__'
 
 

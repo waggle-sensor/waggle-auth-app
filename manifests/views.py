@@ -60,7 +60,7 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
 
 class LorawanDeviceView(CreateAPIView, UpdateAPIView):
     serializer_class = LorawanDeviceSerializer
-    queryset = LoRaWANDevice.objects.all()
+    queryset = LoranwanDevice.objects.all()
     lookup_field = 'deveui'
 
     def create(self, request, *args, **kwargs):
@@ -68,7 +68,7 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView):
         if serializer.is_valid():
             new_record={}
 
-            # Create a LoRaWANDevice object based on serializer data and save to the database
+            # Create a LorawanDevice object based on serializer data and save to the database
             for attr,value in serializer.validated_data.items():
                 
                 if attr == 'node': # Retrieve the associated Node based on the 'vsn' provided in the serializer data
@@ -83,10 +83,10 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView):
                 else:
                     new_record[attr]=value
 
-            lorawan_device = LoRaWANDevice.objects.create(**new_record)
+            lorawan_device = LorawanDevice.objects.create(**new_record)
 
             # Return a response
-            return Response({'message': 'LoRaWANDevice created successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'LorawanDevice created successfully'}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -98,7 +98,7 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView):
         if serializer.is_valid():
             updated_data={}
             
-            #update the LoRaWAN object based on serializer data
+            #update the Lorawan object based on serializer data
             for attr,value in serializer.validated_data.items():
 
                 if attr == 'node': # Retrieve the associated Node based on the 'vsn' provided in the serializer data
@@ -116,6 +116,6 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView):
             serializer.save(**updated_data)
 
             # Return a response
-            return Response({'message': 'LoRaWANDevice updated successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'LorawanDevice updated successfully'}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

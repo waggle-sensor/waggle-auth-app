@@ -377,7 +377,7 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
             obj.computesensor_set.values_list("name", flat=True).order_by("name")
         )
 
-@admin.register(LoRaWANDevice)
+@admin.register(LorawanDevice)
 class LorawanDeviceAdmin(nested_admin.NestedModelAdmin):
     list_display = [
         "device_name",
