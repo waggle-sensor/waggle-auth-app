@@ -20,6 +20,7 @@ class LorawanDeviceSerializer(serializers.ModelSerializer):
 
 class LorawanConnectionSerializer(serializers.ModelSerializer):
     node = serializers.CharField(source='node.vsn')  # Use the 'vsn' field as the source for node field
+    lorawan_device = serializers.CharField(source='lorawan_device.deveui')  # Use the 'deveui' field as the source for lorawan device field
     class Meta:
         model = LorawanConnection
         fields = '__all__'
