@@ -98,6 +98,21 @@ class LorawanConnectionView(CreateAPIView, UpdateAPIView):
     serializer_class = LorawanConnectionSerializer
     queryset = LorawanConnection.objects.all()
 
+    def get_object(self):
+        # Get the 'node_vsn' and 'lorawan_deveui' from the URL
+        node_vsn = self.kwargs['node_vsn']
+        lorawan_deveui = self.kwargs['lorawan_deveui']
+
+        # Retrieve the LorawanConnection instance based on the lookup fields
+        try:
+            lorawan_connection = LorawanConnection.objects.get(
+                node__vsn=node_vsn,
+                lorawan_device__deveui=lorawan_deveui
+            )
+            return lorawan_connection
+        except LorawanConnection.DoesNotExist:
+            raise Http404
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
