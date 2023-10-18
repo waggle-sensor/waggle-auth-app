@@ -71,7 +71,7 @@ class ManifestSerializer(serializers.ModelSerializer):
             "computes",
             "sensors",
             "resources",
-            "lorawandevices"
+            "lorawanconnections"
         )
 
 
