@@ -381,7 +381,8 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
 class LorawanDeviceAdmin(admin.ModelAdmin):
     list_display = [
         "device_name",
-        "deveui"
+        "deveui",
+        "battery_level"
     ]
     search_fields = [
         "device_name",
@@ -396,7 +397,6 @@ class LorawanConnectionAdmin(nested_admin.NestedModelAdmin):
         "node",
         "created_at",
         "last_seen_at",
-        "battery_level"
     ]
     list_filter = ["node","lorawan_device"]
     search_fields = [

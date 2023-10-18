@@ -321,6 +321,7 @@ class NodeBuild(models.Model):
 class LorawanDevice(models.Model):
     deveui = models.CharField(max_length=16, primary_key=True, unique=True, null=False, blank=False)
     device_name = models.CharField(max_length=100, null=True, blank=True)
+    battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     # add more fields later like compatible device classes, compatible connection type, datasheet etc- Flozano
 
     class Meta:
@@ -339,7 +340,6 @@ class LorawanConnection(models.Model):
     connection_name = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
-    battery_level = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     expected_uplink_interval_sec = models.IntegerField(blank=True, null=True)
      # add more fields later like device class, using OTAA or ADB, app name, app key etc- Flozano
