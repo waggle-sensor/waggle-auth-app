@@ -59,10 +59,15 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-class LorawanDeviceView(CreateAPIView, UpdateAPIView):
+class LorawanDeviceView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanDeviceSerializer
     queryset = LorawanDevice.objects.all()
     lookup_field = 'deveui'
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -95,9 +100,14 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LorawanConnectionView(CreateAPIView, UpdateAPIView):
+class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanConnectionSerializer
     queryset = LorawanConnection.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def get_object(self):
         # Get the 'node_vsn' and 'lorawan_deveui' from the URL
