@@ -403,12 +403,24 @@ class LorawanConnectionAdmin(nested_admin.NestedModelAdmin):
         "connection_name"
     ]
 
+@admin.register(LorawanKeys)
+class LorawanKeysAdmin(admin.ModelAdmin):
+    list_display = [
+        "lorawan_connection",
+        "app_key",
+        "network_Key",
+        "app_session_key",
+        "dev_address",
+    ]
+    search_fields = [
+        "lorawan_connection"
+    ]
+
 admin.site.register(
     ComputeHardware,
     list_display=["hardware", "hw_model", "manufacturer"],
     search_fields=["name"],
 )
-
 
 @admin.register(SensorHardware)
 class SensorHardwareAdmin(admin.ModelAdmin):

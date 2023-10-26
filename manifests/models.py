@@ -335,6 +335,11 @@ class LorawanDevice(models.Model):
         return self.deveui
 
 class LorawanConnection(models.Model):
+    CONNECTION_CHOICES = (
+        ("OTAA", "OTAA"),
+        ("ABP", "ABP")
+    )
+
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, related_name='lorawanconnections', null=False,blank=False)
     lorawan_device = models.ForeignKey(LorawanDevice, on_delete=models.CASCADE, related_name='lorawanconnections', null=False,blank=False)
     connection_name = models.CharField(max_length=100, null=True, blank=True)
@@ -342,7 +347,8 @@ class LorawanConnection(models.Model):
     last_seen_at = models.DateTimeField(null=True, blank=True)
     margin = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     expected_uplink_interval_sec = models.IntegerField(blank=True, null=True)
-     # add more fields later like device class, using OTAA or ADB, app name, app key etc- Flozano
+    connection_type = models.CharField(max_length=30, choices=CONNECTION_CHOICES, null=False, blank=False)
+     # add more fields later like device class, app name etc- Flozano
 
     class Meta:
         verbose_name = "Lorawan Connection"
@@ -351,4 +357,26 @@ class LorawanConnection(models.Model):
 
     def __str__(self):
         return str(self.node) + '-' + str(self.lorawan_device)
+
+class LorawanKeys(models.Model):
+
+    lorawan_connection = models.OneToOneField(LorawanConnection, on_delete=models.CASCADE, related_name='lorawankey', null=False,blank=False)
+    app_key = models.CharField(max_length=32, null=True, blank=True)
+    network_Key = models.CharField(max_length=32, null=False, blank=False) 
+    app_session_key = models.CharField(max_length=32, null=False, blank=False) 
+    dev_address = models.CharField(max_length=8, null=False, blank=False)
+
+    def clean(self):
+        # Perform the custom validation here
+        if self.lorawan_connection.connection_type == 'OTAA' and not self.app_key:
+            raise ValidationError("app_key cannot be blank for OTAA connections.")
+
+        super(LorawanKeys, self).clean()
+
+    class Meta:
+        verbose_name = "Lorawan Key"
+        verbose_name_plural = "Lorawan Keys"
+
+    def __str__(self):
+        return str(self.lorawan_connection)
 
