@@ -1,6 +1,6 @@
 from django.contrib.auth.models import *
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from .models import *
 from .serializers import (
@@ -63,6 +63,7 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanDeviceSerializer
     queryset = LorawanDevice.objects.all()
     lookup_field = 'deveui'
+    permission_classes = [IsAdminUser] #adding this for now until node authentication architecture is created
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -103,6 +104,7 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
 class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanConnectionSerializer
     queryset = LorawanConnection.objects.all()
+    permission_classes = [IsAdminUser] #adding this for now until node authentication architecture is created
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
