@@ -46,6 +46,8 @@ class ManifestSerializer(serializers.ModelSerializer):
         fields = (
             "vsn",
             "name",
+            "phase",
+            "address",
             "gps_lat",
             "gps_lon",
             "modem",
@@ -104,3 +106,47 @@ def serialize_compute_hardware(h):
         "gpu_ram": h.gpu_ram,
         "shared_ram": h.shared_ram,
     }
+
+
+class ComputeSerializer(serializers.ModelSerializer):
+    node = serializers.CharField(source="node.vsn")
+    hardware = serializers.CharField(source="hardware.hardware")
+
+    class Meta:
+        model = Compute
+        fields = [
+            "node",
+            "hardware",
+            "name",
+            "serial_no",
+            "zone",
+        ]
+
+
+class NodeBuildSerializer(serializers.ModelSerializer):
+    project = serializers.CharField(source="project.name", allow_null=True)
+    top_camera = serializers.CharField(source="top_camera.hardware", allow_null=True)
+    bottom_camera = serializers.CharField(
+        source="bottom_camera.hardware", allow_null=True
+    )
+    left_camera = serializers.CharField(source="left_camera.hardware", allow_null=True)
+    right_camera = serializers.CharField(
+        source="right_camera.hardware", allow_null=True
+    )
+
+    class Meta:
+        model = NodeBuild
+        fields = [
+            "vsn",
+            "type",
+            "project",
+            "top_camera",
+            "bottom_camera",
+            "left_camera",
+            "right_camera",
+            "agent",
+            "shield",
+            "extra_rpi",
+            "modem",
+            "modem_sim_type",
+        ]

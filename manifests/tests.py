@@ -206,3 +206,46 @@ class SensorHardwareViewsTest(TestCase):
             },
             item,
         )
+
+
+class NodeBuildsTest(TestCase):
+    def test_list(self):
+        project = NodeBuildProject.objects.create(name="Test")
+        NodeBuild.objects.create(vsn="W001", shield=True, modem=False)
+        NodeBuild.objects.create(vsn="W002", agent=True, project=project)
+
+        r = self.client.get("/node-builds/")
+        self.assertEqual(r.status_code, 200)
+        items = r.json()
+
+        self.assertDictContainsSubset(
+            {
+                "vsn": "W001",
+                "project": None,
+                "top_camera": None,
+                "bottom_camera": None,
+                "left_camera": None,
+                "right_camera": None,
+                "agent": False,
+                "shield": True,
+                "modem": False,
+                "modem_sim_type": None,
+            },
+            items[0],
+        )
+
+        self.assertDictContainsSubset(
+            {
+                "vsn": "W002",
+                "project": "Test",
+                "top_camera": None,
+                "bottom_camera": None,
+                "left_camera": None,
+                "right_camera": None,
+                "agent": True,
+                "shield": False,
+                "modem": False,
+                "modem_sim_type": None,
+            },
+            items[1],
+        )

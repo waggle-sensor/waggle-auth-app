@@ -1,27 +1,20 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import (
+    ManifestViewSet,
+    SensorHardwareViewSet,
+    NodeBuildViewSet,
+    ComputeViewSet,
+)
 
 app_name = "manifests"
 
+router = DefaultRouter()
+router.register(r"manifests", ManifestViewSet)
+router.register(r"computes", ComputeViewSet)
+router.register(r"sensors", SensorHardwareViewSet)
+router.register(r"node-builds", NodeBuildViewSet)
+
 urlpatterns = [
-    path(
-        "manifests/",
-        views.NodeList.as_view(),
-        name="manifest-list",
-    ),
-    path(
-        "manifests/<str:vsn>/",
-        views.NodeFilterList.as_view(),
-        name="manifest-detail",
-    ),
-    path(
-        "sensors/",
-        views.SensorHardwareListView.as_view(),
-        name="sensor-list",
-    ),
-    path(
-        "sensors/<str:hardware>/",
-        views.SensorHardwareDetailView.as_view(),
-        name="sensor-detail",
-    ),
+    path("", include(router.urls)),
 ]

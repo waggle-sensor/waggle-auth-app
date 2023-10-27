@@ -1,11 +1,29 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
+
+
+class NodePhase(models.TextChoices):
+    DEPLOYED = "Deployed"
+    MAINTENANCE = "Maintenance"
+    STANDBY = "Standby"
+    AWAITING_DEPLOYMENT = "Awaiting Deployment"
+    SHIPMENT_PENDING = "Shipment Pending"
+
+
+class NodeType(models.TextChoices):
+    BLADE = "Blade", "Blade"
+    WSN = "WSN", "WSN"
 
 
 class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
-    name = models.CharField(max_length=30)
+    name = models.CharField("Node ID", max_length=30, blank=True)
+    phase = models.CharField(
+        "Phase", max_length=30, null=True, choices=NodePhase.choices, blank=True
+    )
     tags = models.ManyToManyField("Tag", blank=True)
+    notes = models.TextField(blank=True)
     computes = models.ManyToManyField(
         "ComputeHardware", through="Compute", related_name="computes"
     )
@@ -14,6 +32,8 @@ class NodeData(models.Model):
     )
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
+    address = models.TextField("Address", blank=True)
+    registered_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.vsn
@@ -201,3 +221,99 @@ class Label(models.Model):
 
     def natural_key(self):
         return self.label
+
+
+class NodeBuildProject(models.Model):
+    class Meta:
+        verbose_name_plural = "Node Build Projects"
+
+    name = models.CharField("Name", max_length=64)
+
+    def __str__(self):
+        return self.name
+
+
+class NodeBuild(models.Model):
+    class Meta:
+        verbose_name_plural = "Node Builds"
+
+    vsn = models.CharField(
+        "VSN",
+        max_length=10,
+        unique=True,
+    )
+    type = models.CharField(
+        "Type",
+        max_length=10,
+        choices=NodeType.choices,
+        default=NodeType.WSN,
+    )
+    project = models.ForeignKey(
+        NodeBuildProject,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    agent = models.BooleanField(
+        "Agent",
+        default=False,
+    )
+    shield = models.BooleanField(
+        "Shield",
+        default=False,
+    )
+    extra_rpi = models.BooleanField(
+        "Extra RPi",
+        default=False,
+    )
+    modem = models.BooleanField(
+        "Modem",
+        default=False,
+    )
+    modem_sim_type = models.CharField(
+        "Modem SIM Type",
+        max_length=64,
+        blank=True,
+        null=True,
+        choices=ModemSIMs,
+        default=None,
+    )
+    top_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    bottom_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    left_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    right_camera = models.ForeignKey(
+        SensorHardware,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
+    def clean(self):
+        super().clean()
+
+        if self.modem is False and self.modem_sim_type is not None:
+            raise ValidationError(
+                {
+                    "modem": "Modem must be set to True if SIM Type is specified.",
+                    "sim_type": "SIM Type should be empty if Modem is False.",
+                }
+            )
