@@ -3,9 +3,14 @@ from .models import *
 
 
 class SensorHardwareSerializer(serializers.ModelSerializer):
+    # replace capabilities IDs by their names
+    capabilities = serializers.SlugRelatedField(many=True, read_only=True, slug_field="capability", required=False)
+
     class Meta:
         model = SensorHardware
-        exclude = ["id"]
+        # to preserve the fields order, we'll list them explicitly
+        fields = ["hardware", "hw_model", "hw_version", "sw_version", "manufacturer", "datasheet", "description",
+                  "capabilities"]
 
 
 class ModemSerializer(serializers.ModelSerializer):
