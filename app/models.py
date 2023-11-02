@@ -3,6 +3,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from node_auth.models import Token
 import re
 import uuid
 
@@ -53,6 +56,11 @@ class Node(models.Model):
 
     def __str__(self):
         return self.vsn
+
+@receiver(post_save, sender=Node)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(device=instance)
 
 
 class Project(models.Model):
