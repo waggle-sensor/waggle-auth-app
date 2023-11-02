@@ -60,7 +60,7 @@ class Node(models.Model):
 @receiver(post_save, sender=Node)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
-        Token.objects.create(device=instance)
+        Token.objects.create(node=instance)
 
 
 class Project(models.Model):
