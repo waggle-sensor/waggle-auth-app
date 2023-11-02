@@ -11,9 +11,9 @@ class Token(models.Model):
     The default authorization token model.
     """
     key = models.CharField(_("Key"), max_length=40, primary_key=True)
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, related_name='auth_token',
-        on_delete=models.CASCADE, verbose_name=_("User")
+    node = models.OneToOneField(
+        'app.Node', related_name='auth_token',
+        on_delete=models.CASCADE, verbose_name=_("node")
     )
     created = models.DateTimeField(_("Created"), auto_now_add=True)
 
@@ -40,16 +40,16 @@ class Token(models.Model):
         return self.key
 
 
-class TokenProxy(Token):
-    """
-    Proxy mapping pk to user pk for use in admin.
-    """
-    @property
-    def pk(self):
-        return self.user_id
+# class TokenProxy(Token):
+#     """
+#     Proxy mapping pk to user pk for use in admin.
+#     """
+#     @property
+#     def pk(self):
+#         return self.node
 
-    class Meta:
-        proxy = 'rest_framework.authtoken' in settings.INSTALLED_APPS
-        abstract = 'rest_framework.authtoken' not in settings.INSTALLED_APPS
-        verbose_name = _("Token")
-        verbose_name_plural = _("Tokens")
+#     class Meta:
+#         proxy = 'rest_framework.authtoken' in settings.INSTALLED_APPS
+#         abstract = 'rest_framework.authtoken' not in settings.INSTALLED_APPS
+#         verbose_name = _("Token")
+#         verbose_name_plural = _("Tokens")
