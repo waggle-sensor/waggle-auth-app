@@ -7,10 +7,6 @@ from app.models import Node
 
 class AuthTokenSerializer(serializers.Serializer):
     vsn = serializers.CharField()
-    token = serializers.CharField(
-        label=_("Token"),
-        read_only=True
-    )
 
     def validate(self, attrs):
         vsn = attrs.get('vsn')
