@@ -1,13 +1,14 @@
 from rest_framework import parsers, renderers
 from .models import Token
 from .serializers import AuthTokenSerializer
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 #delete this? we dont want to obtain the auth token by vsn. Defeats the purpose of adding a token - francisco lozano
 class ObtainAuthToken(APIView):
     throttle_classes = ()
-    permission_classes = ()
+    permission_classes = (IsAdminUser)
     parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
     renderer_classes = (renderers.JSONRenderer,)
     serializer_class = AuthTokenSerializer
