@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 # from django.contrib.admin.utils import quote
 # from django.contrib.admin.views.main import ChangeList
 # from django.contrib.auth import get_user_model
@@ -23,9 +24,10 @@ from .models import Token
 
 
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('key', 'node', 'created')
-    fields = ('node',)
-    ordering = ('-created',)
+    list_display = ("key", "node", "created")
+    fields = ("node",)
+    ordering = ("-created",)
+
 
 admin.site.register(Token, TokenAdmin)
 

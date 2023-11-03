@@ -20,27 +20,33 @@ router.register(r"node-builds", NodeBuildViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        'lorawandevices/create/', 
-        LorawanDeviceView.as_view(), 
-        name='create_lorawan_device'),
-    path(
-        'lorawandevices/update/<str:deveui>/',
+        "lorawandevices/create/",
         LorawanDeviceView.as_view(),
-        name='update_lorawan_device'),
+        name="create_lorawan_device",
+    ),
     path(
-        'lorawandevices/<str:deveui>/',
+        "lorawandevices/update/<str:deveui>/",
         LorawanDeviceView.as_view(),
-        name='retrieve_lorawan_device'),
+        name="update_lorawan_device",
+    ),
     path(
-        'lorawanconnections/create/', 
-        LorawanConnectionView.as_view(), 
-        name='create_lorawan_connection'),
+        "lorawandevices/<str:deveui>/",
+        LorawanDeviceView.as_view(),
+        name="retrieve_lorawan_device",
+    ),
     path(
-        'lorawanconnections/update/<str:node_vsn>/<str:lorawan_deveui>/',
+        "lorawanconnections/create/",
         LorawanConnectionView.as_view(),
-        name='update_lorawan_connection'),
+        name="create_lorawan_connection",
+    ),
     path(
-        'lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/',
+        "lorawanconnections/update/<str:node_vsn>/<str:lorawan_deveui>/",
         LorawanConnectionView.as_view(),
-        name='retrieve_lorawan_connection'),
+        name="update_lorawan_connection",
+    ),
+    path(
+        "lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/",
+        LorawanConnectionView.as_view(),
+        name="retrieve_lorawan_connection",
+    ),
 ]

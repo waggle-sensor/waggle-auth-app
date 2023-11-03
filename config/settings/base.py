@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     "oidc_auth",
     "manifests",
     "nested_admin",
-    "node_auth"
+    "node_auth",
 ]
 
 AUTH_USER_MODEL = "app.User"

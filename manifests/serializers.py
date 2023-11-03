@@ -13,17 +13,24 @@ class ModemSerializer(serializers.ModelSerializer):
         model = Modem
         fields = ["model", "sim_type", "carrier"]
 
+
 class LorawanDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = LorawanDevice
-        fields = '__all__'
+        fields = "__all__"
+
 
 class LorawanConnectionSerializer(serializers.ModelSerializer):
-    node = serializers.CharField(source='node.vsn')  # Use the 'vsn' field as the source for node field
-    lorawan_device = serializers.CharField(source='lorawan_device.deveui')  # Use the 'deveui' field as the source for lorawan device field
+    node = serializers.CharField(
+        source="node.vsn"
+    )  # Use the 'vsn' field as the source for node field
+    lorawan_device = serializers.CharField(
+        source="lorawan_device.deveui"
+    )  # Use the 'deveui' field as the source for lorawan device field
+
     class Meta:
         model = LorawanConnection
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ManifestSerializer(serializers.ModelSerializer):
@@ -71,7 +78,7 @@ class ManifestSerializer(serializers.ModelSerializer):
             "computes",
             "sensors",
             "resources",
-            "lorawanconnections"
+            "lorawanconnections",
         )
 
 
@@ -114,6 +121,7 @@ def serialize_common_hardware(h):
         "description": h.description,
     }
 
+
 def serialize_compute_hardware(h):
     return {
         **serialize_common_hardware(h),
@@ -123,12 +131,14 @@ def serialize_compute_hardware(h):
         "shared_ram": h.shared_ram,
     }
 
+
 def serialize_lorawan_devices(l):
     return {
         "deveui": l.deveui,
         "device_name": l.device_name,
         "battery_level": l.battery_level,
     }
+
 
 def serialize_lorawan_connections(l):
     return {
@@ -139,6 +149,7 @@ def serialize_lorawan_connections(l):
         "expected_uplink_interval_sec": l.expected_uplink_interval_sec,
         "lorawandevice": serialize_lorawan_devices(l.lorawan_device),
     }
+
 
 class ComputeSerializer(serializers.ModelSerializer):
     node = serializers.CharField(source="node.vsn")

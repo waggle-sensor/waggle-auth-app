@@ -12,13 +12,14 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from .models import Token
 
+
 def get_authorization_header(request):
     """
     Return request's 'Authorization:' header, as a bytestring.
 
     Hide some test client ickyness where the header can be unicode.
     """
-    auth = request.META.get('HTTP_AUTHORIZATION', b'')
+    auth = request.META.get("HTTP_AUTHORIZATION", b"")
     if isinstance(auth, str):
         # Work around django test client oddness
         auth = auth.encode(HTTP_HEADER_ENCODING)
@@ -50,6 +51,7 @@ class BaseAuthentication:
         """
         pass
 
+
 class TokenAuthentication(BaseAuthentication):
     """
     Simple token based authentication.
@@ -60,7 +62,7 @@ class TokenAuthentication(BaseAuthentication):
         Authorization: node_auth 401f7ac837da42b97f613d789819ff93537bee6a
     """
 
-    keyword = 'node_auth'
+    keyword = "node_auth"
     model = Token
 
     def authenticate(self, request):
@@ -70,16 +72,18 @@ class TokenAuthentication(BaseAuthentication):
             return None
 
         if len(auth) == 1:
-            msg = _('Invalid token header. No credentials provided.')
+            msg = _("Invalid token header. No credentials provided.")
             raise exceptions.AuthenticationFailed(msg)
         elif len(auth) > 2:
-            msg = _('Invalid token header. Token string should not contain spaces.')
+            msg = _("Invalid token header. Token string should not contain spaces.")
             raise exceptions.AuthenticationFailed(msg)
 
         try:
             token = auth[1].decode()
         except UnicodeError:
-            msg = _('Invalid token header. Token string should not contain invalid characters.')
+            msg = _(
+                "Invalid token header. Token string should not contain invalid characters."
+            )
             raise exceptions.AuthenticationFailed(msg)
 
         return self.authenticate_credentials(token)
@@ -87,9 +91,9 @@ class TokenAuthentication(BaseAuthentication):
     def authenticate_credentials(self, key):
         model = self.model
         try:
-            token = model.objects.select_related('node').get(key=key)
+            token = model.objects.select_related("node").get(key=key)
         except model.DoesNotExist:
-            raise exceptions.AuthenticationFailed(_('Invalid token.'))
+            raise exceptions.AuthenticationFailed(_("Invalid token."))
 
         # if not token.node.is_active: #need to add "is_active" to node model in manifest app
         #     raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
