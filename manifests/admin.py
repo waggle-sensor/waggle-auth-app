@@ -378,6 +378,37 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
         )
 
 
+@admin.register(LorawanDevice)
+class LorawanDeviceAdmin(admin.ModelAdmin):
+    list_display = ["device_name", "deveui", "battery_level"]
+    search_fields = ["device_name", "deveui"]
+
+
+@admin.register(LorawanConnection)
+class LorawanConnectionAdmin(nested_admin.NestedModelAdmin):
+    list_display = [
+        "connection_name",
+        "lorawan_device",
+        "node",
+        "created_at",
+        "last_seen_at",
+    ]
+    list_filter = ["node", "lorawan_device"]
+    search_fields = ["connection_name"]
+
+
+@admin.register(LorawanKeys)
+class LorawanKeysAdmin(admin.ModelAdmin):
+    list_display = [
+        "lorawan_connection",
+        "app_key",
+        "network_Key",
+        "app_session_key",
+        "dev_address",
+    ]
+    search_fields = ["lorawan_connection"]
+
+
 admin.site.register(
     ComputeHardware,
     list_display=["hardware", "hw_model", "manufacturer"],

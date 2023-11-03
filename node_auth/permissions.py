@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission
 
+
 class IsAuthenticated(BasePermission):
     """
     Allows access only to authenticated nodes.

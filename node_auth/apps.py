@@ -3,5 +3,5 @@ from django.utils.translation import gettext_lazy as _
 
 
 class AuthTokenConfig(AppConfig):
-    name = 'node_auth' #used rest_framework.authtoken as template
+    name = "node_auth"  # used rest_framework.authtoken as template
     verbose_name = _("Node Auth Token")
