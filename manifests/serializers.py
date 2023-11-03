@@ -14,12 +14,32 @@ class ModemSerializer(serializers.ModelSerializer):
         fields = ["model", "sim_type", "carrier"]
 
 
+class LorawanDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LorawanDevice
+        fields = "__all__"
+
+
+class LorawanConnectionSerializer(serializers.ModelSerializer):
+    node = serializers.CharField(
+        source="node.vsn"
+    )  # Use the 'vsn' field as the source for node field
+    lorawan_device = serializers.CharField(
+        source="lorawan_device.deveui"
+    )  # Use the 'deveui' field as the source for lorawan device field
+
+    class Meta:
+        model = LorawanConnection
+        fields = "__all__"
+
+
 class ManifestSerializer(serializers.ModelSerializer):
     modem = ModemSerializer()
     computes = serializers.SerializerMethodField("get_computes")
     resources = serializers.SerializerMethodField("get_resources")
     tags = serializers.StringRelatedField(many=True)
     sensors = serializers.SerializerMethodField("get_sensors")
+    lorawanconnections = serializers.SerializerMethodField("get_lorawan_connections")
 
     def get_computes(self, obj: NodeData):
         return [serialize_compute(c) for c in obj.compute_set.all()]
@@ -41,6 +61,9 @@ class ManifestSerializer(serializers.ModelSerializer):
     def get_resources(self, obj: NodeData):
         return [serialize_resource(r) for r in obj.resource_set.all()]
 
+    def get_lorawan_connections(self, obj: NodeData):
+        return [serialize_lorawan_connections(l) for l in obj.lorawanconnections.all()]
+
     class Meta:
         model = NodeData
         fields = (
@@ -55,6 +78,7 @@ class ManifestSerializer(serializers.ModelSerializer):
             "computes",
             "sensors",
             "resources",
+            "lorawanconnections",
         )
 
 
@@ -105,6 +129,25 @@ def serialize_compute_hardware(h):
         "cpu_ram": h.cpu_ram,
         "gpu_ram": h.gpu_ram,
         "shared_ram": h.shared_ram,
+    }
+
+
+def serialize_lorawan_devices(l):
+    return {
+        "deveui": l.deveui,
+        "device_name": l.device_name,
+        "battery_level": l.battery_level,
+    }
+
+
+def serialize_lorawan_connections(l):
+    return {
+        "connection_name": l.connection_name,
+        "created_at": l.created_at,
+        "last_seen_at": l.last_seen_at,
+        "margin": l.margin,
+        "expected_uplink_interval_sec": l.expected_uplink_interval_sec,
+        "lorawandevice": serialize_lorawan_devices(l.lorawan_device),
     }
 
 

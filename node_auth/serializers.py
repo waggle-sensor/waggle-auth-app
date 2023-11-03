@@ -9,13 +9,13 @@ class AuthTokenSerializer(serializers.Serializer):
     vsn = serializers.CharField()
 
     def validate(self, attrs):
-        vsn = attrs.get('vsn')
+        vsn = attrs.get("vsn")
 
         if Node.objects.filter(vsn=vsn).exists():
             node = Node.objects.get(vsn=vsn)
         else:
-            msg = _('Node not registered')
+            msg = _("Node not registered")
             raise serializers.ValidationError(msg)
 
-        attrs['vsn'] = node
+        attrs["vsn"] = node
         return attrs
