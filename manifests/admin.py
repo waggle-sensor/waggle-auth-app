@@ -425,7 +425,7 @@ admin.site.register(
 @admin.register(SensorHardware)
 class SensorHardwareAdmin(admin.ModelAdmin):
     list_display = ["hardware", "hw_model", "manufacturer", "is_camera"]
-    search_fields = ["name"]
+    search_fields = ["hardware", "hw_model", "manufacturer"]
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

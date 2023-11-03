@@ -4,9 +4,10 @@ from .views import (
     ManifestViewSet,
     SensorHardwareViewSet,
     NodeBuildViewSet,
-    ComputeViewSet
+    ComputeViewSet,
+    LorawanDeviceView,
+    LorawanConnectionView,
 )
-from . import views
 
 app_name = "manifests"
 
@@ -20,26 +21,26 @@ urlpatterns = [
     path("", include(router.urls)),
     path(
         'lorawandevices/create/', 
-        views.LorawanDeviceView.as_view(), 
+        LorawanDeviceView.as_view(), 
         name='create_lorawan_device'),
     path(
         'lorawandevices/update/<str:deveui>/',
-        views.LorawanDeviceView.as_view(),
+        LorawanDeviceView.as_view(),
         name='update_lorawan_device'),
     path(
         'lorawandevices/<str:deveui>/',
-        views.LorawanDeviceView.as_view(),
+        LorawanDeviceView.as_view(),
         name='retrieve_lorawan_device'),
     path(
         'lorawanconnections/create/', 
-        views.LorawanConnectionView.as_view(), 
+        LorawanConnectionView.as_view(), 
         name='create_lorawan_connection'),
     path(
         'lorawanconnections/update/<str:node_vsn>/<str:lorawan_deveui>/',
-        views.LorawanConnectionView.as_view(),
+        LorawanConnectionView.as_view(),
         name='update_lorawan_connection'),
     path(
         'lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/',
-        views.LorawanConnectionView.as_view(),
+        LorawanConnectionView.as_view(),
         name='retrieve_lorawan_connection'),
 ]

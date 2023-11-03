@@ -140,7 +140,6 @@ def serialize_lorawan_connections(l):
         "lorawandevice": serialize_lorawan_devices(l.lorawan_device),
     }
 
-
 class ComputeSerializer(serializers.ModelSerializer):
     node = serializers.CharField(source="node.vsn")
     hardware = serializers.CharField(source="hardware.hardware")

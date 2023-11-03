@@ -9,7 +9,7 @@ from .serializers import (
     NodeBuildSerializer,
     ComputeSerializer,
     LorawanDeviceSerializer,
-    LorawanConnectionSerializer
+    LorawanConnectionSerializer,
 ) 
 from rest_framework.response import Response
 from rest_framework import status

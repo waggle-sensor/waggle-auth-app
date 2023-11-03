@@ -317,7 +317,8 @@ class NodeBuild(models.Model):
                     "sim_type": "SIM Type should be empty if Modem is False.",
                 }
             )
-            
+
+
 class LorawanDevice(models.Model):
     deveui = models.CharField(max_length=16, primary_key=True, unique=True, null=False, blank=False)
     device_name = models.CharField(max_length=100, null=True, blank=True)
@@ -333,6 +334,7 @@ class LorawanDevice(models.Model):
 
     def natural_key(self):
         return self.deveui
+
 
 class LorawanConnection(models.Model):
     CONNECTION_CHOICES = (
@@ -358,8 +360,8 @@ class LorawanConnection(models.Model):
     def __str__(self):
         return str(self.node) + '-' + str(self.lorawan_device)
 
-class LorawanKeys(models.Model):
 
+class LorawanKeys(models.Model):
     lorawan_connection = models.OneToOneField(LorawanConnection, on_delete=models.CASCADE, related_name='lorawankey', null=False,blank=False)
     app_key = models.CharField(max_length=32, null=True, blank=True)
     network_Key = models.CharField(max_length=32, null=False, blank=False) 
@@ -379,4 +381,3 @@ class LorawanKeys(models.Model):
 
     def __str__(self):
         return str(self.lorawan_connection)
-
