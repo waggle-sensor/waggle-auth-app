@@ -24,7 +24,7 @@ from node_auth.permissions import IsAuthenticated as NodeIsAuthenticated, IsAuth
 
 class NodeOwnedObjectsMixin:
     """
-    Allows access to objects associated to authenticated node. Order of operations:
+    Allows access to ONLY objects associated to authenticated node. Order of operations:
     1) token authentication
     2) filter queryset to only include records associated with node
     3) checks object permission
@@ -35,6 +35,13 @@ class NodeOwnedObjectsMixin:
         nodeVSN = self.request.user.vsn
         queryset = super().get_queryset()
         return queryset.filter(vsn=nodeVSN)
+
+class NodeAuthMixin:
+    """
+    Allows access to authenticated node:
+    """
+    authentication_classes = (NodeTokenAuthentication,)
+    permission_classes = (NodeIsAuthenticated,)
 
 class ManifestViewSet(NodeOwnedObjectsMixin,ReadOnlyModelViewSet):
     queryset = (
