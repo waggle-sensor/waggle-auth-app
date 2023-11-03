@@ -87,7 +87,7 @@ class OnlyCreateToSelf(BasePermission):
         try:
             return node and node.vsn
         except:
-            return False
+        	return False
 
     @staticmethod
     def default(self, request, foreign_key_name):
