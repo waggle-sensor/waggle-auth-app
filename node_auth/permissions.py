@@ -27,9 +27,10 @@ class IsAuthenticated_ObjectLevel(BasePermission):
         """
         node = request.user
         try:
-        	return node and node.vsn
+            return node and node.vsn
         except:
-        	return False
+            return False
+
 
     def has_object_permission(self, request, view, obj):
         """
