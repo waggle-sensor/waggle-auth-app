@@ -43,7 +43,7 @@ class NodeAuthMixin:
     authentication_classes = (NodeTokenAuthentication,)
     permission_classes = (NodeIsAuthenticated,)
 
-class ManifestViewSet(NodeOwnedObjectsMixin,ReadOnlyModelViewSet):
+class ManifestViewSet(ReadOnlyModelViewSet):
     queryset = (
         NodeData.objects.all()
         .prefetch_related(
@@ -87,13 +87,10 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-class LorawanDeviceView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanDeviceView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanDeviceSerializer
     queryset = LorawanDevice.objects.all()
     lookup_field = "deveui"
-    permission_classes = [
-        IsAdminUser
-    ]  # adding this for now until node authentication architecture is created
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
