@@ -22,19 +22,36 @@ from rest_framework import status
 from node_auth.authentication import TokenAuthentication as NodeTokenAuthentication
 from node_auth.permissions import IsAuthenticated as NodeIsAuthenticated, IsAuthenticated_ObjectLevel as NodeIsAuthenticated_ObjectLevel
 
+# class NodeOwnedObjectsMixin:
+#     """
+#     Allows access to ONLY objects associated to authenticated node. Order of operations:
+#     1) token authentication
+#     2) filter queryset to only include records associated with node
+#     3) checks object permission
+#     """
+#     authentication_classes = (NodeTokenAuthentication,)
+#     permission_classes = (NodeIsAuthenticated_ObjectLevel,)
+#     def get_queryset(self):
+#         nodeVSN = self.request.user.vsn
+#         queryset = super().get_queryset()
+#         return queryset.filter(vsn=nodeVSN)
+
 class NodeOwnedObjectsMixin:
     """
-    Allows access to ONLY objects associated to authenticated node. Order of operations:
-    1) token authentication
-    2) filter queryset to only include records associated with node
-    3) checks object permission
+    Allows access to ONLY objects associated with the authenticated node. Order of operations:
+    1) Token authentication
+    2) Filter queryset to only include records associated with the node (reference your model's vsn field)
+    3) Check object permission
     """
     authentication_classes = (NodeTokenAuthentication,)
     permission_classes = (NodeIsAuthenticated_ObjectLevel,)
+    vsn_field = 'vsn'  # Default vsn field name
+
     def get_queryset(self):
         nodeVSN = self.request.user.vsn
         queryset = super().get_queryset()
-        return queryset.filter(vsn=nodeVSN)
+        return queryset.filter(**{f'{self.vsn_field}': nodeVSN})
+
 
 class NodeAuthMixin:
     """
