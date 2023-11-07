@@ -17,6 +17,10 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from oidc_auth import views as oidc_views
+from django.contrib.admin.views.decorators import staff_member_required
+
+# admin site should use project login instead of custom login
+admin.site.login = staff_member_required(admin.site.login, login_url=settings.LOGIN_URL)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
