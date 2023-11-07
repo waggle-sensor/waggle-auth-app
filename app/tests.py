@@ -571,10 +571,13 @@ class TestAuth(TestCase):
         self.assertEqual(r.cookies["sage_username"].value, user.username)
         self.assertEqual(r.cookies["sage_token"].value, token.key)
 
-        # logging out must tell client to delete user cookies
+        # logging out must tell client to delete user cookies and performs globus logout flow
         r = self.client.post("/logout/")
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(r.url, settings.LOGOUT_REDIRECT_URL)
+        self.assertEqual(
+            r.url,
+            "https://auth.globus.org/v2/web/logout?redirect_uri=http://testserver/",
+        )
         self.assertFalse(r.wsgi_request.user.is_authenticated)
         # TODO see if test client can clear expired / deleted cookies
         self.assertEqual(r.cookies.get("sage_uuid").value, "")
