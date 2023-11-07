@@ -257,10 +257,10 @@ class LogoutView(auth_views.LogoutView):
     def get_success_url_allowed_hosts(self):
         return settings.SUCCESS_URL_ALLOWED_HOSTS
 
-    def get_default_redirect_url(self):
-        redirect_uri = self.request.build_absolute_uri(
-            super().get_default_redirect_url()
-        )
+    # TODO Figure out if get_success_url is the correct function to use here.
+    def get_success_url(self):
+        success_url = super().get_success_url()
+        redirect_uri = self.request.build_absolute_uri(success_url)
         return f"https://auth.globus.org/v2/web/logout?redirect_uri={redirect_uri}"
 
     def dispatch(self, *args, **kwargs):
@@ -271,7 +271,7 @@ class LogoutView(auth_views.LogoutView):
         response.delete_cookie("sage_username", domain=settings.SAGE_COOKIE_DOMAIN)
         response.delete_cookie("sage_token", domain=settings.SAGE_COOKIE_DOMAIN)
 
-        # NOTE get_default_redirect_url will cause this to redirect through globus logout
+        # NOTE get_success_url will cause this to redirect through globus logout
         return response
 
 

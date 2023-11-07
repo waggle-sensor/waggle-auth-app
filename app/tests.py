@@ -637,8 +637,14 @@ class TestAuth(TestCase):
     @override_settings(SUCCESS_URL_ALLOWED_HOSTS=["portal.sagecontinuum.org"])
     def testLogoutNext(self):
         r = self.client.get("/logout/?next=https://portal.sagecontinuum.org")
+        self.assertEqual(r.cookies.get("sage_uuid").value, "")
+        self.assertEqual(r.cookies.get("sage_username").value, "")
+        self.assertEqual(r.cookies.get("sage_token").value, "")
         self.assertEqual(r.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(r.url, "https://portal.sagecontinuum.org")
+        self.assertEqual(
+            r.url,
+            "https://auth.globus.org/v2/web/logout?redirect_uri=https://portal.sagecontinuum.org",
+        )
 
     # TODO(sean) fix /admin/ redirect
     # def testAdminLoginRedirect(self):
@@ -743,11 +749,24 @@ class TestPortalCompatibility(TestCase):
     def testLogoutCallback(self):
         # TODO migrate portal to using /logout/?next=...
         r = self.client.get("/portal-logout/?callback=https://portal.sagecontinuum.org")
-        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(r.url, "https://portal.sagecontinuum.org")
         self.assertEqual(r.cookies.get("sage_uuid").value, "")
         self.assertEqual(r.cookies.get("sage_username").value, "")
         self.assertEqual(r.cookies.get("sage_token").value, "")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(
+            r.url,
+            "https://auth.globus.org/v2/web/logout?redirect_uri=https://portal.sagecontinuum.org",
+        )
+
+    @override_settings(SUCCESS_URL_ALLOWED_HOSTS=["portal.sagecontinuum.org"])
+    def testLogoutCallbackAllowedHosts(self):
+        r = self.client.get("/logout/?next=https://danger.org")
+        self.assertEqual(r.status_code, status.HTTP_302_FOUND)
+        # note that the non-allowed next url is ignored and we should be redirected to http://testserver/
+        self.assertEqual(
+            r.url,
+            "https://auth.globus.org/v2/web/logout?redirect_uri=http://testserver/",
+        )
 
 
 def create_random_user(**kwargs) -> User:
