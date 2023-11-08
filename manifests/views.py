@@ -38,29 +38,14 @@ class NodeOwnedObjectsMixin(NodeAuthMixin):
     3) Check object permission (custom views, you'll need to make sure you check the object level permission checks yourself)
         - self.check_object_permissions(request, node_obj)
     """
-    permission_classes = [NodeIsAuthenticated_ObjectLevel, OnlyAssociateToSelf]
     vsn_field = 'vsn'  # Default vsn field name
-    node_field_name = 'node' # default node foreign key
+    foreign_key_name = 'node' # default node foreign key
+    permission_classes = [NodeIsAuthenticated_ObjectLevel(foreign_key_name), OnlyAssociateToSelf(foreign_key_name)]
 
     def get_queryset(self):
         nodeVSN = self.request.user.vsn
         queryset = super().get_queryset()
         return queryset.filter(**{f'{self.vsn_field}': nodeVSN})
-
-    def get_object(self):
-        queryset = self.get_queryset()
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
-        # Assuming you are using a generic view, you can retrieve the object as follows
-        obj = get_object_or_404(queryset, **{self.lookup_field: self.kwargs[lookup_url_kwarg]})
-
-        # Check object-level permissions here using the user-specified node field name
-        if hasattr(obj,'vsn'):
-            self.check_object_permissions(self.request, obj)
-        else:
-            self.check_object_permissions(self.request, getattr(obj, self.node_field_name))
-
-        return obj
 
 class ManifestViewSet(ReadOnlyModelViewSet):
     queryset = (

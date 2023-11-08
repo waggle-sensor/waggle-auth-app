@@ -19,7 +19,15 @@ class IsAuthenticated(BasePermission):
 class IsAuthenticated_ObjectLevel(BasePermission):
     """
     Allows access only to records associated to the authenticated node.
+    Defaulted to use 'node' as foreign key name
     """
+
+    def __init__(self, foreign_key_name='node'):
+        self.foreign_key_name = foreign_key_name
+
+    #return the object when called. Avoids TypeError when used in permission_classes
+    def __call__(self):
+        return self
 
     def has_permission(self, request, view):
         """
@@ -38,12 +46,17 @@ class IsAuthenticated_ObjectLevel(BasePermission):
         """
         node = request.user
 
-        # Instance must have an attribute named `vsn`.
-        return obj.vsn == node.vsn
+        # Check object-level permissions here using the user-specified foreign key name
+        if hasattr(obj,'vsn'):
+            return obj.vsn == node.vsn
+        else:
+            node_obj = getattr(obj, self.foreign_key_name)
+            return node_obj.vsn == node.vsn
 
 class OnlyAssociateToSelf(BasePermission):
     """
     Permission to only allow authenticated Nodes to create objects associated to itself.
+    Defaulted to use 'node' as foreign key name
     """
 
     def __init__(self, foreign_key_name='node'):
