@@ -21,25 +21,33 @@ from rest_framework import status
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
-    queryset = (
-        NodeData.objects.all()
-        .prefetch_related(
-            "project",
-            "modem",
-            "compute_set__hardware__capabilities",
-            "nodesensor_set__hardware__capabilities",
-            "nodesensor_set__labels",
-            "compute_set__computesensor_set__scope",
-            "compute_set__computesensor_set__hardware__capabilities",
-            "compute_set__computesensor_set__labels",
-            "resource_set__hardware__capabilities",
-            "tags",
-        )
-        .order_by("vsn")
-    )
     serializer_class = ManifestSerializer
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = (
+            NodeData.objects.all()
+            .prefetch_related(
+                "project",
+                "modem",
+                "compute_set__hardware__capabilities",
+                "nodesensor_set__hardware__capabilities",
+                "nodesensor_set__labels",
+                "compute_set__computesensor_set__scope",
+                "compute_set__computesensor_set__hardware__capabilities",
+                "compute_set__computesensor_set__labels",
+                "resource_set__hardware__capabilities",
+                "tags",
+            )
+            .order_by("vsn")
+        )
+
+        project = self.request.query_params.get("project")
+        if project:
+            queryset = queryset.filter(project__name__iexact=project)
+
+        return queryset
 
 
 class ComputeViewSet(ReadOnlyModelViewSet):

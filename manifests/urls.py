@@ -12,7 +12,7 @@ from .views import (
 app_name = "manifests"
 
 router = DefaultRouter()
-router.register(r"manifests", ManifestViewSet)
+router.register(r"manifests", ManifestViewSet, basename="manifest")
 router.register(r"computes", ComputeViewSet)
 router.register(r"sensors", SensorHardwareViewSet)
 router.register(r"node-builds", NodeBuildViewSet)
