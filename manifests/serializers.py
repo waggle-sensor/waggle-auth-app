@@ -11,8 +11,16 @@ class SensorHardwareSerializer(serializers.ModelSerializer):
     class Meta:
         model = SensorHardware
         # to preserve the fields order, we'll list them explicitly
-        fields = ["hardware", "hw_model", "hw_version", "sw_version", "manufacturer", "datasheet", "description",
-                  "capabilities"]
+        fields = [
+            "hardware",
+            "hw_model",
+            "hw_version",
+            "sw_version",
+            "manufacturer",
+            "datasheet",
+            "description",
+            "capabilities",
+        ]
 
 
 class ModemSerializer(serializers.ModelSerializer):
