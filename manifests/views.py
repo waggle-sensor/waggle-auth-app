@@ -18,9 +18,9 @@ from .serializers import (
     LorawanConnectionSerializer,
     LorawanKeysSerializer
 )
-from rest_framework.response import Response
+from rest_framework.response import Response  
 from rest_framework import status
-from django.db import IntegrityError
+from django.db import IntegrityError 
 from node_auth.mixins import NodeAuthMixin, NodeOwnedObjectsMixin
 
 class ManifestViewSet(NodeOwnedObjectsMixin, ReadOnlyModelViewSet):
@@ -74,10 +74,13 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-class LorawanDeviceView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanDeviceView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanDeviceSerializer
     queryset = LorawanDevice.objects.all()
     lookup_field = "deveui"
+    permission_classes = [
+        IsAdminUser
+    ]  # adding this for now until node authentication architecture is created
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -128,12 +131,16 @@ class LorawanDeviceView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPI
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanConnectionSerializer
-    vsn_field = "node__vsn"
+    queryset = LorawanConnection.objects.all()
+    permission_classes = [
+        IsAdminUser
+    ]  # adding this for now until node authentication architecture is created
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.check_object_permissions(request, instance.node)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
