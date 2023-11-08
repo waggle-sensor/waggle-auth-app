@@ -19,6 +19,9 @@ class NodeType(models.TextChoices):
 class NodeData(models.Model):
     vsn = models.CharField("VSN", max_length=30, unique="True")
     name = models.CharField("Node ID", max_length=30, blank=True)
+    project = models.ForeignKey(
+        "NodeBuildProject", null=True, blank=True, on_delete=models.SET_NULL
+    )
     phase = models.CharField(
         "Phase", max_length=30, null=True, choices=NodePhase.choices, blank=True
     )
@@ -223,6 +226,8 @@ class Label(models.Model):
         return self.label
 
 
+# NOTE NodeBuildProject is used to refer to the organization which owns a node (Sage, DAWN, VTO)
+# as opposed to the permissions based groups we use in app's models.
 class NodeBuildProject(models.Model):
     class Meta:
         verbose_name_plural = "Node Build Projects"
