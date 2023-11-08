@@ -64,6 +64,10 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(node=instance)
 
 
+# NOTE This Project is more like a permissions group a node / user can be a part of
+# as opposed to an organizational project (ex. Sage, DAWN, VTO) who owns a node.
+#
+# Eventually, we should clarify the name or how this is done.
 class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)
     users = models.ManyToManyField(User, through="UserMembership")
