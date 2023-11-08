@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from node_auth.authentication import TokenAuthentication as NodeTokenAuthentication
-from node_auth.permissions import IsAuthenticated as NodeIsAuthenticated, IsAuthenticated_ObjectLevel as NodeIsAuthenticated_ObjectLevel
+from node_auth.permissions import IsAuthenticated as NodeIsAuthenticated, IsAuthenticated_ObjectLevel as NodeIsAuthenticated_ObjectLevel, OnlyAssociateToSelf
 from django.shortcuts import get_object_or_404
 
 class NodeAuthMixin:
@@ -38,7 +38,7 @@ class NodeOwnedObjectsMixin(NodeAuthMixin):
     3) Check object permission (custom views, you'll need to make sure you check the object level permission checks yourself)
         - self.check_object_permissions(request, node_obj)
     """
-    permission_classes = (NodeIsAuthenticated_ObjectLevel,)
+    permission_classes = [NodeIsAuthenticated_ObjectLevel, OnlyAssociateToSelf]
     vsn_field = 'vsn'  # Default vsn field name
     node_field_name = 'node' # default node foreign key
 

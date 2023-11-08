@@ -40,3 +40,31 @@ class IsAuthenticated_ObjectLevel(BasePermission):
 
         # Instance must have an attribute named `vsn`.
         return obj.vsn == node.vsn
+
+class OnlyAssociateToSelf(BasePermission):
+    """
+    Permission to only allow authenticated Nodes to create objects associated to itself.
+    """
+
+    def __init__(self, foreign_key_name='node'):
+        self.foreign_key_name = foreign_key_name
+
+    #return the object when called. Avoids TypeError when used in permission_classes
+    def __call__(self):
+        return self
+
+    def has_permission(self, request, view):
+
+        node = request.user
+
+        # Check if the request is POST
+        if request.method == 'POST':
+            # Check if object is associated to self
+            obj_vsn = request.data.get(self.foreign_key_name)
+            return obj_vsn == node.vsn
+
+        # For other requests, allow access based on user's own vsn
+        try:
+            return node and node.vsn
+        except:
+            return False
