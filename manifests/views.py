@@ -24,6 +24,7 @@ class ManifestViewSet(ReadOnlyModelViewSet):
     queryset = (
         NodeData.objects.all()
         .prefetch_related(
+            "project",
             "modem",
             "compute_set__hardware__capabilities",
             "nodesensor_set__hardware__capabilities",

@@ -4,13 +4,23 @@ from .models import *
 
 class SensorHardwareSerializer(serializers.ModelSerializer):
     # replace capabilities IDs by their names
-    capabilities = serializers.SlugRelatedField(many=True, read_only=True, slug_field="capability", required=False)
+    capabilities = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="capability", required=False
+    )
 
     class Meta:
         model = SensorHardware
         # to preserve the fields order, we'll list them explicitly
-        fields = ["hardware", "hw_model", "hw_version", "sw_version", "manufacturer", "datasheet", "description",
-                  "capabilities"]
+        fields = [
+            "hardware",
+            "hw_model",
+            "hw_version",
+            "sw_version",
+            "manufacturer",
+            "datasheet",
+            "description",
+            "capabilities",
+        ]
 
 
 class ModemSerializer(serializers.ModelSerializer):
@@ -39,6 +49,7 @@ class LorawanConnectionSerializer(serializers.ModelSerializer):
 
 
 class ManifestSerializer(serializers.ModelSerializer):
+    project = serializers.CharField(source="project.name", allow_null=True)
     modem = ModemSerializer()
     computes = serializers.SerializerMethodField("get_computes")
     resources = serializers.SerializerMethodField("get_resources")
@@ -75,6 +86,7 @@ class ManifestSerializer(serializers.ModelSerializer):
             "vsn",
             "name",
             "phase",
+            "project",
             "address",
             "gps_lat",
             "gps_lon",
