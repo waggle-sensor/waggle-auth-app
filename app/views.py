@@ -32,6 +32,7 @@ class HomeView(TemplateView):
 
     def get(self, request):
         try:
+            # TODO Review why we're doing this check and redirect.
             callback = request.GET["callback"]
             return redirect(f"/login/?next={callback}")
         except KeyError:
@@ -256,11 +257,21 @@ class LogoutView(auth_views.LogoutView):
     def get_success_url_allowed_hosts(self):
         return settings.SUCCESS_URL_ALLOWED_HOSTS
 
+    # TODO Figure out if get_success_url is the correct function to use here.
+    def get_success_url(self):
+        success_url = super().get_success_url()
+        redirect_uri = self.request.build_absolute_uri(success_url)
+        return f"https://auth.globus.org/v2/web/logout?redirect_uri={redirect_uri}"
+
     def dispatch(self, *args, **kwargs):
         response = super().dispatch(*args, **kwargs)
+
+        # delete sage cookies
         response.delete_cookie("sage_uuid", domain=settings.SAGE_COOKIE_DOMAIN)
         response.delete_cookie("sage_username", domain=settings.SAGE_COOKIE_DOMAIN)
         response.delete_cookie("sage_token", domain=settings.SAGE_COOKIE_DOMAIN)
+
+        # NOTE get_success_url will cause this to redirect through globus logout
         return response
 
 

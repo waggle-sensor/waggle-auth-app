@@ -2,7 +2,7 @@ django==4.2.7
 djangorestframework==3.14.0
 requests==2.31.0
 django-prometheus==2.3.1
-globus-sdk==3.19.0
+globus-sdk==3.31.0
 django-cors-headers==4.0.0
 django-slack==5.19.0
 django-nested-admin==4.0.2
