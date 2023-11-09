@@ -13,7 +13,7 @@ class NodeOwnedObjectsMixin(NodeAuthMixin):
     Allows access to ONLY objects associated with the authenticated node. Order of operations:
     1) Token authentication
     2) Filter queryset to only include records associated with the node (reference your model's vsn field)
-    3) Check object permission (custom views, you'll need to make sure you check the object level permission checks yourself)
+    3) Check object permission (If you override get_object(), you'll need to make sure you check the object level permission checks yourself)
         - self.check_object_permissions(request, node_obj)
     """
     vsn_field = 'vsn'  # Default vsn field name
