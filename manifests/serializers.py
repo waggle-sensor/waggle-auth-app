@@ -218,13 +218,35 @@ class NodesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NodeData
-        fields = ['address', 'gps_lat', 'gps_lon', 'registered_at', 'sensors', 'computes']
+        fields = ["id",
+                  "vsn",
+                  # ToDo: "node_id",
+                  "project",
+                  # ToDo: "focus",
+                  # ToDo: "partner",
+                  # ToDo: "node_type",
+                  "gps_lat",
+                  "gps_lon",
+                  # ToDo: "gps_alt",
+                  "address",
+                  # ToDo: "location",
+                  # ToDo: "commissioned_at",
+                  "registered_at",
+                  # ToDo: "modem_sim",
+                  # ToDo: "files_public",
+                  "phase",
+                  "sensors",
+                  "computes",
+                  # ToDo: "lorawan"
+                  ]
 
-    def serialize_compute(self, c):
+    @staticmethod
+    def serialize_compute(c):
         return {
+            # ToDo: "label": s.label,
             "name": c.name,
-            "serial_no": c.serial_no,
-            "zone": c.zone,
+            "hw_model": c.hardware.hw_model,
+            "manufacturer": c.hardware.manufacturer,
         }
 
     def get_computes(self, obj: NodeData):
@@ -239,8 +261,11 @@ class NodesSerializer(serializers.ModelSerializer):
 
         return results
 
-    def serialize_common_sensor(self, s):
+    @staticmethod
+    def serialize_common_sensor(s):
         return {
+            # ToDo: "label": s.label,
             "name": s.name,
-            "labels": [l.label for l in s.labels.all()],
+            "hw_model": s.hardware.hw_model,
+            "manufacturer": s.hardware.manufacturer,
         }
