@@ -117,7 +117,6 @@ class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, 
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        self.check_object_permissions(request, instance.node)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -131,6 +130,7 @@ class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, 
             lorawan_connection = LorawanConnection.objects.get(
                 node__vsn=node_vsn, lorawan_device__deveui=lorawan_deveui
             )
+            self.check_object_permissions(self.request, lorawan_connection.node)
             return lorawan_connection
         except LorawanConnection.DoesNotExist:
             raise Http404

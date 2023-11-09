@@ -53,7 +53,7 @@ class IsAuthenticated_ObjectLevel(BasePermission):
             node_obj = getattr(obj, self.foreign_key_name)
             return node_obj.vsn == node.vsn
 
-class OnlyAssociateToSelf(BasePermission):
+class OnlyCreateToSelf(BasePermission):
     """
     Permission to only allow authenticated Nodes to create objects associated to itself.
     Defaulted to use 'node' as foreign key name
