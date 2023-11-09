@@ -6,7 +6,7 @@ from .views import (
     NodeBuildViewSet,
     ComputeViewSet,
     LorawanDeviceView,
-    LorawanConnectionView,
+    LorawanConnectionView, NodesViewSet,
 )
 
 app_name = "manifests"
@@ -16,6 +16,7 @@ router.register(r"manifests", ManifestViewSet, basename="manifest")
 router.register(r"computes", ComputeViewSet)
 router.register(r"sensors", SensorHardwareViewSet)
 router.register(r"node-builds", NodeBuildViewSet)
+router.register(r"nodes", NodesViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

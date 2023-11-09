@@ -210,3 +210,37 @@ class NodeBuildSerializer(serializers.ModelSerializer):
             "modem",
             "modem_sim_type",
         ]
+
+
+class NodesSerializer(serializers.ModelSerializer):
+    computes = serializers.SerializerMethodField("get_computes")
+    sensors = serializers.SerializerMethodField("get_sensors")
+
+    class Meta:
+        model = NodeData
+        fields = ['address', 'gps_lat', 'gps_lon', 'registered_at', 'sensors', 'computes']
+
+    def serialize_compute(self, c):
+        return {
+            "name": c.name,
+            "serial_no": c.serial_no,
+            "zone": c.zone,
+        }
+
+    def get_computes(self, obj: NodeData):
+        return [self.serialize_compute(c) for c in obj.compute_set.all()]
+
+    def get_sensors(self, obj: NodeData):
+        results = []
+
+        # add all node sensors
+        for s in obj.nodesensor_set.all():
+            results.append(self.serialize_common_sensor(s))
+
+        return results
+
+    def serialize_common_sensor(self, s):
+        return {
+            "name": s.name,
+            "labels": [l.label for l in s.labels.all()],
+        }

@@ -14,7 +14,7 @@ from .serializers import (
     NodeBuildSerializer,
     ComputeSerializer,
     LorawanDeviceSerializer,
-    LorawanConnectionSerializer,
+    LorawanConnectionSerializer, NodesSerializer,
 )
 from rest_framework.response import Response
 from rest_framework import status
@@ -158,7 +158,7 @@ class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
             # Create a LorawanConnection object based on serializer data and save to the database
             for attr, value in serializer.validated_data.items():
                 if (
-                    attr == "node"
+                        attr == "node"
                 ):  # Retrieve the associated Node based on the 'vsn' provided in the serializer data
                     vsn_data = value
                     vsn = vsn_data["vsn"]
@@ -172,7 +172,7 @@ class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
                     else:
                         new_record["node"] = node
                 elif (
-                    attr == "lorawan_device"
+                        attr == "lorawan_device"
                 ):  # Retrieve the associated lorawan_device based on the 'deveui' provided in the serializer data
                     device_data = value
                     deveui = device_data["deveui"]
@@ -211,7 +211,7 @@ class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
             # update the Lorawan object based on serializer data
             for attr, value in serializer.validated_data.items():
                 if (
-                    attr == "node"
+                        attr == "node"
                 ):  # Retrieve the associated Node based on the 'vsn' provided in the serializer data
                     vsn_data = value
                     vsn = vsn_data["vsn"]
@@ -225,7 +225,7 @@ class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
                     else:
                         updated_data["node"] = node
                 elif (
-                    attr == "lorawan_device"
+                        attr == "lorawan_device"
                 ):  # Retrieve the associated lorawan_device based on the 'deveui' provided in the serializer data
                     device_data = value
                     deveui = device_data["deveui"]
@@ -252,3 +252,9 @@ class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NodesViewSet(ReadOnlyModelViewSet):
+    queryset = NodeData.objects.all()
+    serializer_class = NodesSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
