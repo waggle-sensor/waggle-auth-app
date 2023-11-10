@@ -37,6 +37,13 @@ class LorawanConnectionSerializer(serializers.ModelSerializer):
         model = LorawanConnection
         fields = "__all__"
 
+class LorawanKeysSerializer(serializers.ModelSerializer):
+    lorawan_connection = serializers.CharField()
+
+    class Meta:
+        model = LorawanKeys
+        fields = "__all__"
+
 
 class ManifestSerializer(serializers.ModelSerializer):
     modem = ModemSerializer()

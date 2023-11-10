@@ -7,6 +7,7 @@ from .views import (
     ComputeViewSet,
     LorawanDeviceView,
     LorawanConnectionView,
+    LorawanKeysView
 )
 
 app_name = "manifests"
@@ -49,4 +50,19 @@ urlpatterns = [
         LorawanConnectionView.as_view(),
         name="retrieve_lorawan_connection",
     ),
+    path(
+        "lorawankeys/create/",
+        LorawanKeysView.as_view(),
+        name="create_lorawan_key",
+    ),
+    # path(
+    #     "lorawankeys/update/<str:node_vsn>/<str:lorawan_deveui>/",
+    #     LorawanKeysView.as_view(),
+    #     name="update_lorawan_key",
+    # ),
+    # path(
+    #     "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
+    #     LorawanKeysView.as_view(),
+    #     name="retrieve_lorawan_key",
+    # ),
 ]

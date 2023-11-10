@@ -15,9 +15,11 @@ from .serializers import (
     ComputeSerializer,
     LorawanDeviceSerializer,
     LorawanConnectionSerializer,
+    LorawanKeysSerializer
 )
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import IntegrityError
 from node_auth.mixins import NodeAuthMixin, NodeOwnedObjectsMixin
 
 class ManifestViewSet(ReadOnlyModelViewSet):
@@ -77,8 +79,15 @@ class LorawanDeviceView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPI
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            # Create a LorawanDevice object based on serializer data and save to the database
-            LorawanDevice.objects.create(**serializer.validated_data)
+            # Create a LorawanDevice instance based on serializer data and save to the database
+            try:
+                LorawanDevice.objects.create(**serializer.validated_data)
+            except IntegrityError as e:
+                error_message = f"IntegrityError: {e}"
+                return Response(
+                    {"message": error_message},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Return a response
             return Response(
@@ -175,7 +184,14 @@ class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, 
                 else:
                     new_record[attr] = value
 
-            LorawanConnection.objects.create(**new_record)
+            try:
+                LorawanConnection.objects.create(**new_record)
+            except IntegrityError as e:
+                error_message = f"IntegrityError: {e}"
+                return Response(
+                    {"message": error_message},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Return a response
             return Response(
@@ -193,7 +209,7 @@ class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, 
         if serializer.is_valid():
             updated_data = {}
 
-            # update the Lorawan object based on serializer data
+            # update the Lorawan instance based on serializer data
             for attr, value in serializer.validated_data.items():
                 if (
                     attr == "node"
@@ -237,3 +253,91 @@ class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, 
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LorawanKeysView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
+    serializer_class = LorawanKeysSerializer
+    lookup_field = "lorawan_connection"
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
+
+    # def get_object(self):
+    #     # Get the 'node_vsn' and 'lorawan_deveui' from the URL
+    #     node_vsn = self.kwargs["node_vsn"]
+    #     lorawan_deveui = self.kwargs["lorawan_deveui"]
+
+    #     # Retrieve the LorawanConnection instance based on the lookup fields
+    #     try:
+    #         lorawan_connection = LorawanConnection.objects.get(
+    #             node__vsn=node_vsn, lorawan_device__deveui=lorawan_deveui
+    #         )
+    #         self.check_object_permissions(self.request, lorawan_connection.node)
+    #         return lorawan_connection.LorawanKeys
+    #     except LorawanConnection.DoesNotExist:
+    #         raise Http404
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            new_record = {}
+
+            # Create a lorawankey instance based on serializer data and save to the database
+            for attr, value in serializer.validated_data.items():
+                if (
+                    attr == "lorawan_connection"
+                ):  # Retrieve the associated lorawan_connection based on the str provided in the serializer data
+                    lc_str = value
+                    #lc_str = data["lorawan_connection"]
+                    try:
+                        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
+                        lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+                    except LorawanConnection.DoesNotExist:
+                        return Response(
+                            {"message": f"Lorawan Connection does not exist"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        new_record["lorawan_connection"] = lc
+                else:
+                    new_record[attr] = value
+
+            try:
+                LorawanKeys.objects.create(**new_record)
+            except IntegrityError as e:
+                error_message = f"IntegrityError: {e}"
+                return Response(
+                    {"message": error_message},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Return a response
+            return Response(
+                {"message": "Lorawan Key created successfully"},
+                status=status.HTTP_201_CREATED,
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # def update(self, request, *args, **kwargs):
+    #     partial = kwargs.pop("partial", False)
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+    #     if serializer.is_valid():
+    #         updated_data = {}
+
+    #         # update the Lorawan object based on serializer data
+    #         for attr, value in serializer.validated_data.items():
+    #             updated_data[attr] = value
+
+    #         serializer.save(**updated_data)
+
+    #         # Return a response
+    #         return Response(
+    #             {"message": "LorawanKey updated successfully"},
+    #             status=status.HTTP_200_OK,
+    #         )
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
