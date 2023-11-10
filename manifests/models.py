@@ -35,8 +35,11 @@ class NodeData(models.Model):
     )
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
+    gps_alt = models.FloatField("Altitude", blank=True, null=True)
     address = models.TextField("Address", blank=True)
+    location = models.TextField("Location", blank=True)
     registered_at = models.DateTimeField(null=True, blank=True)
+    commissioned_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.vsn

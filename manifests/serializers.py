@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
+
 from .models import *
 
 
@@ -215,29 +217,30 @@ class NodeBuildSerializer(serializers.ModelSerializer):
 class NodesSerializer(serializers.ModelSerializer):
     computes = serializers.SerializerMethodField("get_computes")
     sensors = serializers.SerializerMethodField("get_sensors")
+    modem_sim = SlugRelatedField(read_only=True, slug_field='sim_type', source='modem')
 
     class Meta:
         model = NodeData
         fields = ["id",
                   "vsn",
                   # ToDo: "node_id",
-                  "project",
+                  "project",  # I still think "SAGE" should be "Sage", but I'll live either way. :)
                   # ToDo: "focus",
                   # ToDo: "partner",
-                  # ToDo: "node_type",
+                  # ToDo: "node_type",    # NodeBuild.type ?
                   "gps_lat",
                   "gps_lon",
-                  # ToDo: "gps_alt",
-                  "address",
-                  # ToDo: "location",
-                  # ToDo: "commissioned_at",
+                  "gps_alt",  # ToDo: or "gps_elevation"?
+                  "address",  # ToDo: validation ?  could be a partial address or even a block address
+                  "location",  # ToDo: new field?  descriptions such as "Roof of Utah Natural History Museum", "S. Sacramento & 5th Avenue", "on the dock", "up the hill", etc
+                  "commissioned_at",  # ToDo: commission_date might be better, but there's also already registered_at, so I really don't feel strongly.
                   "registered_at",
-                  # ToDo: "modem_sim",
-                  # ToDo: "files_public",
+                  "modem_sim",    # ToDo  ?
+                  # ToDo: "files_public",  ?
                   "phase",
                   "sensors",
                   "computes",
-                  # ToDo: "lorawan"
+                  "lorawanconnections"  # ToDo  ? // make part of sensors/computes?  Francisco suggested using "capabilities" to differentiate.
                   ]
 
     @staticmethod
@@ -269,3 +272,6 @@ class NodesSerializer(serializers.ModelSerializer):
             "hw_model": s.hardware.hw_model,
             "manufacturer": s.hardware.manufacturer,
         }
+
+    def get_modem_sim(self, obj: NodeData):
+        return obj.modem.sim_type
