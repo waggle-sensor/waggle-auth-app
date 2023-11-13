@@ -55,14 +55,14 @@ urlpatterns = [
         LorawanKeysView.as_view(),
         name="create_lorawan_key",
     ),
-    # path(
-    #     "lorawankeys/update/<str:node_vsn>/<str:lorawan_deveui>/",
-    #     LorawanKeysView.as_view(),
-    #     name="update_lorawan_key",
-    # ),
-    # path(
-    #     "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
-    #     LorawanKeysView.as_view(),
-    #     name="retrieve_lorawan_key",
-    # ),
+    path(
+        "lorawankeys/update/<str:node_vsn>/<str:lorawan_deveui>/",
+        LorawanKeysView.as_view(),
+        name="update_lorawan_key",
+    ),
+    path(
+        "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
+        LorawanKeysView.as_view(),
+        name="retrieve_lorawan_key",
+    ),
 ]

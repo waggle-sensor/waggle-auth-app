@@ -1,5 +1,6 @@
 from django.contrib.auth.models import *
 from django.http import Http404
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.generics import (
     RetrieveAPIView,
     CreateAPIView,
@@ -254,29 +255,31 @@ class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, 
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LorawanKeysView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanKeysView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanKeysSerializer
     lookup_field = "lorawan_connection"
 
-    # def retrieve(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance)
-    #     return Response(serializer.data)
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
-    # def get_object(self):
-    #     # Get the 'node_vsn' and 'lorawan_deveui' from the URL
-    #     node_vsn = self.kwargs["node_vsn"]
-    #     lorawan_deveui = self.kwargs["lorawan_deveui"]
+    def get_object(self):
+        # Get the 'node_vsn' and 'lorawan_deveui' from the URL
+        node_vsn = self.kwargs["node_vsn"]
+        lorawan_deveui = self.kwargs["lorawan_deveui"]
 
-    #     # Retrieve the LorawanConnection instance based on the lookup fields
-    #     try:
-    #         lorawan_connection = LorawanConnection.objects.get(
-    #             node__vsn=node_vsn, lorawan_device__deveui=lorawan_deveui
-    #         )
-    #         self.check_object_permissions(self.request, lorawan_connection.node)
-    #         return lorawan_connection.LorawanKeys
-    #     except LorawanConnection.DoesNotExist:
-    #         raise Http404
+        # Retrieve the LorawanConnection instance based on the lookup fields
+        try:
+            lorawan_connection = LorawanConnection.objects.get(
+                node__vsn=node_vsn, lorawan_device__deveui=lorawan_deveui
+            )
+            self.check_object_permissions(self.request, lorawan_connection.node)
+            return lorawan_connection.lorawankey
+        except LorawanConnection.DoesNotExist:
+            raise Http404 #<- should be 400, add later with error msg
+        except ObjectDoesNotExist:
+            raise Http404 #<- should be 400, add later with error msg
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -289,7 +292,6 @@ class LorawanKeysView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
                     attr == "lorawan_connection"
                 ):  # Retrieve the associated lorawan_connection based on the str provided in the serializer data
                     lc_str = value
-                    #lc_str = data["lorawan_connection"]
                     try:
                         node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
                         lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
@@ -320,24 +322,39 @@ class LorawanKeysView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # def update(self, request, *args, **kwargs):
-    #     partial = kwargs.pop("partial", False)
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance, data=request.data, partial=partial)
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
 
-    #     if serializer.is_valid():
-    #         updated_data = {}
+        if serializer.is_valid():
+            updated_data = {}
 
-    #         # update the Lorawan object based on serializer data
-    #         for attr, value in serializer.validated_data.items():
-    #             updated_data[attr] = value
+            # update the Lorawan instance based on serializer data
+            for attr, value in serializer.validated_data.items():
+                if (
+                    attr == "lorawan_connection"
+                ):  # Retrieve the associated lorawan_connection based on the 'vsn' provided in the serializer data
+                    lc_str = value
+                    try:
+                        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
+                        lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+                    except LorawanConnection.DoesNotExist:
+                        return Response(
+                            {"message": f"Lorawan Connection does not exist"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        updated_data["lorawan_connection"] = lc
+                else:
+                    updated_data[attr] = value
 
-    #         serializer.save(**updated_data)
+            serializer.save(**updated_data)
 
-    #         # Return a response
-    #         return Response(
-    #             {"message": "LorawanKey updated successfully"},
-    #             status=status.HTTP_200_OK,
-    #         )
-    #     else:
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # Return a response
+            return Response(
+                {"message": "LorawanConnection updated successfully"},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
