@@ -44,6 +44,14 @@ class LorawanKeysSerializer(serializers.ModelSerializer):
         model = LorawanKeys
         fields = "__all__"
 
+    def validate_lorawan_connection(self, value):
+        # Ensure that lorawan_connection is in the format "node-device_name-deveui"
+        try:
+            node_vsn, device_name, deveui = value.split('-')
+        except ValueError:
+            raise serializers.ValidationError("Invalid lorawan_connection format. Use 'node-device_name-deveui'.")
+        return value
+
 
 class ManifestSerializer(serializers.ModelSerializer):
     modem = ModemSerializer()
