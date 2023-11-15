@@ -44,13 +44,17 @@ class IsAuthenticated_ObjectLevel(BasePermission):
 
         # Check object-level permissions here using the user-specified foreign key name
         foreign_key_name = getattr(view, 'foreign_key_name', 'node')
-
         if hasattr(obj, 'vsn'):
             return obj.vsn == node.vsn
         else:
-            node_obj = getattr(obj, foreign_key_name)
-            return node_obj.vsn == node.vsn
-
+            attributes = foreign_key_name.split('__')
+            record = obj
+            for attr in attributes:
+                try:
+                    record = getattr(record, attr)
+                except AttributeError:
+                    return False
+            return record.vsn == node.vsn
 
 class OnlyCreateToSelf(BasePermission):
     """
