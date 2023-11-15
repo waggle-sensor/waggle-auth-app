@@ -23,13 +23,13 @@ class NodeOwnedObjectsMixin(NodeAuthMixin):
     vsn_field = 'vsn'  # Default vsn field name
     foreign_key_name = 'node' # default node foreign key 
     
-    def vsn_get_func(self, obj, request):
+    def vsn_get_func(self, obj, request, foreign_key_name):
         """
         Returns the vsn used for POST method node auth checks. Subclasses can override this method to customize.
         """
-        return request.data.get(obj.foreign_key_name)
+        return request.data.get(foreign_key_name)
         
-    permission_classes = [IsAuthenticated_ObjectLevel(foreign_key_name), OnlyCreateToSelf(foreign_key_name)]
+    permission_classes = [IsAuthenticated_ObjectLevel, OnlyCreateToSelf]
 
     def get_queryset(self):
         nodeVSN = self.request.user.vsn

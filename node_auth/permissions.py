@@ -22,9 +22,6 @@ class IsAuthenticated_ObjectLevel(BasePermission):
     Defaulted to use 'node' as foreign key name
     """
 
-    def __init__(self, foreign_key_name='node'):
-        self.foreign_key_name = foreign_key_name
-
     #return the object when called. Avoids TypeError when used in permission_classes
     def __call__(self):
         return self
@@ -39,7 +36,6 @@ class IsAuthenticated_ObjectLevel(BasePermission):
         except:
             return False
 
-
     def has_object_permission(self, request, view, obj):
         """
         Checks for object level permissions.
@@ -47,20 +43,20 @@ class IsAuthenticated_ObjectLevel(BasePermission):
         node = request.user
 
         # Check object-level permissions here using the user-specified foreign key name
-        if hasattr(obj,'vsn'):
+        foreign_key_name = getattr(view, 'foreign_key_name', 'node')
+
+        if hasattr(obj, 'vsn'):
             return obj.vsn == node.vsn
         else:
-            node_obj = getattr(obj, self.foreign_key_name)
+            node_obj = getattr(obj, foreign_key_name)
             return node_obj.vsn == node.vsn
+
 
 class OnlyCreateToSelf(BasePermission):
     """
     Permission to only allow authenticated Nodes to create objects associated to itself.
     Defaulted to use 'node' as foreign key name. 
     """
-
-    def __init__(self, foreign_key_name='node'):
-        self.foreign_key_name = foreign_key_name
 
     #return the object when called. Avoids TypeError when used in permission_classes
     def __call__(self):
@@ -70,14 +66,17 @@ class OnlyCreateToSelf(BasePermission):
 
         node = request.user
 
+        # Check object-level permissions here using the user-specified foreign key name
+        foreign_key_name = getattr(view, 'foreign_key_name', 'node')
+
         # Check if the request is POST
         if request.method == 'POST':
             # Check if object is associated to self
             vsn_get_func = getattr(view, 'vsn_get_func', None)
             if callable(vsn_get_func):
-                obj_vsn = vsn_get_func(self, request)
+                obj_vsn = vsn_get_func(self, request, foreign_key_name)
             else:
-                obj_vsn = self.default(self, request)
+                obj_vsn = self.default(self, request, foreign_key_name)
             return obj_vsn == node.vsn
 
         # For other requests, allow access based on user's own vsn
@@ -87,5 +86,5 @@ class OnlyCreateToSelf(BasePermission):
             return False
 
     @staticmethod
-    def default(self, request):
-        return request.data.get(self.foreign_key_name)
+    def default(self, request, foreign_key_name):
+        return request.data.get(foreign_key_name)
