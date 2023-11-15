@@ -56,7 +56,7 @@ class IsAuthenticated_ObjectLevel(BasePermission):
 class OnlyCreateToSelf(BasePermission):
     """
     Permission to only allow authenticated Nodes to create objects associated to itself.
-    Defaulted to use 'node' as foreign key name
+    Defaulted to use 'node' as foreign key name. 
     """
 
     def __init__(self, foreign_key_name='node'):
@@ -73,7 +73,11 @@ class OnlyCreateToSelf(BasePermission):
         # Check if the request is POST
         if request.method == 'POST':
             # Check if object is associated to self
-            obj_vsn = request.data.get(self.foreign_key_name)
+            vsn_get_func = getattr(view, 'vsn_get_func', None)
+            if callable(vsn_get_func):
+                obj_vsn = vsn_get_func(self, request)
+            else:
+                obj_vsn = self.default(self, request)
             return obj_vsn == node.vsn
 
         # For other requests, allow access based on user's own vsn
@@ -81,3 +85,7 @@ class OnlyCreateToSelf(BasePermission):
             return node and node.vsn
         except:
             return False
+
+    @staticmethod
+    def default(self, request):
+        return request.data.get(self.foreign_key_name)

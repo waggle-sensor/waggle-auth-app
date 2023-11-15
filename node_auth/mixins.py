@@ -16,11 +16,19 @@ class NodeOwnedObjectsMixin(NodeAuthMixin):
         - 'vsn' is default vsn_field
     3) Check object permission (reference your model's node foreign key)
         - 'node' is default foreign_key_name
+        - For POST method, it uses vsn_get_func() or default() to retrieve the vsn from the object being created
         - If you override get_object(), you'll need to make sure you check the object level permission checks yourself
           - self.check_object_permissions(request, node_obj)
     """
     vsn_field = 'vsn'  # Default vsn field name
-    foreign_key_name = 'node' # default node foreign key
+    foreign_key_name = 'node' # default node foreign key 
+    
+    def vsn_get_func(self, obj, request):
+        """
+        Returns the vsn used for POST method node auth checks. Subclasses can override this method to customize.
+        """
+        return request.data.get(obj.foreign_key_name)
+        
     permission_classes = [IsAuthenticated_ObjectLevel(foreign_key_name), OnlyCreateToSelf(foreign_key_name)]
 
     def get_queryset(self):
