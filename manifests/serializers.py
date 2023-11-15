@@ -232,6 +232,7 @@ class NodesSerializer(serializers.ModelSerializer):
                   "gps_lon",
                   "gps_alt",  # ToDo: or "gps_elevation"?
                   "address",  # ToDo: validation ?  could be a partial address or even a block address
+                  "address_new",  # ToDo: new field?  descriptions such as "Roof of Utah Natural History Museum", "S. Sacramento & 5th Avenue", "on the dock", "up the hill", etc
                   "location",  # ToDo: new field?  descriptions such as "Roof of Utah Natural History Museum", "S. Sacramento & 5th Avenue", "on the dock", "up the hill", etc
                   "commissioned_at",  # ToDo: commission_date might be better, but there's also already registered_at, so I really don't feel strongly.
                   "registered_at",
