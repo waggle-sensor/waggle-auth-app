@@ -121,9 +121,9 @@ class LorawanDeviceView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPI
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanConnectionSerializer
-    vsn_field = "node__vsn" #reference relationship table's field (NodeData vsn field)
+    vsn_field = "node__vsn"
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -255,10 +255,23 @@ class LorawanConnectionView(NodeOwnedObjectsMixin,CreateAPIView, UpdateAPIView, 
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LorawanKeysView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanKeysSerializer
     lookup_field = "lorawan_connection"
+    vsn_field = "lorawan_connection__node__vsn"
+    foreign_key_name = "lorawan_connection__node"
 
+    def vsn_get_func(self, obj, request, foreign_key_name):
+        model, field = foreign_key_name.split("__")
+        lc_str = request.data.get(model)
+        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
+        lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+        if lc:
+            node_obj = getattr(lc, field)
+            return node_obj.vsn
+        else:
+            return None
+        
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -295,6 +308,7 @@ class LorawanKeysView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIVi
                     try:
                         node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
                         lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+                        self.check_object_permissions(self.request, lc.node)
                     except LorawanConnection.DoesNotExist:
                         return Response(
                             {"message": f"Lorawan Connection does not exist"},
@@ -339,6 +353,7 @@ class LorawanKeysView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIVi
                     try:
                         node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
                         lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+                        self.check_object_permissions(self.request, lc.node)
                     except LorawanConnection.DoesNotExist:
                         return Response(
                             {"message": f"Lorawan Connection does not exist"},
@@ -349,7 +364,14 @@ class LorawanKeysView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIVi
                 else:
                     updated_data[attr] = value
 
-            serializer.save(**updated_data)
+            try:
+                serializer.save(**updated_data)
+            except IntegrityError as e:
+                error_message = f"IntegrityError: {e}"
+                return Response(
+                    {"message": error_message},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Return a response
             return Response(
