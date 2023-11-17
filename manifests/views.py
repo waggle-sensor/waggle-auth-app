@@ -159,7 +159,6 @@ class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView,
                     vsn = vsn_data["vsn"]
                     try:
                         node = NodeData.objects.get(vsn=vsn)
-                        self.check_object_permissions(self.request, node)
                     except NodeData.DoesNotExist:
                         return Response(
                             {"message": f"Node with vsn {vsn} does not exist"},
@@ -310,7 +309,6 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
                     try:
                         node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
                         lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
-                        self.check_object_permissions(self.request, lc.node)
                     except LorawanConnection.DoesNotExist:
                         return Response(
                             {"message": f"Lorawan Connection does not exist"},
