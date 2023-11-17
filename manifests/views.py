@@ -23,6 +23,7 @@ from rest_framework import status
 from django.db import IntegrityError 
 from node_auth.mixins import NodeAuthMixin, NodeOwnedObjectsMixin
 
+
 class ManifestViewSet(NodeOwnedObjectsMixin, ReadOnlyModelViewSet):
     serializer_class = ManifestSerializer
     lookup_field = "vsn" 
