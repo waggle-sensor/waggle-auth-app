@@ -519,14 +519,10 @@ class NodeSensorAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "hardware",
-        "serial_no",
-        "uri",
         "node",
     ]
     search_fields = [
         "name",
-        "serial_no",
-        "uri",
         "hardware__hardware",
         "hardware__hw_model",
         "node__vsn",
