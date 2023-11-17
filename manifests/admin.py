@@ -90,8 +90,15 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
     actions = ["autopopulate_from_beekeeper_and_data", "export_as_json"]
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return queryset.prefetch_related("modem", "tags", "computes")
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "modem",
+                "tags",
+                "computes",
+            )
+        )
 
     @admin.display(description="Tags")
     def get_tags(self, obj):
@@ -436,8 +443,7 @@ class SensorHardwareAdmin(admin.ModelAdmin):
     search_fields = ["hardware", "hw_model", "manufacturer"]
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return queryset.prefetch_related("capabilities")
+        return super().get_queryset(request).prefetch_related("capabilities")
 
     @admin.display(description="Camera?", boolean=True)
     def is_camera(self, obj):
@@ -506,3 +512,47 @@ class NodeBuildAdmin(admin.ModelAdmin):
                 capabilities__capability="camera",
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(NodeSensor)
+class NodeSensorAdmin(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "hardware",
+        "node",
+    ]
+    search_fields = [
+        "name",
+        "hardware__hardware",
+        "hardware__hw_model",
+        "node__vsn",
+    ]
+    # We're excluding scope because it seems to be intended to always be set to "default".
+    exclude = ["scope"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("hardware", "node")
+
+
+@admin.register(ComputeSensor)
+class ComputeSensorAdmin(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "hardware",
+        "scope",
+        "node",
+    ]
+    search_fields = [
+        "name",
+        "hardware__hardware",
+        "hardware__hw_model",
+        "scope__name",
+        "scope__node__vsn",
+    ]
+    # We're exclude scope as currently the scope selectbox just lists the compute name (ex. rpi) but not the vsn,
+    # so using it properly is confusing. For now, it's just a convinient way to see all compute sensors and update
+    # things like name and serial number.
+    exclude = ["scope"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("scope", "scope__node")

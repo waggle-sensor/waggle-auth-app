@@ -199,6 +199,9 @@ class NodeSensor(AbstractSensor):
 class ComputeSensor(AbstractSensor):
     scope = models.ForeignKey(Compute, on_delete=models.CASCADE, blank=True)
 
+    def node(self):
+        return self.scope.node
+
 
 class Resource(models.Model):
     node = models.ForeignKey(NodeData, on_delete=models.CASCADE, blank=True)
