@@ -7,7 +7,7 @@ from .views import (
     ComputeViewSet,
     LorawanDeviceView,
     LorawanConnectionView,
-    LorawanKeysView
+    LorawanKeysView,
 )
 
 app_name = "manifests"

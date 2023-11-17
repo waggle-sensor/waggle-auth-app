@@ -62,7 +62,6 @@ class LorawanKeysSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid lorawan_connection format. Use 'node-device_name-deveui'.")
         return value
 
-
 class ManifestSerializer(serializers.ModelSerializer):
     project = serializers.CharField(source="project.name", allow_null=True)
     modem = ModemSerializer()

@@ -16,7 +16,7 @@ from .serializers import (
     ComputeSerializer,
     LorawanDeviceSerializer,
     LorawanConnectionSerializer,
-    LorawanKeysSerializer
+    LorawanKeysSerializer,
 )
 from rest_framework.response import Response  
 from rest_framework import status
