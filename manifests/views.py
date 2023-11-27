@@ -339,7 +339,7 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
 
             # Return a response
             return Response(
-                {"message": "Lorawan Key created successfully"},
+                {"message": "LorawanKey created successfully"},
                 status=status.HTTP_201_CREATED,
             )
         else:
@@ -384,7 +384,7 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
 
             # Return a response
             return Response(
-                {"message": "LorawanConnection updated successfully"},
+                {"message": "LorawanKey updated successfully"},
                 status=status.HTTP_200_OK,
             )
         else:
