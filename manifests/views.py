@@ -76,14 +76,10 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-
-class LorawanDeviceView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanDeviceView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanDeviceSerializer
     queryset = LorawanDevice.objects.all()
     lookup_field = "deveui"
-    permission_classes = [
-        IsAdminUser
-    ]  # adding this for now until node authentication architecture is created
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -134,16 +130,12 @@ class LorawanDeviceView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LorawanConnectionView(CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanConnectionSerializer
-    queryset = LorawanConnection.objects.all()
-    permission_classes = [
-        IsAdminUser
-    ]  # adding this for now until node authentication architecture is created
+    vsn_field = "node__vsn"
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        self.check_object_permissions(request, instance.node)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
