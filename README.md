@@ -44,7 +44,7 @@ python manage.py createsuperuser
 You can run the test suite using:
 
 ```sh
-python manage.py test
+pytest
 ```
 
 Finally, you can start the dev server:
