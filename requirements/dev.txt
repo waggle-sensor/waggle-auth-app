@@ -5,3 +5,4 @@ django-stubs==4.2.4                  # better type hints for django
 djangorestframework-stubs==3.14.2    # better type hints for django rest framework
 pytest-django==4.7.0                 # better testing
 pytest-cov==4.1.0                    # includes coverage report when testing with pytest
+pytest-xdist==3.5.0                  # allows for running tests on multiple processes for faster testing
