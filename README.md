@@ -91,12 +91,13 @@ You can configure user login via Globus OIDC by performing the following _one ti
 
 1. Go to [https://developers.globus.org](https://developers.globus.org)
 2. Go to Register your app with Globus
-3. Create an app with a name like "Test App"
+3. Create an app using `Register a portal, science gateway, or other application you host` with a name like "Test App"
   * Set redirect URL to: `http://localhost:8000/globus-auth-redirect/`
-  * Copy the following template to `~/waggle-auth-oidc.env` and fill in your client ID, client secret and redirect URL:
+4. Create a client secret using your new app's dashboard
+  * Copy the following template to `~/waggle-auth-oidc.env` and fill in your Client UUID, client secret and redirect URL:
 
 ```sh
-export OIDC_CLIENT_ID="Your Client ID!"
+export OIDC_CLIENT_ID="Your Client UUID!"
 export OIDC_CLIENT_SECRET="Your Client Secret!"
 ```
 
@@ -105,3 +106,18 @@ You can enable Globus OIDC login by sourcing the env file _before_ running eithe
 ```sh
 . ~/waggle-auth-oidc.env
 ```
+5. Run your django server `python manage.py runserver` and log in by creating a new account. **Keep note of your username**
+6. On first run of your server, you will get an error as your account is not a *Superuser*. To fix this, open the django shell and run these commands
+```sh
+python3 manage.py shell
+```
+```py
+from django.contrib.auth import get_user_model
+User = get_user_model()
+user = User.objects.get(username="MY USERNAME")
+user.is_staff = True
+user.is_admin = True
+user.is_superuser = True
+user.save()
+```
+7. You should now be able to run your django server and log in to the admin site succesfully
