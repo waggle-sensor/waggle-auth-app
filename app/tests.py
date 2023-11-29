@@ -16,7 +16,7 @@ class TestHomeView(TestCase):
     """
     TestHomeView tests that the home page renders its templates without error for anonymous, regular and admin users.
     """
-
+    @pytest.mark.django_db
     @pytest.mark.xfail(reason="This test is expected to fail when `python manage.py collectstatic` hasn't been ran. If the command has ben ran, the error is unkown")
     def testAsAnon(self):
         r = self.client.get("/")
@@ -25,6 +25,7 @@ class TestHomeView(TestCase):
         self.assertNotContains(r, "Log out")
         self.assertNotContains(r, "View admin site")
 
+    @pytest.mark.django_db
     @pytest.mark.xfail(reason="This test is expected to fail when `python manage.py collectstatic` hasn't been ran. If the command has ben ran, the error is unkown")
     def testAsUser(self):
         user = create_random_user()
@@ -35,6 +36,7 @@ class TestHomeView(TestCase):
         self.assertContains(r, "Log out")
         self.assertNotContains(r, "View admin site")
 
+    @pytest.mark.django_db
     @pytest.mark.xfail(reason="This test is expected to fail when `python manage.py collectstatic` hasn't been ran. If the command has ben ran, the error is unkown")
     def testAsAdmin(self):
         user = create_random_admin_user()
@@ -519,6 +521,7 @@ class TestAuth(TestCase):
     user creation and login.
     """
 
+    @pytest.mark.django_db
     @pytest.mark.xfail(reason="This test is expected to fail when `python manage.py collectstatic` hasn't been ran. If the command has ben ran, the error is unkown")
     def testCompleteLoginAndLogout(self):
         # generate user info and set as session data to match oidc data
