@@ -8,6 +8,9 @@ class TestAuthTokenSerializer(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
 
+    def tearDown(self):
+        Node.objects.all().delete()
+
     def test_validate_valid_node(self):
         """
         Test that validate method returns attrs with vsn as a Node instance for a valid node.

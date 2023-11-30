@@ -41,6 +41,10 @@ class NodeTokenAuthTests(TestCase):
         self.auth_header = self.header_prefix + self.key
         self.wrong_auth_header = self.header_prefix + "123"
 
+    def tearDown(self):
+        Node.objects.all().delete()
+        Token.objects.all().delete()
+
     def test_correct_token(self):
         """
         Test node token authentication using correct token

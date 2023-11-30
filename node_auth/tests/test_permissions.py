@@ -3,8 +3,7 @@ from manifests.models import NodeData
 from node_auth.models import Token
 from rest_framework.views import APIView
 import unittest
-from unittest.mock import patch
-from unittest.mock import Mock
+from unittest.mock import patch, Mock
 from node_auth.models import Token
 from node_auth.permissions import IsAuthenticated, IsAuthenticated_ObjectLevel, OnlyCreateToSelf
 from rest_framework import exceptions

@@ -26,10 +26,10 @@ def get_authorization_header(request):
     return auth
 
 
-class CSRFCheck(CsrfViewMiddleware):
-    def _reject(self, request, reason):
-        # Return the failure reason instead of an HttpResponse
-        return reason
+# class CSRFCheck(CsrfViewMiddleware):
+#     def _reject(self, request, reason):
+#         # Return the failure reason instead of an HttpResponse
+#         return reason
 
 
 class BaseAuthentication:
