@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from rest_framework import exceptions
 
 
 class IsAuthenticated(BasePermission):
@@ -10,11 +11,12 @@ class IsAuthenticated(BasePermission):
         """
         Checks for view level permissions.
         """
-        node = request.user
         try:
-        	return node and node.vsn
+            node = request.user
         except:
-        	return False
+        	raise exceptions.AuthenticationFailed(detail='Could not get node from request')
+
+        return node and node.vsn
 
 class IsAuthenticated_ObjectLevel(IsAuthenticated):
     """
@@ -43,7 +45,7 @@ class IsAuthenticated_ObjectLevel(IsAuthenticated):
                 try:
                     record = getattr(record, attr)
                 except AttributeError:
-                    return False
+                    raise exceptions.ParseError(detail='Nested relationship error, could not get node table')
             return record.vsn == node.vsn
 
 class OnlyCreateToSelf(BasePermission):
@@ -58,7 +60,10 @@ class OnlyCreateToSelf(BasePermission):
 
     def has_permission(self, request, view):
 
-        node = request.user
+        try:
+            node = request.user
+        except:
+        	raise exceptions.AuthenticationFailed(detail='Could not get node from request')
 
         # Check object-level permissions here using the user-specified foreign key name
         foreign_key_name = getattr(view, 'foreign_key_name', 'node')
@@ -74,10 +79,8 @@ class OnlyCreateToSelf(BasePermission):
             return obj_vsn == node.vsn
 
         # For other requests, allow access based on user's own vsn
-        try:
-            return node and node.vsn
-        except:
-        	return False
+        return node and node.vsn
+
 
     @staticmethod
     def default(self, request, foreign_key_name):
