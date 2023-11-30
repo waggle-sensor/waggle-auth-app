@@ -12,6 +12,9 @@ from rest_framework import status
 from django.http import HttpRequest
 from manifests.serializers import ManifestSerializer
 from django.urls import reverse
+import unittest
+from unittest.mock import patch
+from node_auth.models import Token
 
 class NodeTokenAuthTests(TestCase):
     """
@@ -195,3 +198,31 @@ class NodeTokenAuthTests(TestCase):
         response = self.csrf_client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, "Expected status code 403, Forbidden")
+
+class test_TokenModel(unittest.TestCase):
+
+    @patch("node_auth.models.os.urandom")
+    def test_generate_key(self, mock_urandom):
+        """ Test generation of key function """
+        # Mock the os.urandom method to control the random bytes generated
+        mock_urandom.return_value = b"\x01\x23\x45\x67\x89\xab\xcd\xef"
+
+        # Call the method under test
+        key = Token.generate_key()
+
+        # Assertions
+        self.assertEqual(key, "0123456789abcdef")  # Expected hex value based on the mocked os.urandom result
+
+    def test_str_method(self):
+        """ Test str of model """
+        # Create an instance of the Token model
+        token_instance = Token(key="test_key")
+
+        # Call the __str__ method
+        result = str(token_instance)
+
+        # Assert the result matches the expected string representation
+        self.assertEqual(result, "test_key")
+
+if __name__ == "__main__":
+    unittest.main()
