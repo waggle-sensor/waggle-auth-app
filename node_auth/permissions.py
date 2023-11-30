@@ -16,7 +16,7 @@ class IsAuthenticated(BasePermission):
         except:
         	return False
 
-class IsAuthenticated_ObjectLevel(BasePermission):
+class IsAuthenticated_ObjectLevel(IsAuthenticated):
     """
     Allows access only to records associated to the authenticated node.
     Defaulted to use 'node' as foreign key name
@@ -25,16 +25,6 @@ class IsAuthenticated_ObjectLevel(BasePermission):
     #return the object when called. Avoids TypeError when used in permission_classes
     def __call__(self):
         return self
-
-    def has_permission(self, request, view):
-        """
-        Checks for view level permissions.
-        """
-        node = request.user
-        try:
-            return node and node.vsn
-        except:
-            return False
 
     def has_object_permission(self, request, view, obj):
         """
