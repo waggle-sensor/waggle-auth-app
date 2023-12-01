@@ -277,29 +277,22 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            new_record = {}
-
-            # Create a lorawankey instance based on serializer data and save to the database
-            for attr, value in serializer.validated_data.items():
-                if (
-                    attr == "lorawan_connection"
-                ):  # Retrieve the associated lorawan_connection based on the str provided in the serializer data
-                    lc_str = value
-                    try:
-                        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
-                        lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
-                    except LorawanConnection.DoesNotExist:
-                        return Response(
-                            {"message": f"Lorawan Connection does not exist"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-                    else:
-                        new_record["lorawan_connection"] = lc
+            #retrieve lc
+            if "lorawan_connection" in serializer.validated_data:
+                lc_str = serializer.validated_data["lorawan_connection"]
+                try:
+                    node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
+                    lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+                except LorawanConnection.DoesNotExist:
+                    return Response(
+                        {"message": f"Lorawan Connection does not exist"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 else:
-                    new_record[attr] = value
+                    serializer.validated_data["lorawan_connection"] = lc
 
             try:
-                LorawanKeys.objects.create(**new_record)
+                LorawanKeys.objects.create(**serializer.validated_data)
             except IntegrityError as e:
                 error_message = f"IntegrityError: {e}"
                 return Response(
@@ -321,30 +314,21 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
 
         if serializer.is_valid():
-            updated_data = {}
-
-            # update the Lorawan instance based on serializer data
-            for attr, value in serializer.validated_data.items():
-                if (
-                    attr == "lorawan_connection"
-                ):  # Retrieve the associated lorawan_connection based on the 'vsn' provided in the serializer data
-                    lc_str = value
-                    try:
-                        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
-                        lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
-                        self.check_object_permissions(self.request, lc.node)
-                    except LorawanConnection.DoesNotExist:
-                        return Response(
-                            {"message": f"Lorawan Connection does not exist"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-                    else:
-                        updated_data["lorawan_connection"] = lc
+            #retrieve lc
+            if "lorawan_connection" in serializer.validated_data:
+                lc_str = serializer.validated_data["lorawan_connection"]
+                try:
+                    node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
+                    lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+                except LorawanConnection.DoesNotExist:
+                    return Response(
+                        {"message": f"Lorawan Connection does not exist"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 else:
-                    updated_data[attr] = value
-
+                    serializer.validated_data["lorawan_connection"] = lc
             try:
-                serializer.save(**updated_data)
+                serializer.save(**serializer.validated_data)
             except IntegrityError as e:
                 error_message = f"IntegrityError: {e}"
                 return Response(
