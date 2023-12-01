@@ -256,11 +256,6 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
             return node_obj.vsn
         else:
             return None
-        
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
 
     def get_object(self):
         # Get the 'node_vsn' and 'lorawan_deveui' from the URL
