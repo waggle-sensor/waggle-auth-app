@@ -2,9 +2,9 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
 from app.models import Node
-from manifests.models import NodeData, LorawanDevice, LorawanConnection
-from manifests.serializers import LorawanConnectionSerializer
-from manifests.views import LorawanConnectionView
+from manifests.models import NodeData, LorawanDevice, LorawanConnection, LorawanKeys
+from manifests.serializers import LorawanConnectionSerializer, LorawanKeysSerializer
+from manifests.views import LorawanConnectionView, LorawanKeysView
 from node_auth.authentication import TokenAuthentication
 from unittest.mock import patch, Mock
 from django.urls import reverse
@@ -18,10 +18,11 @@ class LorawanConnectionViewTestCase(TestCase):
         self.Myvsn = 'W001'
         self.mac = '111'
         self.deveui = '123456789'
+        self.device_name = "test"
         self.factory = APIRequestFactory()
         self.node = Node.objects.create(vsn=self.Myvsn, mac=self.mac)
         self.nodedata = NodeData.objects.create(vsn=self.Myvsn)  
-        self.device = LorawanDevice.objects.create(deveui=self.deveui)
+        self.device = LorawanDevice.objects.create(deveui=self.deveui, device_name= self.device_name)
     
     def tearDown(self):
         NodeData.objects.all().delete()
@@ -35,7 +36,7 @@ class LorawanConnectionViewTestCase(TestCase):
         LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
 
         # Create a request to retrieve the LorawanConnection
-        url = f"/lorawanconnections/{self.nodedata.vsn}/{self.device.deveui}/"
+        url = reverse('manifests:retrieve_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         request = self.factory.get(url)
 
         # Use the LorawanConnectionView to handle the request
@@ -51,7 +52,7 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_retrieve_nonexistent_lorawan_connection(self):
         """Test lorawan connection view for retrieving records sad path"""
         # Attempt to retrieve a nonexistent LorawanConnection
-        url = f"/lorawanconnections/nonexistent_vsn/nonexistent_deveui/"
+        url = reverse('manifests:retrieve_lorawan_connection',kwargs={'node_vsn': "nonexistent_vsn",'lorawan_deveui': "nonexistent_deveui"})
         request = self.factory.get(url)
 
         # Use the LorawanConnectionView to handle the request
@@ -105,7 +106,7 @@ class LorawanConnectionViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"message": f"Node with vsn {nonexistent_vsn} does not exist"})
 
-        # Check that no LorawanConnection is created in the database
+        # Check that no LorawanConnection is not created in the database
         with self.assertRaises(LorawanConnection.DoesNotExist):
             LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
 
@@ -130,7 +131,7 @@ class LorawanConnectionViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"message": f"Lorawan Device with deveui {nonexistent_deveui} does not exist"})
 
-        # Check that no LorawanConnection is created in the database
+        # Check that no LorawanConnection is not created in the database
         with self.assertRaises(LorawanConnection.DoesNotExist):
             LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
 
@@ -152,7 +153,7 @@ class LorawanConnectionViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Check that no LorawanConnection is created in the database
+        # Check that no LorawanConnection is not created in the database
         with self.assertRaises(LorawanConnection.DoesNotExist):
             LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
 
@@ -162,7 +163,7 @@ class LorawanConnectionViewTestCase(TestCase):
         # Create a LorawanConnection
         lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
 
-        #create request
+        #request
         url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"connection_type": "OTAA"}
         request = self.factory.patch(url, data, format="json")
@@ -185,7 +186,7 @@ class LorawanConnectionViewTestCase(TestCase):
         # Create a LorawanConnection
         lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
 
-        #create request
+        #request
         nonexistent_vsn = 'nonexistent_vsn'
         url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"node": nonexistent_vsn, "connection_type": "OTAA"}
@@ -209,7 +210,7 @@ class LorawanConnectionViewTestCase(TestCase):
         # Create a LorawanConnection
         lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
 
-        #create request
+        #request
         nonexistent_deveui = 'nonexistent_deveui'
         url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"lorawan_device": nonexistent_deveui, "connection_type": "OTAA"}
@@ -247,3 +248,184 @@ class LorawanConnectionViewTestCase(TestCase):
         # Check if the LorawanConnection is not updated in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
         self.assertNotEquals(lorawan_connection.connection_type, data["connection_type"])
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_retrieve_existing_lorawan_key(self):
+        """Test lorawan key view for retrieving records happy path"""
+        # Create a LorawanConnection and key for testing
+        lc = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
+        LorawanKeys.objects.create(lorawan_connection= lc, network_Key= '123', app_session_key= '13', dev_address='14')
+
+        # Create a request to retrieve the keys
+        url = reverse('manifests:retrieve_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        request = self.factory.get(url)
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        # Check the response status code and data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_data = LorawanKeysSerializer(LorawanKeys.objects.get()).data
+        self.assertEqual(response.data, expected_data)
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_retrieve_nonexistent_lorawan_key(self):
+        """Test lorawan key view for retrieving records sad path"""
+        # Attempt to retrieve a nonexistent key
+        url = reverse('manifests:retrieve_lorawan_key',kwargs={'node_vsn': "nonexistent_vsn",'lorawan_deveui': "nonexistent_deveui"})
+        request = self.factory.get(url)
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request, node_vsn="nonexistent_vsn", lorawan_deveui="nonexistent_deveui")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_create_lorawan_key_success(self):
+        """Test correctly creating a lorawan key"""
+        # Create a LorawanConnection for testing
+        lc = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
+
+        # Create a request to create a key
+        url = reverse('manifests:create_lorawan_key')
+        data = {
+            "lorawan_connection": str(lc),
+            "network_Key": '123',
+            "app_session_key": '13',
+            "dev_address": '14'
+        }
+        request = self.factory.post(url, data, format="json")
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request)
+
+        # Check the response status code and data
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data, {"message": "LorawanKey created successfully"})
+
+        # Check if the key is created in the database
+        lorawan_connection = LorawanKeys.objects.get(lorawan_connection=lc)
+        self.assertIsNotNone(lorawan_connection)
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_create_lorawan_key_invalid_lc(self):
+        """Test creating a lorawan key with invalid node"""
+        # Create a request to create a key with an invalid lc
+        nonexistent_lc = 'error-error-error'
+        url = reverse('manifests:create_lorawan_key')
+        data = {
+            "lorawan_connection": nonexistent_lc,
+            "network_Key": '123',
+            "app_session_key": '13',
+            "dev_address": '14'
+        }
+        request = self.factory.post(url, data, format="json")
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request)
+
+        # Check the response status code and error message
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"message": f"Lorawan Connection does not exist"})
+
+        # Check that no key is not created in the database
+        with self.assertRaises(LorawanKeys.DoesNotExist):
+            LorawanKeys.objects.get(network_Key='123')
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_create_lorawan_key_serializer_error(self):
+        """Test for getting a serializer error when creating a lorawan key"""
+        # Create a request to create a key
+        url = reverse('manifests:create_lorawan_key')
+        data = {
+            "lorawan_connection": '123',
+            "network_Key": '123',
+            "app_session_key": '13',
+            "dev_address": '14'
+        }
+        request = self.factory.post(url, data, format="json")
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Check that key is not created in the database
+        with self.assertRaises(LorawanKeys.DoesNotExist):
+            LorawanKeys.objects.get(network_Key=123)
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_update_lorawan_key_success(self):
+        """Test correctly updating a lorawan key"""
+        # Create a LorawanConnection and key for testing
+        lc = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
+        LorawanKeys.objects.create(lorawan_connection= lc, network_Key= '123', app_session_key= '13', dev_address= '14')
+
+        #request
+        url = reverse('manifests:update_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        data = {"network_Key": '111'}
+        request = self.factory.patch(url, data, format="json")
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        # Check the response status code and data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"message": "LorawanKey updated successfully"})
+
+        # Check if the key is updated in the database
+        key = LorawanKeys.objects.get(lorawan_connection=lc)
+        self.assertEqual(key.network_Key, data["network_Key"])
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_update_lorawan_key_invalid_lc(self):
+        """Test creating a lorawan key with invalid node"""
+        # Create a LorawanConnection and key for testing
+        lc = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
+        LorawanKeys.objects.create(lorawan_connection= lc, network_Key= '123', app_session_key= '13', dev_address= '14')
+
+        # Create a request to create a key with an invalid lc
+        nonexistent_lc = 'error-error-error'
+        url = reverse('manifests:update_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        data = {"lorawan_connection": nonexistent_lc, "network_Key": '111'}
+        request = self.factory.patch(url, data, format="json")
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        # Check the response status code and error message
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"message": f"Lorawan Connection does not exist"})
+
+        # Check if the key is not updated in the database
+        key = LorawanKeys.objects.get(lorawan_connection= lc)
+        self.assertNotEquals(key.network_Key, data["network_Key"])
+
+    @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
+    def test_update_lorawan_key_serializer_error(self):
+        """Test for getting a serializer error when updating a lorawan key"""
+        # Create a LorawanConnection and key for testing
+        lc = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
+        LorawanKeys.objects.create(lorawan_connection= lc, network_Key= '123', app_session_key= '13', dev_address= '14')
+
+        #request
+        url = reverse('manifests:update_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        data = {"dev_address": '123456789', "app_session_key": '222'}
+        request = self.factory.patch(url, data, format="json")
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view()
+        response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Check that key is not created in the database
+        with self.assertRaises(LorawanKeys.DoesNotExist):
+            LorawanKeys.objects.get(app_session_key='222')
