@@ -13,6 +13,7 @@ from django.http import HttpRequest
 from manifests.serializers import ManifestSerializer
 from django.urls import reverse
 from node_auth.models import Token
+from node_auth.authentication import TokenAuthentication
 
 class NodeTokenAuthTests(TestCase):
     """
@@ -22,7 +23,7 @@ class NodeTokenAuthTests(TestCase):
     """
     model = None
     path = None
-    header_prefix = 'node_auth '
+    header_prefix = TokenAuthentication.keyword + ' '
 
     def setUp(self):
         self.csrf_client = APIClient(enforce_csrf_checks=True)
