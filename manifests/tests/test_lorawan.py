@@ -152,6 +152,10 @@ class LorawanConnectionViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        # Check that no LorawanConnection is created in the database
+        with self.assertRaises(LorawanConnection.DoesNotExist):
+            LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
+
     @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
     def test_update_lorawan_connection_success(self):
         """Test correctly updating a lorawan connection"""
@@ -229,7 +233,7 @@ class LorawanConnectionViewTestCase(TestCase):
         # Create a LorawanConnection
         lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
 
-        # Create a request to create a LorawanConnection
+        # Create a request to update a LorawanConnection
         url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"connection_type": "error"}
         request = self.factory.patch(url, data, format="json")
@@ -239,3 +243,7 @@ class LorawanConnectionViewTestCase(TestCase):
         response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Check if the LorawanConnection is not updated in the database
+        lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
+        self.assertNotEquals(lorawan_connection.connection_type, data["connection_type"])
