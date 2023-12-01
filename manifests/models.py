@@ -331,7 +331,7 @@ class LorawanDevice(models.Model):
     deveui = models.CharField(
         max_length=16, primary_key=True, unique=True, null=False, blank=False
     )
-    device_name = models.CharField(max_length=100, null=True, blank=True)
+    device_name = models.CharField(max_length=100, null=False, blank=False)
     battery_level = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )
