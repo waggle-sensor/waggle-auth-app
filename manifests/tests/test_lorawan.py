@@ -135,7 +135,7 @@ class LorawanConnectionViewTestCase(TestCase):
             LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
 
     @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
-    def test_create_lorawan_connection_success(self):
+    def test_create_lorawan_connection_serializer_error(self):
         """Test for getting a serializer error when creating a lorawan connection"""
         # Create a request to create a LorawanConnection
         url = reverse('manifests:create_lorawan_connection')
@@ -152,3 +152,90 @@ class LorawanConnectionViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
+    def test_update_lorawan_connection_success(self):
+        """Test correctly updating a lorawan connection"""
+        # Create a LorawanConnection
+        lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
+
+        #create request
+        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        data = {"connection_type": "OTAA"}
+        request = self.factory.patch(url, data, format="json")
+
+        # Use the LorawanConnectionView to handle the request
+        lorawan_connection_view = LorawanConnectionView.as_view()
+        response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        # Check the response status code and data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"message": "LorawanConnection updated successfully"})
+
+        # Check if the LorawanConnection is updated in the database
+        lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
+        self.assertEqual(lorawan_connection.connection_type, data["connection_type"])
+
+    @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
+    def test_update_lorawan_connection_invalid_node(self):
+        """Test update a lorawan connection with invalid node"""
+        # Create a LorawanConnection
+        lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
+
+        #create request
+        nonexistent_vsn = 'nonexistent_vsn'
+        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        data = {"node": nonexistent_vsn, "connection_type": "OTAA"}
+        request = self.factory.patch(url, data, format="json")
+
+        # Use the LorawanConnectionView to handle the request
+        lorawan_connection_view = LorawanConnectionView.as_view()
+        response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        # Check the response status code and error message
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"message": f"Node with vsn {nonexistent_vsn} does not exist"})
+
+        # Check if the LorawanConnection is not updated in the database
+        lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
+        self.assertNotEquals(lorawan_connection.connection_type, data["connection_type"])
+
+    @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
+    def test_update_lorawan_connection_invalid_device(self):
+        """Test update a lorawan connection with invalid device"""
+        # Create a LorawanConnection
+        lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
+
+        #create request
+        nonexistent_deveui = 'nonexistent_deveui'
+        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        data = {"lorawan_device": nonexistent_deveui, "connection_type": "OTAA"}
+        request = self.factory.patch(url, data, format="json")
+
+        # Use the LorawanConnectionView to handle the request
+        lorawan_connection_view = LorawanConnectionView.as_view()
+        response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        # Check the response status code and error message
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"message": f"Lorawan Device with deveui {nonexistent_deveui} does not exist"})
+
+        # Check if the LorawanConnection is not updated in the database
+        lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
+        self.assertNotEquals(lorawan_connection.connection_type, data["connection_type"])
+
+    @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
+    def test_update_lorawan_connection_serializer_error(self):
+        """Test for getting a serializer error when updating a lorawan connection"""
+        # Create a LorawanConnection
+        lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
+
+        # Create a request to create a LorawanConnection
+        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        data = {"connection_type": "error"}
+        request = self.factory.patch(url, data, format="json")
+
+        # Use the LorawanConnectionView to handle the request
+        lorawan_connection_view = LorawanConnectionView.as_view()
+        response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
