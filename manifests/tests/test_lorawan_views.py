@@ -202,7 +202,7 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check if the LorawanConnection is not updated in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
-        self.assertNotEquals(lorawan_connection.connection_type, data["connection_type"])
+        self.assertNotEqual(lorawan_connection.connection_type, data["connection_type"])
 
     @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
     def test_update_lorawan_connection_invalid_device(self):
@@ -226,7 +226,7 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check if the LorawanConnection is not updated in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
-        self.assertNotEquals(lorawan_connection.connection_type, data["connection_type"])
+        self.assertNotEqual(lorawan_connection.connection_type, data["connection_type"])
 
     @patch('manifests.views.LorawanConnectionView.permission_classes', [AllowAny])
     def test_update_lorawan_connection_serializer_error(self):
@@ -247,7 +247,7 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check if the LorawanConnection is not updated in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
-        self.assertNotEquals(lorawan_connection.connection_type, data["connection_type"])
+        self.assertNotEqual(lorawan_connection.connection_type, data["connection_type"])
 
     @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
     def test_retrieve_existing_lorawan_key(self):
@@ -406,7 +406,7 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check if the key is not updated in the database
         key = LorawanKeys.objects.get(lorawan_connection= lc)
-        self.assertNotEquals(key.network_Key, data["network_Key"])
+        self.assertNotEqual(key.network_Key, data["network_Key"])
 
     @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
     def test_update_lorawan_key_serializer_error(self):
@@ -539,4 +539,4 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check that device is not updated in the database
         device = LorawanDevice.objects.get(deveui=self.device.deveui)
-        self.assertNotEquals(device.device_name, data["device_name"])
+        self.assertNotEqual(device.device_name, data["device_name"])
