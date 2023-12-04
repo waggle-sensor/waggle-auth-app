@@ -85,7 +85,7 @@ Finally, when you're done working, you can stop everything using:
 make stop
 ```
 
-### Enable user login via Globus OIDC (Optional)
+### Enable user login via Globus OIDC
 
 You can configure user login via Globus OIDC by performing the following _one time_ setup:
 
