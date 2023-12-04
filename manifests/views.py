@@ -7,7 +7,7 @@ from rest_framework.generics import (
     UpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from .models import *
 from .serializers import (
     ManifestSerializer,
@@ -80,55 +80,6 @@ class LorawanDeviceView(NodeAuthMixin, CreateAPIView, UpdateAPIView, RetrieveAPI
     serializer_class = LorawanDeviceSerializer
     queryset = LorawanDevice.objects.all()
     lookup_field = "deveui"
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            # Create a LorawanDevice instance based on serializer data and save to the database
-            try:
-                LorawanDevice.objects.create(**serializer.validated_data)
-            except IntegrityError as e:
-                error_message = f"IntegrityError: {e}"
-                return Response(
-                    {"message": error_message},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Return a response
-            return Response(
-                {"message": "LorawanDevice created successfully"},
-                status=status.HTTP_201_CREATED,
-            )
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-
-        if serializer.is_valid():
-            updated_data = {}
-
-            # update the Lorawan object based on serializer data
-            for attr, value in serializer.validated_data.items():
-                updated_data[attr] = value
-
-            serializer.save(**updated_data)
-
-            # Return a response
-            return Response(
-                {"message": "LorawanDevice updated successfully"},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanConnectionSerializer

@@ -477,7 +477,6 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check the response status code and data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {"message": "LorawanDevice created successfully"})
 
         # Check if the device is created in the database
         device = LorawanDevice.objects.get(deveui=deveui)
@@ -519,7 +518,6 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check the response status code and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"message": "LorawanDevice updated successfully"})
 
         # Check if the device is updated in the database
         device = LorawanDevice.objects.get(deveui= self.device.deveui)
