@@ -34,44 +34,5 @@ class AbstractNode(AbstractBaseNode):
     def __str__(self):
         return self.vsn
 
-class AnonymousNode:
-    id = None
-    pk = None
-    vsn = ""
-    mac = ""
-
-    def __str__(self):
-        return "AnonymousNode"
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__)
-
-    def __hash__(self):
-        return 1  # instances always return the same hash value
-
-    def __int__(self):
-        raise TypeError(
-            "Cannot cast AnonymousNode to int. Are you trying to use it in place of "
-            "Node?"
-        )
-
-    def save(self):
-        raise NotImplementedError(
-            "Django doesn't provide a DB representation for AnonymousNode."
-        )
-
-    def delete(self):
-        raise NotImplementedError(
-            "Django doesn't provide a DB representation for AnonymousNode."
-        )
-
-    @property
-    def is_anonymous(self):
-        return True
-
-    @property
-    def is_authenticated(self):
-        return False
-
-    def get_vsn(self):
-        return self.vsn
+    def get_by_vsn(self, vsn):
+        return self.get(vsn=vsn)
