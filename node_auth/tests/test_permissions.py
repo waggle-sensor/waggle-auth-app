@@ -21,8 +21,8 @@ class TestIsAuthenticatedPermission(TestCase):
 
         # Create a mock request with an authenticated node
         request = self.factory.get('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
 
         # Create an instance of the IsAuthenticated permission
         permission = IsAuthenticated()
@@ -70,8 +70,8 @@ class TestIsAuthenticatedObjectLevelPermission(TestCase):
 
         # Create a mock request with an authenticated node
         request = self.factory.get('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
 
         # Create an instance of the IsAuthenticated_ObjectLevel permission
         permission = IsAuthenticated_ObjectLevel()
@@ -91,8 +91,8 @@ class TestIsAuthenticatedObjectLevelPermission(TestCase):
 
         # Create a mock request with an authenticated node
         request = self.factory.get('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
 
         # Create an instance of the IsAuthenticated_ObjectLevel permission
         permission = IsAuthenticated_ObjectLevel()
@@ -113,8 +113,8 @@ class TestIsAuthenticatedObjectLevelPermission(TestCase):
 
         # Create a mock request with an authenticated node
         request = self.factory.get('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
 
         # Create an instance of the IsAuthenticated_ObjectLevel permission
         permission = IsAuthenticated_ObjectLevel()
@@ -143,8 +143,8 @@ class TestIsAuthenticatedObjectLevelPermission(TestCase):
 
         # Create a mock request with an authenticated node
         request = self.factory.get('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
 
         # Create an instance of the IsAuthenticated_ObjectLevel permission
         permission = IsAuthenticated_ObjectLevel()
@@ -174,8 +174,8 @@ class TestIsAuthenticatedObjectLevelPermission(TestCase):
 
         # Create a mock request
         request = self.factory.get('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
 
         # Create an instance of the IsAuthenticated_ObjectLevel permission
         permission = IsAuthenticated_ObjectLevel()
@@ -212,8 +212,8 @@ class TestOnlyCreateToSelfPermission(TestCase):
 
         # Create a mock request with an authenticated node and POST method
         request = self.factory.post('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
         data = {'node': Myvsn}
         request.data = data
 
@@ -235,8 +235,8 @@ class TestOnlyCreateToSelfPermission(TestCase):
 
         # Create a mock request with an authenticated node and POST method
         request = self.factory.post('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
         data = {'node': Not_Myvsn}
         request.data = data
 
@@ -259,8 +259,8 @@ class TestOnlyCreateToSelfPermission(TestCase):
 
         # Create a mock request with an authenticated node and POST method
         request = self.factory.post('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
         data = {'node': Myvsn}
         request.data = data
 
@@ -287,8 +287,8 @@ class TestOnlyCreateToSelfPermission(TestCase):
 
         # Create a mock request with an authenticated node and POST method
         request = self.factory.post('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
         data = {'test': Not_Myvsn}
         request.data = data
 
@@ -312,8 +312,8 @@ class TestOnlyCreateToSelfPermission(TestCase):
 
         # Create a mock request with an authenticated node
         request = self.factory.get('/')
-        request.user = Mock()
-        request.user.vsn = Myvsn
+        request.node = Mock()
+        request.node.vsn = Myvsn
 
         # Create an instance of the OnlyCreateToSelf permission
         permission = OnlyCreateToSelf()
@@ -331,7 +331,7 @@ class TestOnlyCreateToSelfPermission(TestCase):
 
         # Create a mock request with an authenticated node
         request = self.factory.get('/')
-        request.user = None
+        request.node = None
 
         # Create an instance of the OnlyCreateToSelf permission
         permission = OnlyCreateToSelf()
