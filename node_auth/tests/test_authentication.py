@@ -1,10 +1,12 @@
 import unittest
 from django.test import TestCase
-from app.models import Node
 from rest_framework.test import APIRequestFactory
 from rest_framework import exceptions
 from node_auth.authentication import TokenAuthentication, BaseAuthentication
 from unittest.mock import patch, Mock
+from node_auth import get_node_model
+
+Node = get_node_model()
 
 class TestTokenAuthentication(TestCase):
 

@@ -3,6 +3,9 @@ from rest_framework.test import APIRequestFactory
 from app.models import Node
 from node_auth.serializers import AuthTokenSerializer
 from rest_framework import serializers
+from node_auth import get_node_model
+
+Node = get_node_model()
 
 class TestAuthTokenSerializer(TestCase):
     def setUp(self):
