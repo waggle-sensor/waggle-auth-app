@@ -8,6 +8,7 @@ from node_auth import get_token_keyword, get_token_model, get_node_model
 
 class AuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
+        """add the lazy node instance to request"""
         self.node_model = get_node_model()
         self.token_model = get_token_model()
         self.keyword = get_token_keyword()
@@ -19,6 +20,7 @@ class AuthenticationMiddleware(MiddlewareMixin):
         request.node = node_instance
  
     def get_node_instance(self, request):
+        """ get node instance using token in auth header"""
         auth = get_authorization_header(request).split()
 
         if not auth or auth[0].lower() != self.keyword.lower().encode():
