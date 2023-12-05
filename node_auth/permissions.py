@@ -12,7 +12,7 @@ class IsAuthenticated(BasePermission):
         Checks for view level permissions.
         """
         try:
-            node = request.user
+            node = request.node
         except:
         	raise exceptions.AuthenticationFailed(detail='Could not get node from request')
 
@@ -32,7 +32,7 @@ class IsAuthenticated_ObjectLevel(IsAuthenticated):
         """
         Checks for object level permissions.
         """
-        node = request.user
+        node = request.node
 
         # Check object-level permissions here using the user-specified foreign key name
         foreign_key_name = getattr(view, 'foreign_key_name', 'node')
@@ -61,7 +61,7 @@ class OnlyCreateToSelf(BasePermission):
     def has_permission(self, request, view):
 
         try:
-            node = request.user
+            node = request.node
         except:
         	raise exceptions.AuthenticationFailed(detail='Could not get node from request')
 
