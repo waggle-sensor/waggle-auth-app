@@ -4,14 +4,14 @@ from rest_framework import authentication <- original
 """
 import base64
 import binascii
-
 from django.contrib.auth import authenticate
 from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.translation import gettext_lazy as _
-
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from .models import Token
-
+from django.conf import settings
+from django.apps import apps as django_apps
+from node_auth import get_token_keyword, get_token_model
 
 def get_authorization_header(request):
     """
@@ -26,11 +26,10 @@ def get_authorization_header(request):
     return auth
 
 
-# class CSRFCheck(CsrfViewMiddleware):
+# class CSRFCheck(CsrfViewMiddleware): #TODO: delete once you know it is not being used
 #     def _reject(self, request, reason):
 #         # Return the failure reason instead of an HttpResponse
 #         return reason
-
 
 class BaseAuthentication:
     """
@@ -62,8 +61,8 @@ class TokenAuthentication(BaseAuthentication):
         Authorization: node_auth 401f7ac837da42b97f613d789819ff93537bee6a
     """
 
-    keyword = "node_auth"
-    model = Token
+    keyword = get_token_keyword()
+    model = get_token_model()
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()
@@ -95,8 +94,8 @@ class TokenAuthentication(BaseAuthentication):
         except model.DoesNotExist:
             raise exceptions.AuthenticationFailed(_("Invalid token."))
 
-        # if not token.node.is_active: #need to add "is_active" to node model in manifest app
-        #     raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
+        if not token.node.is_active: 
+            raise exceptions.AuthenticationFailed(_('Node inactive or deleted.'))
 
         return (token.node, token)
 
