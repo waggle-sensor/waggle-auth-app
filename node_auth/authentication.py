@@ -2,15 +2,9 @@
 Provides token authentication policies for nodes. - Grabbed from authentication module in rest_framework
 from rest_framework import authentication <- original
 """
-import base64
-import binascii
-from django.contrib.auth import authenticate
-from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.translation import gettext_lazy as _
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from .models import Token
-from django.conf import settings
-from django.apps import apps as django_apps
 from node_auth import get_token_keyword, get_token_model
 
 def get_authorization_header(request):
@@ -25,12 +19,6 @@ def get_authorization_header(request):
         auth = auth.encode(HTTP_HEADER_ENCODING)
     return auth
 
-
-# class CSRFCheck(CsrfViewMiddleware): #TODO: delete once you know it is not being used
-#     def _reject(self, request, reason):
-#         # Return the failure reason instead of an HttpResponse
-#         return reason
-
 class BaseAuthentication:
     """
     All authentication classes should extend BaseAuthentication.
@@ -38,7 +26,7 @@ class BaseAuthentication:
 
     def authenticate(self, request):
         """
-        Authenticate the request and return a two-tuple of (user, token).
+        Authenticate the request and return a two-tuple of (node, token).
         """
         raise NotImplementedError(".authenticate() must be overridden.")
 
@@ -49,7 +37,6 @@ class BaseAuthentication:
         authentication scheme should return `403 Permission Denied` responses.
         """
         pass
-
 
 class TokenAuthentication(BaseAuthentication):
     """
