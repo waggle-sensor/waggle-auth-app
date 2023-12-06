@@ -1,7 +1,6 @@
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
-from app.models import Node
 from manifests.models import NodeData, LorawanDevice, LorawanConnection, LorawanKeys
 from manifests.serializers import LorawanConnectionSerializer, LorawanKeysSerializer, LorawanDeviceSerializer
 from manifests.views import LorawanConnectionView, LorawanKeysView, LorawanDeviceView
@@ -9,8 +8,11 @@ from node_auth.authentication import TokenAuthentication
 from unittest.mock import patch, Mock
 from django.urls import reverse
 from rest_framework.permissions import AllowAny
+from node_auth import get_token_keyword, get_token_model, get_node_model
 
-HEADER_PREFIX =  TokenAuthentication.keyword + ' '
+HEADER_PREFIX =  get_token_keyword() + ' '
+Token = get_token_model()
+Node = get_node_model()
 
 class LorawanConnectionViewTestCase(TestCase):
     def setUp(self):
@@ -21,6 +23,8 @@ class LorawanConnectionViewTestCase(TestCase):
         self.device_name = "test"
         self.factory = APIRequestFactory()
         self.node = Node.objects.create(vsn=self.Myvsn, mac=self.mac)
+        self.token = Token.objects.get(node=self.node)
+        self.key = self.token.key
         self.nodedata = NodeData.objects.create(vsn=self.Myvsn)  
         self.device = LorawanDevice.objects.create(deveui=self.deveui, device_name= self.device_name)
     
