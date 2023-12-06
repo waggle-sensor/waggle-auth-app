@@ -54,7 +54,7 @@ class NodeTokenAuthTests(TestCase):
         """
 
         request = self.factory.post("/", HTTP_AUTHORIZATION=self.auth_header)
-        request.node = Mock()
+        request.node = Mock() #I have to create mock since it doesn't pass through node_auth middleware
         request.node.vsn = self.Myvsn
 
         # Create a simple view with the permission
