@@ -6,7 +6,7 @@ from rest_framework.generics import (
     CreateAPIView,
     UpdateAPIView,
 )
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from .models import *
 from .serializers import (
