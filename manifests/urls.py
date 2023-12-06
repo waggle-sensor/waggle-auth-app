@@ -21,12 +21,12 @@ router.register(r"node-builds", NodeBuildViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "lorawandevices/create/",
+        "lorawandevices/",
         LorawanDeviceView.as_view(),
         name="create_lorawan_device",
     ),
     path(
-        "lorawandevices/update/<str:deveui>/",
+        "lorawandevices/<str:deveui>/",
         LorawanDeviceView.as_view(),
         name="update_lorawan_device",
     ),
@@ -36,12 +36,12 @@ urlpatterns = [
         name="retrieve_lorawan_device",
     ),
     path(
-        "lorawanconnections/create/",
+        "lorawanconnections/",
         LorawanConnectionView.as_view(),
         name="create_lorawan_connection",
     ),
     path(
-        "lorawanconnections/update/<str:node_vsn>/<str:lorawan_deveui>/",
+        "lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/",
         LorawanConnectionView.as_view(),
         name="update_lorawan_connection",
     ),
@@ -51,12 +51,12 @@ urlpatterns = [
         name="retrieve_lorawan_connection",
     ),
     path(
-        "lorawankeys/create/",
+        "lorawankeys/",
         LorawanKeysView.as_view(),
         name="create_lorawan_key",
     ),
     path(
-        "lorawankeys/update/<str:node_vsn>/<str:lorawan_deveui>/",
+        "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
         LorawanKeysView.as_view(),
         name="update_lorawan_key",
     ),
