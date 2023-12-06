@@ -140,10 +140,8 @@ class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView,
                 )
 
             # Return a response
-            return Response(
-                {"message": "LorawanConnection created successfully"},
-                status=status.HTTP_201_CREATED,
-            )
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -184,10 +182,7 @@ class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView,
             serializer.save(**serializer.validated_data)
 
             # Return a response
-            return Response(
-                {"message": "LorawanConnection updated successfully"},
-                status=status.HTTP_200_OK,
-            )
+            return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -252,10 +247,8 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
                 )
 
             # Return a response
-            return Response(
-                {"message": "LorawanKey created successfully"},
-                status=status.HTTP_201_CREATED,
-            )
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -288,9 +281,6 @@ class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, Retri
                 )
 
             # Return a response
-            return Response(
-                {"message": "LorawanKey updated successfully"},
-                status=status.HTTP_200_OK,
-            )
+            return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

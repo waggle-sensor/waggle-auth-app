@@ -83,7 +83,6 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check the response status code and data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {"message": "LorawanConnection created successfully"})
 
         # Check if the LorawanConnection is created in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
@@ -178,7 +177,6 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check the response status code and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"message": "LorawanConnection updated successfully"})
 
         # Check if the LorawanConnection is updated in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
@@ -308,7 +306,6 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check the response status code and data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {"message": "LorawanKey created successfully"})
 
         # Check if the key is created in the database
         lorawan_connection = LorawanKeys.objects.get(lorawan_connection=lc)
@@ -381,7 +378,6 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Check the response status code and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"message": "LorawanKey updated successfully"})
 
         # Check if the key is updated in the database
         key = LorawanKeys.objects.get(lorawan_connection=lc)
