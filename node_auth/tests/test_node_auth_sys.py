@@ -1,6 +1,5 @@
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from manifests.models import NodeData, LorawanDevice
-from app.models import Node
 from node_auth.models import Token
 from rest_framework.test import APIClient
 from rest_framework.views import APIView
@@ -12,8 +11,12 @@ from rest_framework import status
 from django.http import HttpRequest
 from manifests.serializers import ManifestSerializer
 from django.urls import reverse
-from node_auth.models import Token
 from node_auth.authentication import TokenAuthentication
+from node_auth import get_token_keyword, get_token_model, get_node_model
+from unittest.mock import patch, Mock
+
+Token = get_token_model()
+Node = get_node_model()
 
 class NodeTokenAuthTests(TestCase):
     """
@@ -21,39 +24,38 @@ class NodeTokenAuthTests(TestCase):
         - Nodes have access to actions/records it shouldn't 
         - Or nodes don't have access to actions/records it should
     """
-    model = None
-    path = None
-    header_prefix = TokenAuthentication.keyword + ' '
 
     def setUp(self):
+        self.factory = RequestFactory()
         self.csrf_client = APIClient(enforce_csrf_checks=True)
-        self.vsn = 'W001'
+        self.Myvsn = 'W001'
         self.mac = '111'
-        self.node = Node.objects.create(vsn=self.vsn, mac=self.mac)
+        self.node = Node.objects.create(vsn=self.Myvsn, mac=self.mac)
         self.token = Token.objects.get(node=self.node)
         self.key = self.token.key
-        self.nodedata = NodeData.objects.create(vsn=self.vsn)
+        self.nodedata = NodeData.objects.create(vsn=self.Myvsn)
         self.NotMy_vsn = 'W002'
         self.NotMy_mac = '222'
         self.NotMy_node = Node.objects.create(vsn=self.NotMy_vsn, mac=self.NotMy_mac)
         self.NotMy_token = Token.objects.get(node=self.NotMy_node)
         self.NotMy_key = self.NotMy_token.key
         self.NotMy_nodedata = NodeData.objects.create(vsn=self.NotMy_vsn)
-        self.auth_header = self.header_prefix + self.key
-        self.wrong_auth_header = self.header_prefix + "123"
+        self.auth_header = get_token_keyword() + " " + self.key
+        self.wrong_auth_header = get_token_keyword() + " 123"
 
     def tearDown(self):
         Node.objects.all().delete()
         Token.objects.all().delete()
+        NodeData.objects.all().delete()
 
     def test_correct_token(self):
         """
         Test node token authentication using correct token
         """
-        request = HttpRequest()
-        request.method = 'POST'
-        request.path = self.path
-        request.META['HTTP_AUTHORIZATION'] = self.auth_header
+
+        request = self.factory.post("/", HTTP_AUTHORIZATION=self.auth_header)
+        request.node = Mock()
+        request.node.vsn = self.Myvsn
 
         # Create a simple view with the permission
         class TestView(NodeAuthMixin, APIView):
@@ -70,10 +72,9 @@ class NodeTokenAuthTests(TestCase):
         """
         Test node token authentication using wrong token
         """
-        request = HttpRequest()
-        request.method = 'POST'
-        request.path = self.path
-        request.META['HTTP_AUTHORIZATION'] = self.wrong_auth_header
+        request = self.factory.post("/", HTTP_AUTHORIZATION=self.wrong_auth_header)
+        request.node = Mock()
+        request.node.vsn = self.NotMy_vsn
 
         # Create a simple view with the permission
         class TestView(NodeAuthMixin, APIView):
@@ -91,10 +92,9 @@ class NodeTokenAuthTests(TestCase):
         Test object level node authentication using correct token
         """
 
-        request = HttpRequest()
-        request.method = 'GET'
-        request.path = self.path
-        request.META['HTTP_AUTHORIZATION'] = self.auth_header
+        request = self.factory.get("/", HTTP_AUTHORIZATION=self.auth_header)
+        request.node = Mock()
+        request.node.vsn = self.Myvsn
 
         # Create a simple view with the permission
         class TestView(NodeOwnedObjectsMixin, RetrieveAPIView):
@@ -104,7 +104,7 @@ class NodeTokenAuthTests(TestCase):
 
         # Set the request attribute on the view using the existing response
         view = TestView.as_view()
-        response = view(request,vsn=self.vsn)
+        response = view(request,vsn=self.Myvsn)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, "Expected status code 200")
         
@@ -114,10 +114,9 @@ class NodeTokenAuthTests(TestCase):
         Test object level node authentication using wrong token
         """
 
-        request = HttpRequest()
-        request.method = 'GET'
-        request.path = self.path
-        request.META['HTTP_AUTHORIZATION'] = self.auth_header
+        request = self.factory.get("/", HTTP_AUTHORIZATION=self.wrong_auth_header)
+        request.node = Mock()
+        request.node.vsn = self.NotMy_vsn
 
         # Create a simple view with the permission
         class TestView(NodeOwnedObjectsMixin, RetrieveAPIView):
@@ -138,10 +137,9 @@ class NodeTokenAuthTests(TestCase):
         if list retrieved only includes records related to my node
         """
 
-        request = HttpRequest()
-        request.method = 'GET'
-        request.path = self.path
-        request.META['HTTP_AUTHORIZATION'] = self.auth_header
+        request = self.factory.get("/", HTTP_AUTHORIZATION=self.auth_header)
+        request.node = Mock()
+        request.node.vsn = self.Myvsn
 
         # Create a simple view with the permission
         class TestView(NodeOwnedObjectsMixin, ReadOnlyModelViewSet, APIView):
@@ -151,7 +149,7 @@ class NodeTokenAuthTests(TestCase):
 
         # Set the request attribute on the view using the existing response
         view = TestView.as_view({'get': 'list'})
-        response = view(request,pk=self.vsn)
+        response = view(request,pk=self.Myvsn)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, "Expected status code 200")
 
