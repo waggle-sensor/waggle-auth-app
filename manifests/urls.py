@@ -17,24 +17,10 @@ router.register(r"manifests", ManifestViewSet, basename="manifest")
 router.register(r"computes", ComputeViewSet)
 router.register(r"sensors", SensorHardwareViewSet)
 router.register(r"node-builds", NodeBuildViewSet)
+router.register(r"lorawandevices", LorawanDeviceView, basename="lorawandevices")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path(
-        "lorawandevices/",
-        LorawanDeviceView.as_view(),
-        name="create_lorawan_device",
-    ),
-    path(
-        "lorawandevices/<str:deveui>/",
-        LorawanDeviceView.as_view(),
-        name="update_lorawan_device",
-    ),
-    path(
-        "lorawandevices/<str:deveui>/",
-        LorawanDeviceView.as_view(),
-        name="retrieve_lorawan_device",
-    ),
     path(
         "lorawanconnections/",
         LorawanConnectionView.as_view(),

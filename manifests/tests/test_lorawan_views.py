@@ -434,11 +434,11 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_retrieve_existing_lorawan_device(self):
         """Test lorawan device view for retrieving records happy path"""
         # Create a request to retrieve the device
-        url = reverse('manifests:retrieve_lorawan_device',kwargs={'deveui': self.device.deveui})
+        url = reverse('manifests:lorawandevices-detail',kwargs={'deveui': self.device.deveui})
         request = self.factory.get(url)
 
         # Use the LorawanDeviceView to handle the request
-        lorawan_device_view = LorawanDeviceView.as_view()
+        lorawan_device_view = LorawanDeviceView.as_view({'get': 'retrieve'})
         response = lorawan_device_view(request, deveui=self.device.deveui)
 
         # Check the response status code and data
@@ -450,11 +450,11 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_retrieve_nonexistent_lorawan_device(self):
         """Test lorawan device view for retrieving records sad path"""
         # Attempt to retrieve a nonexistent device
-        url = reverse('manifests:retrieve_lorawan_device',kwargs={'deveui': "nonexistent_deveui"})
+        url = reverse('manifests:lorawandevices-detail',kwargs={'deveui': "nonexistent_deveui"})
         request = self.factory.get(url)
 
         # Use the device view to handle the request
-        lorawan_device_view = LorawanDeviceView.as_view()
+        lorawan_device_view = LorawanDeviceView.as_view({'get': 'retrieve'})
         response = lorawan_device_view(request, deveui="nonexistent_deveui")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -464,7 +464,7 @@ class LorawanConnectionViewTestCase(TestCase):
         """Test correctly creating a lorawan device"""
         # Create a request to create a device
         deveui = "451"
-        url = reverse('manifests:create_lorawan_device')
+        url = reverse('manifests:lorawandevices-list')
         data = {
             "deveui": deveui,
             "device_name": "test",
@@ -472,7 +472,7 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the device view to handle the request
-        lorawan_device_view = LorawanDeviceView.as_view()
+        lorawan_device_view = LorawanDeviceView.as_view({'post': 'create'})
         response = lorawan_device_view(request)
 
         # Check the response status code and data
@@ -487,7 +487,7 @@ class LorawanConnectionViewTestCase(TestCase):
         """Test for getting a serializer error when creating a lorawan device"""
         # Create a request to create a device
         deveui = "123456789123456789"
-        url = reverse('manifests:create_lorawan_device')
+        url = reverse('manifests:lorawandevices-list')
         data = {
             "deveui": deveui,
             "device_name": "test",
@@ -495,7 +495,7 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the device view to handle the request
-        lorawan_device_view = LorawanDeviceView.as_view()
+        lorawan_device_view = LorawanDeviceView.as_view({'post': 'create'})
         response = lorawan_device_view(request)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -508,12 +508,12 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_update_lorawan_device_success(self):
         """Test correctly updating a lorawan device"""
         #request
-        url = reverse('manifests:update_lorawan_device',kwargs={'deveui': self.device.deveui})
+        url = reverse('manifests:lorawandevices-detail',kwargs={'deveui': self.device.deveui})
         data = {"battery_level": 2.1}
         request = self.factory.patch(url, data, format="json")
 
         # Use the device view to handle the request
-        lorawan_device_view = LorawanDeviceView.as_view()
+        lorawan_device_view = LorawanDeviceView.as_view({'patch': 'partial_update'})
         response = lorawan_device_view(request, deveui=self.device.deveui)
 
         # Check the response status code and data
@@ -527,12 +527,12 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_update_lorawan_device_serializer_error(self):
         """Test for getting a serializer error when updating a lorawan device"""
         # Create a request to update a device
-        url = reverse('manifests:update_lorawan_device',kwargs={'deveui': self.device.deveui})
+        url = reverse('manifests:lorawandevices-detail',kwargs={'deveui': self.device.deveui})
         data = {"deveui": "123456789123456789", "device_name": "update"}
         request = self.factory.patch(url, data, format="json")
 
         # Use the device view to handle the request
-        lorawan_device_view = LorawanDeviceView.as_view()
+        lorawan_device_view = LorawanDeviceView.as_view({'patch': 'partial_update'})
         response = lorawan_device_view(request, deveui=self.device.deveui)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
