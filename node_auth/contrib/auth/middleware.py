@@ -1,9 +1,9 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
-from node_auth.contrib import auth
+from node_auth.contrib.auth import get_node as auth_get_node
 
 def get_node(request):
-    return auth.get_node(request)
+    return auth_get_node(request)
 
 class AuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
