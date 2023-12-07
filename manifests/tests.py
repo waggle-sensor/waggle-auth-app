@@ -195,6 +195,89 @@ class SensorHardwareViewsTest(TestCase):
             [item["hardware"] for item in items], ["gps", "raingauge"]
         )
 
+        # vsns should be empty since sensors haven't been assigned to nodes
+        self.assertCountEqual(
+            [item["vsns"] for item in items], [[],[]]
+        )
+
+        # assign sensors to nodes under different projects
+        project_a = NodeBuildProject.objects.create(name="ProjA")
+        project_b = NodeBuildProject.objects.create(name="ProjB")
+        node_a = NodeData.objects.create(vsn="A123", name="A_name", project=project_a, phase='Deployed')
+        node_b = NodeData.objects.create(vsn="B123", name="B_name", project=project_b, phase='Awaiting Shipment')
+        sensor_a = SensorHardware.objects.create(hardware="top_camera", hw_model="fe-8010")
+        sensor_b = SensorHardware.objects.create(hardware="bottom_camera", hw_model="ptz-8081")
+        NodeSensor.objects.create(node=node_a, hardware=sensor_a)
+        NodeSensor.objects.create(node=node_b, hardware=sensor_a)
+        NodeSensor.objects.create(node=node_b, hardware=sensor_b)
+
+        # request without filters
+        r = self.client.get("/sensors/")
+        self.assertEqual(r.status_code, 200)
+        items = r.json()
+
+        # check for top_camera
+        sensors = list(filter(lambda o: o["hardware"] == "top_camera", items))
+        self.assertEqual(len(sensors), 1)
+        vsns = sensors[0]["vsns"]
+        self.assertCountEqual(vsns, ['A123', 'B123'])
+
+        # check for bottom_camera
+        sensors = list(filter(lambda o: o["hardware"] == "bottom_camera", items))
+        self.assertEqual(len(sensors), 1)
+        vsns = sensors[0]["vsns"]
+        self.assertCountEqual(vsns, ['B123'])
+
+        #
+        # test requests with filters
+        #
+        r = self.client.get("/sensors/?project=projA")
+        self.assertEqual(r.status_code, 200)
+        items = r.json()
+
+        # check only 1 sensor is listed (for ProjA)
+        self.assertEqual(len(items), 1)
+        self.assertCountEqual(items[0]["vsns"], ["A123"])
+
+        # 0 queries
+        r = self.client.get("/sensors/?phase=foo")
+        self.assertEqual(r.status_code, 200)
+        items = r.json()
+        self.assertEqual(len(items), 0)
+
+        r = self.client.get("/sensors/?project=foo&phase=Deployed")
+        items = r.json()
+        self.assertEqual(len(items), 0)
+
+        # good phase
+        r = self.client.get("/sensors/?phase=awaiting shipment")
+        self.assertEqual(r.status_code, 200)
+        items = r.json()
+        self.assertEqual(len(items), 2)
+        self.assertCountEqual([item["vsns"] for item in items], [["B123"], ["B123"]])
+
+        # multi filtering
+        r = self.client.get("/sensors/?phase=deployed,awaiting shipment")
+        items = r.json()
+        self.assertEqual(len(items), 2)
+
+        sensors = list(filter(lambda o: o["hardware"] == "bottom_camera", items))
+        self.assertEqual(len(sensors), 1)
+        self.assertCountEqual(sensors[0]["vsns"], ['B123'])
+
+        sensors = list(filter(lambda o: o["hardware"] == "top_camera", items))
+        self.assertEqual(len(sensors), 1)
+        self.assertCountEqual(sensors[0]["vsns"], ["A123", "B123"])
+
+        r = self.client.get("/sensors/?project=proja&phase=deployed,awaiting shipment")
+        items = r.json()
+        self.assertEqual(len(items), 1)
+        self.assertCountEqual(items[0]["vsns"], ["A123"])
+
+        r = self.client.get("/sensors/?project=proja&phase=awaiting shipment")
+        items = r.json()
+        self.assertEqual(len(items), 0)
+
     def test_detail_view(self):
         r = self.client.get("/sensors/gps/")
         self.assertEqual(r.status_code, 200)
