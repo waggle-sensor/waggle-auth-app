@@ -199,3 +199,6 @@ class NodeTokenAuthTests(TestCase):
         response = self.csrf_client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, "Expected status code 403, Forbidden")
+
+if __name__ == "__main__":
+    unittest.main()

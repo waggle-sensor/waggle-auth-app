@@ -540,3 +540,6 @@ class LorawanConnectionViewTestCase(TestCase):
         # Check that device is not updated in the database
         device = LorawanDevice.objects.get(deveui=self.device.deveui)
         self.assertNotEqual(device.device_name, data["device_name"])
+
+if __name__ == "__main__":
+    unittest.main()
