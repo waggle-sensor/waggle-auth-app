@@ -5,6 +5,7 @@ from unittest.mock import patch
 from node_auth.models import Token
 from node_auth import get_token_keyword, get_node_model, get_token_model
 from django.core.exceptions import ImproperlyConfigured
+from node_auth.contrib.auth.models import AnonymousNode
 
 class test_TokenModel(TestCase):
 
@@ -70,8 +71,43 @@ class get_functions(TestCase):
         with self.assertRaises(ImproperlyConfigured) as context:
             get_token_keyword()
 
+class AnonymousNodeTestCase(TestCase):
 
+    def test_str_method(self):
+        """Test the __str__ method."""
+        anonymous_node = AnonymousNode()
+        self.assertEqual(str(anonymous_node), "AnonymousNode")
 
+    def test_eq_method(self):
+        """Test the __eq__ method."""
+        anonymous_node1 = AnonymousNode()
+        anonymous_node2 = AnonymousNode()
+        self.assertEqual(anonymous_node1, anonymous_node2)
+
+        different_object = object()
+        self.assertNotEqual(anonymous_node1, different_object)
+
+    def test_save_method(self):
+        """Test the save method."""
+        anonymous_node = AnonymousNode()
+        with self.assertRaises(NotImplementedError):
+            anonymous_node.save()
+
+    def test_delete_method(self):
+        """Test the delete method."""
+        anonymous_node = AnonymousNode()
+        with self.assertRaises(NotImplementedError):
+            anonymous_node.delete()
+
+    def test_is_anonymous_property(self):
+        """Test the is_anonymous property."""
+        anonymous_node = AnonymousNode()
+        self.assertTrue(anonymous_node.is_anonymous)
+
+    def test_is_authenticated_property(self):
+        """Test the is_authenticated property."""
+        anonymous_node = AnonymousNode()
+        self.assertFalse(anonymous_node.is_authenticated)
 
 if __name__ == "__main__":
     unittest.main()
