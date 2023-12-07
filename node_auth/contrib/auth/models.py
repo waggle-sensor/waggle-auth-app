@@ -30,9 +30,6 @@ class AbstractNode(AbstractBaseNode):
         verbose_name_plural = _("nodes")
         abstract = True
 
-    def get_by_vsn(self, vsn):
-        return self.get(vsn=vsn)
-
 class AnonymousNode:
     id = None
     pk = None
