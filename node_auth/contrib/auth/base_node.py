@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 class AbstractBaseNode(models.Model):
-    last_updated = models.DateTimeField(_("last updated"), blank=True, null=True)
 
     is_active = True
     REQUIRED_FIELDS = ["vsn"]
@@ -25,8 +24,3 @@ class AbstractBaseNode(models.Model):
 
     def natural_key(self):
         return (self.get_vsn(),) 
-
-    def update_last_updated(self):
-        # This method is called when node is updated
-        self.last_updated = timezone.now()
-        self.save(update_fields=['last_updated'])
