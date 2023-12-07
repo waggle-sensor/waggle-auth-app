@@ -23,16 +23,12 @@ class AbstractNode(AbstractBaseNode):
     )
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
-    REQUIRED_FIELDS = ["vsn"]
     VSN_FIELD = "vsn"
 
     class Meta:
         verbose_name = _("node")
         verbose_name_plural = _("nodes")
         abstract = True
-
-    def __str__(self):
-        return self.vsn
 
     def get_by_vsn(self, vsn):
         return self.get(vsn=vsn)
