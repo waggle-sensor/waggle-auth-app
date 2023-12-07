@@ -10,9 +10,8 @@ class SensorViewSerializer(serializers.ModelSerializer):
     vsns = serializers.SerializerMethodField()
 
     def get_vsns(self, obj):
-        hardware = obj.hardware
-        compute_sensors = ComputeSensor.objects.filter(hardware__hardware=hardware)
-        node_sensors = NodeSensor.objects.filter(hardware__hardware=hardware)
+        compute_sensors = obj.computesensor_set.all()
+        node_sensors = obj.nodesensor_set.all()
         nodes = [s.scope.node for s in compute_sensors] + [s.node for s in node_sensors]
 
         project = self.context['request'].query_params.get("project")
@@ -31,7 +30,7 @@ class SensorViewSerializer(serializers.ModelSerializer):
                 if node.phase.lower() in (p.lower() for p in phases)
             ]
 
-        vsns = set([node.vsn for node in nodes])
+        vsns = sorted(set([node.vsn for node in nodes]))
 
         return vsns
 

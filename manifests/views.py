@@ -57,7 +57,17 @@ class ComputeViewSet(ReadOnlyModelViewSet):
 
 
 class SensorHardwareViewSet(ReadOnlyModelViewSet):
-    queryset = SensorHardware.objects.all().order_by("hardware")
+    queryset = (
+        SensorHardware.objects.all()
+            .prefetch_related(
+                "nodesensor_set",
+                "nodesensor_set__node",
+                "computesensor_set",
+                "computesensor_set__scope",
+                "computesensor_set__scope__node"
+            )
+            .order_by("hardware")
+    )
     serializer_class = SensorViewSerializer
     lookup_field = "hardware"
     permission_classes = [IsAuthenticatedOrReadOnly]
