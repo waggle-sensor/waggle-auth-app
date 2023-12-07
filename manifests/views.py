@@ -62,6 +62,16 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
     lookup_field = "hardware"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    def list(self, request, *args, **kwargs):
+        res = super(SensorHardwareViewSet, self).list(request, *args, **kwargs)
+
+        # if filtering, ignore sensors which aren't connected to nodes
+        q = request.query_params
+        if q.get("project") or q.get("phase"):
+            res.data = filter(lambda o: len(o["vsns"]), res.data)
+
+        return res
+
 
 class NodeBuildViewSet(ReadOnlyModelViewSet):
     queryset = (
