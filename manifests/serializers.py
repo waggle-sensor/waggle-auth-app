@@ -2,11 +2,38 @@ from rest_framework import serializers
 from .models import *
 
 
-class SensorHardwareSerializer(serializers.ModelSerializer):
+class SensorViewSerializer(serializers.ModelSerializer):
     # replace capabilities IDs by their names
     capabilities = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="capability", required=False
     )
+    vsns = serializers.SerializerMethodField()
+
+    def get_vsns(self, obj):
+        hardware = obj.hardware
+        compute_sensors = ComputeSensor.objects.filter(hardware__hardware=hardware)
+        node_sensors = NodeSensor.objects.filter(hardware__hardware=hardware)
+        nodes = [s.scope.node for s in compute_sensors] + [s.node for s in node_sensors]
+
+        project = self.context['request'].query_params.get("project")
+        if project:
+            projects = project.split(',')
+            nodes = [
+                node for node in nodes
+                if node.project and node.project.name.lower() in (p.lower() for p in projects)
+            ]
+
+        phase = self.context['request'].query_params.get("phase")
+        if phase:
+            phases = phase.split(',')
+            nodes = [
+                node for node in nodes
+                if node.phase.lower() in (p.lower() for p in phases)
+            ]
+
+        vsns = set([node.vsn for node in nodes])
+
+        return vsns
 
     class Meta:
         model = SensorHardware
@@ -20,6 +47,7 @@ class SensorHardwareSerializer(serializers.ModelSerializer):
             "datasheet",
             "description",
             "capabilities",
+            "vsns"
         ]
 
 

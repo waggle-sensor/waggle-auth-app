@@ -10,7 +10,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from .models import *
 from .serializers import (
     ManifestSerializer,
-    SensorHardwareSerializer,
+    SensorViewSerializer,
     NodeBuildSerializer,
     ComputeSerializer,
     LorawanDeviceSerializer,
@@ -58,7 +58,7 @@ class ComputeViewSet(ReadOnlyModelViewSet):
 
 class SensorHardwareViewSet(ReadOnlyModelViewSet):
     queryset = SensorHardware.objects.all().order_by("hardware")
-    serializer_class = SensorHardwareSerializer
+    serializer_class = SensorViewSerializer
     lookup_field = "hardware"
     permission_classes = [IsAuthenticatedOrReadOnly]
 

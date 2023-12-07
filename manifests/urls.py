@@ -14,7 +14,7 @@ app_name = "manifests"
 router = DefaultRouter()
 router.register(r"manifests", ManifestViewSet, basename="manifest")
 router.register(r"computes", ComputeViewSet)
-router.register(r"sensors", SensorHardwareViewSet)
+router.register(r"sensors", SensorHardwareViewSet, basename="sensors")
 router.register(r"node-builds", NodeBuildViewSet)
 
 urlpatterns = [
