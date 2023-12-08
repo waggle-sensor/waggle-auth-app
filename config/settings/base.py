@@ -25,6 +25,7 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = "app.User"
+AUTH_USER_KEYWORD = "Sage"
 AUTH_NODE_MODEL = "app.Node"
 AUTH_NODE_TOKEN_MODEL = "node_auth.Token"
 AUTH_NODE_KEYWORD = "node_auth"

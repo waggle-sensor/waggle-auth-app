@@ -3,6 +3,8 @@ import unittest
 from unittest.mock import patch
 from app.models import Node
 from django.utils import timezone
+from django.core.exceptions import ImproperlyConfigured
+from app import get_user_token_keyword
 
 class NodeTestCases(TestCase):
 
@@ -30,3 +32,13 @@ class NodeTestCases(TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class get_functions(TestCase):
+
+    @patch('app.settings', None)
+    def test_get_user_token_keyword_attribute_error(self):
+        """
+        test get_user_token_keyword raises ImproperlyConfigured for attribute error
+        """
+        with self.assertRaises(ImproperlyConfigured) as context:
+            get_user_token_keyword()
