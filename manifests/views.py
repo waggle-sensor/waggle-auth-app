@@ -1,11 +1,6 @@
 from django.contrib.auth.models import *
 from django.http import Http404
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.generics import (
-    RetrieveAPIView,
-    CreateAPIView,
-    UpdateAPIView,
-)
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from .models import *
