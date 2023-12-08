@@ -4,7 +4,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework import exceptions
 from node_auth.authentication import TokenAuthentication, BaseAuthentication
 from unittest.mock import patch, Mock
-from node_auth import get_node_model, get_token_keyword
+from node_auth import get_node_model, get_node_token_keyword
 
 Node = get_node_model()
 
@@ -25,7 +25,7 @@ class TestTokenAuthentication(TestCase):
         """
         Test that authenticate method returns a valid node and token for a valid token.
         """
-        request = self.factory.get("/", HTTP_AUTHORIZATION=f"{get_token_keyword()} {self.token.key}")
+        request = self.factory.get("/", HTTP_AUTHORIZATION=f"{get_node_token_keyword()} {self.token.key}")
         authentication = TokenAuthentication()
 
         node, token = authentication.authenticate(request)
@@ -37,7 +37,7 @@ class TestTokenAuthentication(TestCase):
         """
         Test that authenticate method raises AuthenticationFailed for an invalid token.
         """
-        request = self.factory.get("/", HTTP_AUTHORIZATION=f"{get_token_keyword()} invalidtoken")
+        request = self.factory.get("/", HTTP_AUTHORIZATION=f"{get_node_token_keyword()} invalidtoken")
         authentication = TokenAuthentication()
         with self.assertRaises(exceptions.AuthenticationFailed):
             authentication.authenticate(request)
@@ -48,7 +48,7 @@ class TestTokenAuthentication(TestCase):
         """
         inactive_node = Node.objects.create(vsn="123", mac="123", is_active=False)
         inactive_token = TokenAuthentication.model.objects.get(node=inactive_node)
-        request = self.factory.get("/", HTTP_AUTHORIZATION=f"{get_token_keyword()} {inactive_token}")
+        request = self.factory.get("/", HTTP_AUTHORIZATION=f"{get_node_token_keyword()} {inactive_token}")
         authentication = TokenAuthentication()
 
         with self.assertRaises(exceptions.AuthenticationFailed):
@@ -80,7 +80,7 @@ class TestTokenAuthentication(TestCase):
         request = self.factory.get("/")
         authentication = TokenAuthentication()
         result = authentication.authenticate_header(request)
-        self.assertEqual(result, get_token_keyword())
+        self.assertEqual(result, get_node_token_keyword())
 
     def test_baseauth_authenticate_method(self):
         base_auth = BaseAuthentication()
@@ -112,7 +112,7 @@ class TestTokenAuthentication(TestCase):
         mock_request = Mock()
 
         # Mock the get_authorization_header function to return only keyword
-        mock_get_authorization_header.return_value = get_token_keyword().encode('utf-8')
+        mock_get_authorization_header.return_value = get_node_token_keyword().encode('utf-8')
 
         with self.assertRaises(exceptions.AuthenticationFailed) as context:
             token_auth.authenticate(mock_request)
@@ -123,7 +123,7 @@ class TestTokenAuthentication(TestCase):
         mock_request = Mock()
 
         # Mock the get_authorization_header function to return an invalid header with spaces
-        mock_get_authorization_header.return_value = f'{get_token_keyword()} token with spaces'.encode('utf-8')
+        mock_get_authorization_header.return_value = f'{get_node_token_keyword()} token with spaces'.encode('utf-8')
 
         with self.assertRaises(exceptions.AuthenticationFailed) as context:
             token_auth.authenticate(mock_request)

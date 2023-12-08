@@ -5,9 +5,9 @@ import unittest
 from unittest.mock import patch, Mock
 from node_auth.permissions import IsAuthenticated, IsAuthenticated_ObjectLevel, OnlyCreateToSelf
 from rest_framework import exceptions
-from node_auth import get_token_model
+from node_auth import get_node_token_model
 
-Token = get_token_model()
+Token = get_node_token_model()
 
 class TestIsAuthenticatedPermission(TestCase):
     def setUp(self):

@@ -3,11 +3,11 @@ from django.test.client import RequestFactory
 from node_auth.contrib.auth import get_node as auth_get_node, authenticate_credentials
 from node_auth.contrib.auth.models import AnonymousNode
 from django.contrib.auth import get_user_model
-from node_auth import get_token_keyword, get_node_model, get_token_model
+from node_auth import get_node_token_keyword, get_node_model, get_node_token_model
 from unittest.mock import patch, Mock
 
 Node = get_node_model()
-Token = get_token_model()
+Token = get_node_token_model()
 
 class Middleware(TestCase):
     def setUp(self):
@@ -16,7 +16,7 @@ class Middleware(TestCase):
         self.mac = '111'
         self.node = Node.objects.create(vsn=self.vsn, mac=self.mac)
         self.token = Token.objects.get(node=self.node)
-        self.auth_header = get_token_keyword() + " " + self.token.key
+        self.auth_header = get_node_token_keyword() + " " + self.token.key
 
     def tearDown(self):
         Node.objects.all().delete()
@@ -42,7 +42,7 @@ class Middleware(TestCase):
         """
         Test that get node function returns anonymous node when request has no token
         """
-        request = self.factory.get("/", HTTP_AUTHORIZATION=get_token_keyword())
+        request = self.factory.get("/", HTTP_AUTHORIZATION=get_node_token_keyword())
         response = auth_get_node(request)
         self.assertEqual(response,AnonymousNode())
 

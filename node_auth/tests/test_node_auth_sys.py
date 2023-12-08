@@ -12,10 +12,10 @@ from django.http import HttpRequest
 from manifests.serializers import ManifestSerializer
 from django.urls import reverse
 from node_auth.authentication import TokenAuthentication
-from node_auth import get_token_keyword, get_token_model, get_node_model
+from node_auth import get_node_token_keyword, get_node_token_model, get_node_model
 from unittest.mock import patch, Mock
 
-Token = get_token_model()
+Token = get_node_token_model()
 Node = get_node_model()
 
 class NodeTokenAuthTests(TestCase):
@@ -40,8 +40,8 @@ class NodeTokenAuthTests(TestCase):
         self.NotMy_token = Token.objects.get(node=self.NotMy_node)
         self.NotMy_key = self.NotMy_token.key
         self.NotMy_nodedata = NodeData.objects.create(vsn=self.NotMy_vsn)
-        self.auth_header = get_token_keyword() + " " + self.key
-        self.wrong_auth_header = get_token_keyword() + " 123"
+        self.auth_header = get_node_token_keyword() + " " + self.key
+        self.wrong_auth_header = get_node_token_keyword() + " 123"
 
     def tearDown(self):
         Node.objects.all().delete()

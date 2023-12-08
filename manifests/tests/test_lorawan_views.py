@@ -8,10 +8,10 @@ from node_auth.authentication import TokenAuthentication
 from unittest.mock import patch, Mock
 from django.urls import reverse
 from rest_framework.permissions import AllowAny
-from node_auth import get_token_keyword, get_token_model, get_node_model
+from node_auth import get_node_token_keyword, get_node_token_model, get_node_model
 
-HEADER_PREFIX =  get_token_keyword() + ' '
-Token = get_token_model()
+HEADER_PREFIX =  get_node_token_keyword() + ' '
+Token = get_node_token_model()
 Node = get_node_model()
 
 class LorawanConnectionViewTestCase(TestCase):

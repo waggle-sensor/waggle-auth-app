@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import HTTP_HEADER_ENCODING
-from node_auth import get_token_keyword, get_token_model
+from node_auth import get_node_token_keyword, get_node_token_model
 from .models import AnonymousNode
 
 def get_node(request):
@@ -8,7 +8,7 @@ def get_node(request):
     Get node instance using token in auth header. 
     If no node is retrieved, return an instance of `AnonymousNode`.
     """
-    KEYWORD = get_token_keyword()
+    KEYWORD = get_node_token_keyword()
 
     auth = get_authorization_header(request).split()
 
@@ -28,7 +28,7 @@ def get_node(request):
     return authenticate_credentials(token)
 
 def authenticate_credentials(key):
-    TOKEN_MODEL = get_token_model()
+    TOKEN_MODEL = get_node_token_model()
     try:
         token = TOKEN_MODEL.objects.select_related("node").get(key=key)
     except TOKEN_MODEL.DoesNotExist:

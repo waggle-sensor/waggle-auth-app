@@ -22,9 +22,9 @@ def get_node_model():
             % settings.AUTH_NODE_MODEL
         )
 
-def get_token_model():
+def get_node_token_model():
     """
-    Return the Token model that is active in this project.
+    Return the Token model for Nodes that is active in this project.
     """
     try:
         return django_apps.get_model(settings.AUTH_NODE_TOKEN_MODEL, require_ready=False)
@@ -38,9 +38,9 @@ def get_token_model():
             % settings.AUTH_NODE_TOKEN_MODEL
         )
 
-def get_token_keyword():
+def get_node_token_keyword():
     """
-    Return the Token keyword that is active in this project.
+    Return the Token keyword for Nodes that is active in this project.
     """
     try:
         return settings.AUTH_NODE_KEYWORD

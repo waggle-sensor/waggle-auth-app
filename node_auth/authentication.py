@@ -5,7 +5,7 @@ from rest_framework import authentication <- original
 from django.utils.translation import gettext_lazy as _
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from .models import Token
-from node_auth import get_token_keyword, get_token_model
+from node_auth import get_node_token_keyword, get_node_token_model
 
 def get_authorization_header(request):
     """
@@ -48,8 +48,8 @@ class TokenAuthentication(BaseAuthentication):
         Authorization: node_auth 401f7ac837da42b97f613d789819ff93537bee6a
     """
 
-    keyword = get_token_keyword()
-    model = get_token_model()
+    keyword = get_node_token_keyword()
+    model = get_node_token_model()
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()

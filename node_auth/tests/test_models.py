@@ -3,7 +3,7 @@ from node_auth.models import Token
 import unittest
 from unittest.mock import patch
 from node_auth.models import Token
-from node_auth import get_token_keyword, get_node_model, get_token_model
+from node_auth import get_node_token_keyword, get_node_model, get_node_token_model
 from django.core.exceptions import ImproperlyConfigured
 from node_auth.contrib.auth.models import AnonymousNode
 
@@ -48,28 +48,28 @@ class get_functions(TestCase):
             get_node_model()
 
     @patch('node_auth.settings.AUTH_NODE_TOKEN_MODEL', 'invalid_model_format')
-    def test_get_token_model_ValueError(self):
+    def test_get_node_token_model_ValueError(self):
         """
-        test get_token_model raises ImproperlyConfigured for value error
+        test get_node_token_model raises ImproperlyConfigured for value error
         """
         with self.assertRaises(ImproperlyConfigured) as context:
-            get_token_model()
+            get_node_token_model()
 
     @patch('node_auth.settings.AUTH_NODE_TOKEN_MODEL', 'nonexistent_app.NonexistentModel')
-    def test_get_token_model_lookup_error(self):
+    def test_get_node_token_model_lookup_error(self):
         """
-        test get_token_model raises ImproperlyConfigured for lookup error
+        test get_node_token_model raises ImproperlyConfigured for lookup error
         """
         with self.assertRaises(ImproperlyConfigured) as context:
-            get_token_model()
+            get_node_token_model()
 
     @patch('node_auth.settings', None)
-    def test_get_token_keyword_attribute_error(self):
+    def test_get_node_token_keyword_attribute_error(self):
         """
-        test get_token_keyword raises ImproperlyConfigured for attribute error
+        test get_node_token_keyword raises ImproperlyConfigured for attribute error
         """
         with self.assertRaises(ImproperlyConfigured) as context:
-            get_token_keyword()
+            get_node_token_keyword()
 
 class AnonymousNodeTestCase(TestCase):
 
