@@ -81,12 +81,44 @@ class LorawanKeysSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate_lorawan_connection(self, value):
-        # Ensure that lorawan_connection is in the format "node-device_name-deveui"
+        """Ensure that lorawan_connection is in the format "node-device_name-deveui"""
         try:
             node_vsn, device_name, deveui = value.split('-')
         except ValueError:
             raise serializers.ValidationError("Invalid lorawan_connection format. Use 'node-device_name-deveui'.")
         return value
+
+    def get_lc(self, lc_str):
+        """Validate and retrieve the lorawan connection instance"""
+        try:
+            node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
+            lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+        except LorawanConnection.DoesNotExist:
+            raise serializers.ValidationError({"lorawan_connection":[f"Invalid connection \"{lc_str}\" - object does not exist."]})
+        return lc
+
+    def get_lookup_records(self, validated_data):
+        """Retrieve lookup field record based on custom logic"""
+        lc = validated_data.pop('lorawan_connection', None)
+
+        if lc:
+            validated_data['lorawan_connection'] = self.get_lc(lc)
+
+        return validated_data
+
+    def create(self, validated_data):
+        """
+        Retrieve lookup field records based on validated data 
+        to then pass in to parent create function
+        """
+        return super().create(self.get_lookup_records(validated_data))
+
+    def update(self, instance, validated_data):
+        """
+        Retrieve lookup field records based on validated data 
+        to then pass in to parent update function
+        """
+        return super().update(instance, self.get_lookup_records(validated_data))
 
 class ManifestSerializer(serializers.ModelSerializer):
     project = serializers.CharField(source="project.name", allow_null=True)
