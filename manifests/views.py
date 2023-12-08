@@ -100,7 +100,7 @@ class LorawanConnectionView(NodeOwnedObjectsMixin, ModelViewSet):
         except LorawanConnection.DoesNotExist:
             raise Http404
 
-class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
     serializer_class = LorawanKeysSerializer
     lookup_field = "lorawan_connection"
     vsn_field = "lorawan_connection__node__vsn"

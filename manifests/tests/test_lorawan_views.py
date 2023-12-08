@@ -259,11 +259,11 @@ class LorawanConnectionViewTestCase(TestCase):
         LorawanKeys.objects.create(lorawan_connection= lc, network_Key= '123', app_session_key= '13', dev_address='14')
 
         # Create a request to retrieve the keys
-        url = reverse('manifests:retrieve_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         request = self.factory.get(url)
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'get': 'retrieve'})
         response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         # Check the response status code and data
@@ -275,11 +275,11 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_retrieve_nonexistent_lorawan_key(self):
         """Test lorawan key view for retrieving records sad path"""
         # Attempt to retrieve a nonexistent key
-        url = reverse('manifests:retrieve_lorawan_key',kwargs={'node_vsn': "nonexistent_vsn",'lorawan_deveui': "nonexistent_deveui"})
+        url = reverse('manifests:URD_lorawan_key',kwargs={'node_vsn': "nonexistent_vsn",'lorawan_deveui': "nonexistent_deveui"})
         request = self.factory.get(url)
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'get': 'retrieve'})
         response = lorawan_key_view(request, node_vsn="nonexistent_vsn", lorawan_deveui="nonexistent_deveui")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -291,7 +291,7 @@ class LorawanConnectionViewTestCase(TestCase):
         lc = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
 
         # Create a request to create a key
-        url = reverse('manifests:create_lorawan_key')
+        url = reverse('manifests:C_lorawan_key')
         data = {
             "lorawan_connection": str(lc),
             "network_Key": '123',
@@ -301,7 +301,7 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'post': 'create'})
         response = lorawan_key_view(request)
 
         # Check the response status code and data
@@ -316,7 +316,7 @@ class LorawanConnectionViewTestCase(TestCase):
         """Test creating a lorawan key with invalid node"""
         # Create a request to create a key with an invalid lc
         nonexistent_lc = 'error-error-error'
-        url = reverse('manifests:create_lorawan_key')
+        url = reverse('manifests:C_lorawan_key')
         data = {
             "lorawan_connection": nonexistent_lc,
             "network_Key": '123',
@@ -326,7 +326,7 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'post': 'create'})
         response = lorawan_key_view(request)
 
         # Check the response status code and error message
@@ -341,7 +341,7 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_create_lorawan_key_serializer_error(self):
         """Test for getting a serializer error when creating a lorawan key"""
         # Create a request to create a key
-        url = reverse('manifests:create_lorawan_key')
+        url = reverse('manifests:C_lorawan_key')
         data = {
             "lorawan_connection": '123',
             "network_Key": '123',
@@ -351,7 +351,7 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'post': 'create'})
         response = lorawan_key_view(request)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -368,12 +368,12 @@ class LorawanConnectionViewTestCase(TestCase):
         LorawanKeys.objects.create(lorawan_connection= lc, network_Key= '123', app_session_key= '13', dev_address= '14')
 
         #request
-        url = reverse('manifests:update_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"network_Key": '111'}
         request = self.factory.patch(url, data, format="json")
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'patch': 'partial_update'})
         response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         # Check the response status code and data
@@ -392,12 +392,12 @@ class LorawanConnectionViewTestCase(TestCase):
 
         # Create a request to create a key with an invalid lc
         nonexistent_lc = 'error-error-error'
-        url = reverse('manifests:update_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"lorawan_connection": nonexistent_lc, "network_Key": '111'}
         request = self.factory.patch(url, data, format="json")
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'patch': 'partial_update'})
         response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         # Check the response status code and error message
@@ -416,12 +416,12 @@ class LorawanConnectionViewTestCase(TestCase):
         LorawanKeys.objects.create(lorawan_connection= lc, network_Key= '123', app_session_key= '13', dev_address= '14')
 
         #request
-        url = reverse('manifests:update_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_key',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"dev_address": '123456789', "app_session_key": '222'}
         request = self.factory.patch(url, data, format="json")
 
         # Use the key view to handle the request
-        lorawan_key_view = LorawanKeysView.as_view()
+        lorawan_key_view = LorawanKeysView.as_view({'patch': 'partial_update'})
         response = lorawan_key_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -34,17 +34,12 @@ urlpatterns = [
     ),
     path(
         "lorawankeys/",
-        LorawanKeysView.as_view(),
-        name="create_lorawan_key",
+        LorawanKeysView.as_view({'post': 'create'}),
+        name="C_lorawan_key",
     ),
     path(
         "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanKeysView.as_view(),
-        name="update_lorawan_key",
-    ),
-    path(
-        "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanKeysView.as_view(),
-        name="retrieve_lorawan_key",
-    ),
+        LorawanKeysView.as_view({'patch': 'partial_update', 'put': 'update', 'get': 'retrieve', 'delete':'destroy'}),
+        name="URD_lorawan_key",
+    )
 ]
