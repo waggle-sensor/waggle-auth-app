@@ -251,6 +251,25 @@ class LorawanConnectionViewTestCase(TestCase):
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
         self.assertNotEqual(lorawan_connection.connection_type, data["connection_type"])
 
+class LorawanKeysViewTestCase(TestCase):
+    def setUp(self):
+        # Create necessary objects for testing
+        self.Myvsn = 'W001'
+        self.mac = '111'
+        self.deveui = '123456789'
+        self.device_name = "test"
+        self.factory = APIRequestFactory()
+        self.node = Node.objects.create(vsn=self.Myvsn, mac=self.mac)
+        self.token = Token.objects.get(node=self.node)
+        self.key = self.token.key
+        self.nodedata = NodeData.objects.create(vsn=self.Myvsn)  
+        self.device = LorawanDevice.objects.create(deveui=self.deveui, device_name= self.device_name)
+    
+    def tearDown(self):
+        NodeData.objects.all().delete()
+        LorawanDevice.objects.all().delete()
+        LorawanConnection.objects.all().delete()
+
     @patch('manifests.views.LorawanKeysView.permission_classes', [AllowAny])
     def test_retrieve_existing_lorawan_key(self):
         """Test lorawan key view for retrieving records happy path"""
@@ -429,6 +448,25 @@ class LorawanConnectionViewTestCase(TestCase):
         # Check that key is not created in the database
         with self.assertRaises(LorawanKeys.DoesNotExist):
             LorawanKeys.objects.get(app_session_key='222')
+
+class LorawanDeviceViewTestCase(TestCase):
+    def setUp(self):
+        # Create necessary objects for testing
+        self.Myvsn = 'W001'
+        self.mac = '111'
+        self.deveui = '123456789'
+        self.device_name = "test"
+        self.factory = APIRequestFactory()
+        self.node = Node.objects.create(vsn=self.Myvsn, mac=self.mac)
+        self.token = Token.objects.get(node=self.node)
+        self.key = self.token.key
+        self.nodedata = NodeData.objects.create(vsn=self.Myvsn)  
+        self.device = LorawanDevice.objects.create(deveui=self.deveui, device_name= self.device_name)
+    
+    def tearDown(self):
+        NodeData.objects.all().delete()
+        LorawanDevice.objects.all().delete()
+        LorawanConnection.objects.all().delete()
 
     @patch('manifests.views.LorawanDeviceView.permission_classes', [AllowAny])
     def test_retrieve_existing_lorawan_device(self):
