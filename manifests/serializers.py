@@ -36,16 +36,42 @@ class LorawanDeviceSerializer(serializers.ModelSerializer):
 
 
 class LorawanConnectionSerializer(serializers.ModelSerializer):
-    node = serializers.CharField(
-        source="node.vsn"
-    )  # Use the 'vsn' field as the source for node field
-    lorawan_device = serializers.CharField(
-        source="lorawan_device.deveui"
-    )  # Use the 'deveui' field as the source for lorawan device field
+    node = serializers.CharField()  # turn into char field to get rid of error ""Incorrect type. Expected pk value, received str.""
 
     class Meta:
         model = LorawanConnection
         fields = "__all__"
+
+    def get_node(self, vsn):
+        """Validate and retrieve the NodeData instance"""
+        try:
+            node = NodeData.objects.get(vsn=vsn)
+        except NodeData.DoesNotExist:
+            raise serializers.ValidationError({"node":[f"Invalid vsn \"{vsn}\" - object does not exist."]}) 
+        return node
+
+    def get_lookup_records(self, validated_data):
+        """Retrieve lookup field record based on custom logic"""
+        node_data = validated_data.pop('node', None)
+
+        if node_data:
+            validated_data['node'] = self.get_node(node_data)
+
+        return validated_data
+
+    def create(self, validated_data):
+        """
+        Retrieve lookup field records cbased on validated data 
+        to then pass in to parent create function
+        """
+        return super().create(self.get_lookup_records(validated_data))
+
+    def update(self, instance, validated_data):
+        """
+        Retrieve lookup field records based on validated data 
+        to then pass in to parent update function
+        """
+        return super().update(instance, self.get_lookup_records(validated_data))
 
 class LorawanKeysSerializer(serializers.ModelSerializer):
     lorawan_connection = serializers.CharField()
