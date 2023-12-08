@@ -81,7 +81,7 @@ class LorawanDeviceView(NodeAuthMixin, ModelViewSet):
     queryset = LorawanDevice.objects.all()
     lookup_field = "deveui"
 
-class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
+class LorawanConnectionView(NodeOwnedObjectsMixin, ModelViewSet):
     serializer_class = LorawanConnectionSerializer
     vsn_field = "node__vsn"
 
@@ -99,92 +99,6 @@ class LorawanConnectionView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView,
             return lorawan_connection
         except LorawanConnection.DoesNotExist:
             raise Http404
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            #retrieve node
-            if "node" in serializer.validated_data:
-                vsn = serializer.validated_data["node"]["vsn"]
-                try:
-                    node = NodeData.objects.get(vsn=vsn)
-                except NodeData.DoesNotExist:
-                    return Response(
-                        {"message": f"Node with vsn {vsn} does not exist"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                else:
-                    serializer.validated_data["node"] = node
-            #retrieve ld
-            if "lorawan_device" in serializer.validated_data:
-                deveui = serializer.validated_data["lorawan_device"]["deveui"]
-                try:
-                    device = LorawanDevice.objects.get(deveui=deveui)
-                except LorawanDevice.DoesNotExist:
-                    return Response(
-                        {
-                            "message": f"Lorawan Device with deveui {deveui} does not exist"
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                else:
-                    serializer.validated_data["lorawan_device"] = device
-
-            try:
-                LorawanConnection.objects.create(**serializer.validated_data)
-            except IntegrityError as e:
-                error_message = f"IntegrityError: {e}"
-                return Response(
-                    {"message": error_message},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Return a response
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-
-        if serializer.is_valid():
-            #retrieve node
-            if "node" in serializer.validated_data:
-                vsn = serializer.validated_data["node"]["vsn"]
-                try:
-                    node = NodeData.objects.get(vsn=vsn)
-                except NodeData.DoesNotExist:
-                    return Response(
-                        {"message": f"Node with vsn {vsn} does not exist"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                else:
-                    serializer.validated_data["node"] = node
-            #retrieve ld
-            if "lorawan_device" in serializer.validated_data:
-                
-                deveui = serializer.validated_data["lorawan_device"]["deveui"]
-                try:
-                    device = LorawanDevice.objects.get(deveui=deveui)
-                except LorawanDevice.DoesNotExist:
-                    return Response(
-                        {
-                            "message": f"Lorawan Device with deveui {deveui} does not exist"
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                else:
-                    serializer.validated_data["lorawan_device"] = device
-
-            serializer.save(**serializer.validated_data)
-
-            # Return a response
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LorawanKeysView(NodeOwnedObjectsMixin, CreateAPIView, UpdateAPIView, RetrieveAPIView):
     serializer_class = LorawanKeysSerializer

@@ -40,11 +40,11 @@ class LorawanConnectionViewTestCase(TestCase):
         LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
 
         # Create a request to retrieve the LorawanConnection
-        url = reverse('manifests:retrieve_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         request = self.factory.get(url)
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'get': 'retrieve'})
         response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         # Check the response status code and data
@@ -56,11 +56,11 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_retrieve_nonexistent_lorawan_connection(self):
         """Test lorawan connection view for retrieving records sad path"""
         # Attempt to retrieve a nonexistent LorawanConnection
-        url = reverse('manifests:retrieve_lorawan_connection',kwargs={'node_vsn': "nonexistent_vsn",'lorawan_deveui': "nonexistent_deveui"})
+        url = reverse('manifests:URD_lorawan_connection',kwargs={'node_vsn': "nonexistent_vsn",'lorawan_deveui': "nonexistent_deveui"})
         request = self.factory.get(url)
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'get': 'retrieve'})
         response = lorawan_connection_view(request, node_vsn="nonexistent_vsn", lorawan_deveui="nonexistent_deveui")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -69,7 +69,7 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_create_lorawan_connection_success(self):
         """Test correctly creating a lorawan connection"""
         # Create a request to create a LorawanConnection
-        url = reverse('manifests:create_lorawan_connection')
+        url = reverse('manifests:C_lorawan_connection')
         data = {
             "node": self.nodedata.vsn,
             "lorawan_device": self.device.deveui,
@@ -78,7 +78,7 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'post': 'create'})
         response = lorawan_connection_view(request)
 
         # Check the response status code and data
@@ -93,7 +93,7 @@ class LorawanConnectionViewTestCase(TestCase):
         """Test creating a lorawan connection with invalid node"""
         # Create a request to create a LorawanConnection with an invalid node
         nonexistent_vsn = 'nonexistent_vsn'
-        url = reverse('manifests:create_lorawan_connection')
+        url = reverse('manifests:C_lorawan_connection')
         data = {
             "node": nonexistent_vsn,
             "lorawan_device": self.device.deveui,
@@ -102,12 +102,12 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'post': 'create'})
         response = lorawan_connection_view(request)
 
         # Check the response status code and error message
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"message": f"Node with vsn {nonexistent_vsn} does not exist"})
+        self.assertEqual(response.data, {"node":[f"Invalid vsn \"{nonexistent_vsn}\" - object does not exist."]})
 
         # Check that no LorawanConnection is not created in the database
         with self.assertRaises(LorawanConnection.DoesNotExist):
@@ -118,7 +118,7 @@ class LorawanConnectionViewTestCase(TestCase):
         """Test creating a lorawan connection with invalid device"""
         # Create a request to create a LorawanConnection with an invalid node
         nonexistent_deveui = '121456984'
-        url = reverse('manifests:create_lorawan_connection')
+        url = reverse('manifests:C_lorawan_connection')
         data = {
             "node": self.nodedata.vsn,
             "lorawan_device": nonexistent_deveui,
@@ -127,12 +127,12 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'post': 'create'})
         response = lorawan_connection_view(request)
 
         # Check the response status code and error message
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"message": f"Lorawan Device with deveui {nonexistent_deveui} does not exist"})
+        self.assertEqual(response.data, {"lorawan_device":[f"Invalid pk \"{nonexistent_deveui}\" - object does not exist."]})
 
         # Check that no LorawanConnection is not created in the database
         with self.assertRaises(LorawanConnection.DoesNotExist):
@@ -142,7 +142,7 @@ class LorawanConnectionViewTestCase(TestCase):
     def test_create_lorawan_connection_serializer_error(self):
         """Test for getting a serializer error when creating a lorawan connection"""
         # Create a request to create a LorawanConnection
-        url = reverse('manifests:create_lorawan_connection')
+        url = reverse('manifests:C_lorawan_connection')
         data = {
             "node": self.nodedata.vsn,
             "lorawan_device": self.device.deveui,
@@ -151,7 +151,7 @@ class LorawanConnectionViewTestCase(TestCase):
         request = self.factory.post(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'post': 'create'})
         response = lorawan_connection_view(request)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -167,12 +167,12 @@ class LorawanConnectionViewTestCase(TestCase):
         lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
 
         #request
-        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"connection_type": "OTAA"}
         request = self.factory.patch(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'patch': 'partial_update'})
         response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         # Check the response status code and data
@@ -190,17 +190,17 @@ class LorawanConnectionViewTestCase(TestCase):
 
         #request
         nonexistent_vsn = 'nonexistent_vsn'
-        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"node": nonexistent_vsn, "connection_type": "OTAA"}
         request = self.factory.patch(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'patch': 'partial_update'})
         response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         # Check the response status code and error message
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"message": f"Node with vsn {nonexistent_vsn} does not exist"})
+        self.assertEqual(response.data,{"node":[f"Invalid vsn \"{nonexistent_vsn}\" - object does not exist."]})
 
         # Check if the LorawanConnection is not updated in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
@@ -214,17 +214,17 @@ class LorawanConnectionViewTestCase(TestCase):
 
         #request
         nonexistent_deveui = 'nonexistent_deveui'
-        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"lorawan_device": nonexistent_deveui, "connection_type": "OTAA"}
         request = self.factory.patch(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'patch': 'partial_update'})
         response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         # Check the response status code and error message
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"message": f"Lorawan Device with deveui {nonexistent_deveui} does not exist"})
+        self.assertEqual(response.data, {"lorawan_device":[f"Invalid pk \"{nonexistent_deveui}\" - object does not exist."]})
 
         # Check if the LorawanConnection is not updated in the database
         lorawan_connection = LorawanConnection.objects.get(node=self.nodedata, lorawan_device=self.device)
@@ -237,12 +237,12 @@ class LorawanConnectionViewTestCase(TestCase):
         lorawan_connection = LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device, connection_type="ABP")
 
         # Create a request to update a LorawanConnection
-        url = reverse('manifests:update_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
+        url = reverse('manifests:URD_lorawan_connection',kwargs={'node_vsn': self.nodedata.vsn,'lorawan_deveui': self.device.deveui})
         data = {"connection_type": "error"}
         request = self.factory.patch(url, data, format="json")
 
         # Use the LorawanConnectionView to handle the request
-        lorawan_connection_view = LorawanConnectionView.as_view()
+        lorawan_connection_view = LorawanConnectionView.as_view({'patch': 'partial_update'})
         response = lorawan_connection_view(request, node_vsn=self.nodedata.vsn, lorawan_deveui=self.device.deveui)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

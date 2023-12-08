@@ -18,23 +18,19 @@ router.register(r"computes", ComputeViewSet)
 router.register(r"sensors", SensorHardwareViewSet)
 router.register(r"node-builds", NodeBuildViewSet)
 router.register(r"lorawandevices", LorawanDeviceView, basename="lorawandevices")
+router.register(r"lorawanconnections", LorawanConnectionView, basename="lorawanconnections")
 
 urlpatterns = [
     path("", include(router.urls)),
     path(
         "lorawanconnections/",
-        LorawanConnectionView.as_view(),
-        name="create_lorawan_connection",
+        LorawanConnectionView.as_view({'post': 'create'}),
+        name="C_lorawan_connection",
     ),
     path(
         "lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanConnectionView.as_view(),
-        name="update_lorawan_connection",
-    ),
-    path(
-        "lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanConnectionView.as_view(),
-        name="retrieve_lorawan_connection",
+        LorawanConnectionView.as_view({'patch': 'partial_update', 'put': 'update', 'get': 'retrieve', 'delete':'destroy'}),
+        name="URD_lorawan_connection",
     ),
     path(
         "lorawankeys/",

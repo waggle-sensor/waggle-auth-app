@@ -174,7 +174,7 @@ class NodeTokenAuthTests(TestCase):
         self.csrf_client.credentials(HTTP_AUTHORIZATION=self.auth_header)
 
         # Use reverse to dynamically generate the URL
-        url = reverse('manifests:create_lorawan_connection')
+        url = reverse('manifests:C_lorawan_connection')
         response = self.csrf_client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, "Expected status code 201, object created")
@@ -195,7 +195,7 @@ class NodeTokenAuthTests(TestCase):
         self.csrf_client.credentials(HTTP_AUTHORIZATION=self.auth_header)
 
         # Use reverse to dynamically generate the URL
-        url = reverse('manifests:create_lorawan_connection')
+        url = reverse('manifests:C_lorawan_connection')
         response = self.csrf_client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, "Expected status code 403, Forbidden")
