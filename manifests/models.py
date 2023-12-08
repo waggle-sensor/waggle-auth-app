@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from node_auth.contrib.auth.models import AbstractNode
 
 
 class NodePhase(models.TextChoices):
@@ -16,8 +17,7 @@ class NodeType(models.TextChoices):
     WSN = "WSN", "WSN"
 
 
-class NodeData(models.Model):
-    vsn = models.CharField("VSN", max_length=30, unique="True")
+class NodeData(AbstractNode):
     name = models.CharField("Node ID", max_length=30, blank=True)
     project = models.ForeignKey(
         "NodeBuildProject", null=True, blank=True, on_delete=models.SET_NULL
@@ -41,8 +41,8 @@ class NodeData(models.Model):
     def __str__(self):
         return self.vsn
 
-    class Meta:
-        verbose_name_plural = "Nodes"
+    # class Meta:
+    #     verbose_name_plural = "Nodes"
 
 
 ModemModels = [
