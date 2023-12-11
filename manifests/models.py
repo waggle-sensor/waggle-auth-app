@@ -327,11 +327,11 @@ class NodeBuild(models.Model):
             )
 
 
-class LorawanDevice(models.Model):
+class LorawanDevice(AbstractSensor):
     deveui = models.CharField(
         max_length=16, primary_key=True, unique=True, null=False, blank=False
     )
-    device_name = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
     battery_level = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )
@@ -342,7 +342,7 @@ class LorawanDevice(models.Model):
         verbose_name_plural = "Lorawan Devices"
 
     def __str__(self):
-        return str(self.device_name) + "-" + str(self.deveui)
+        return str(self.name) + "-" + str(self.deveui)
 
     def natural_key(self):
         return self.deveui

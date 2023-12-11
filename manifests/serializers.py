@@ -179,7 +179,7 @@ def serialize_compute_hardware(h):
 def serialize_lorawan_devices(l):
     return {
         "deveui": l.deveui,
-        "device_name": l.device_name,
+        "name": l.name,
         "battery_level": l.battery_level,
     }
 
