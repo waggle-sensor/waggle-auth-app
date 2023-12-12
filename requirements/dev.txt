@@ -3,3 +3,6 @@ ipython==8.13.2                      # enables ipython for `./manage.py shell`
 black==23.3.0                        # used as autoformatter for project
 django-stubs==4.2.4                  # better type hints for django
 djangorestframework-stubs==3.14.2    # better type hints for django rest framework
+pytest-django==4.7.0                 # better testing
+pytest-cov==4.1.0                    # includes coverage report when testing with pytest
+pytest-xdist==3.5.0                  # allows for running tests on multiple processes for faster testing

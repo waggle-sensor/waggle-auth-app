@@ -25,6 +25,10 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = "app.User"
+AUTH_USER_KEYWORD = "Sage"
+AUTH_NODE_MODEL = "app.Node"
+AUTH_NODE_TOKEN_MODEL = "node_auth.Token"
+AUTH_NODE_KEYWORD = "node_auth"
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
@@ -35,6 +39,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "node_auth.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",

@@ -7,6 +7,7 @@ from .views import (
     ComputeViewSet,
     LorawanDeviceView,
     LorawanConnectionView,
+    LorawanKeysView,
 )
 
 app_name = "manifests"
@@ -16,37 +17,29 @@ router.register(r"manifests", ManifestViewSet, basename="manifest")
 router.register(r"computes", ComputeViewSet)
 router.register(r"sensors", SensorHardwareViewSet, basename="sensors")
 router.register(r"node-builds", NodeBuildViewSet)
+router.register(r"lorawandevices", LorawanDeviceView, basename="lorawandevices")
+router.register(r"lorawanconnections", LorawanConnectionView, basename="lorawanconnections")
 
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "lorawandevices/create/",
-        LorawanDeviceView.as_view(),
-        name="create_lorawan_device",
-    ),
-    path(
-        "lorawandevices/update/<str:deveui>/",
-        LorawanDeviceView.as_view(),
-        name="update_lorawan_device",
-    ),
-    path(
-        "lorawandevices/<str:deveui>/",
-        LorawanDeviceView.as_view(),
-        name="retrieve_lorawan_device",
-    ),
-    path(
-        "lorawanconnections/create/",
-        LorawanConnectionView.as_view(),
-        name="create_lorawan_connection",
-    ),
-    path(
-        "lorawanconnections/update/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanConnectionView.as_view(),
-        name="update_lorawan_connection",
+        "lorawanconnections/",
+        LorawanConnectionView.as_view({'post': 'create'}),
+        name="C_lorawan_connection",
     ),
     path(
         "lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanConnectionView.as_view(),
-        name="retrieve_lorawan_connection",
+        LorawanConnectionView.as_view({'patch': 'partial_update', 'put': 'update', 'get': 'retrieve', 'delete':'destroy'}),
+        name="URD_lorawan_connection",
     ),
+    path(
+        "lorawankeys/",
+        LorawanKeysView.as_view({'post': 'create'}),
+        name="C_lorawan_key",
+    ),
+    path(
+        "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
+        LorawanKeysView.as_view({'patch': 'partial_update', 'put': 'update', 'get': 'retrieve', 'delete':'destroy'}),
+        name="URD_lorawan_key",
+    )
 ]

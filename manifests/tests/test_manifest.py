@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import *
+from manifests.models import *
 
 
 class ManifestInitialTest(TestCase):
