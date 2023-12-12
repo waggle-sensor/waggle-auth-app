@@ -64,7 +64,9 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
                 "nodesensor_set__node",
                 "computesensor_set",
                 "computesensor_set__scope",
-                "computesensor_set__scope__node"
+                "computesensor_set__scope__node",
+                "lorawandevice_set",
+                "lorawandevice_set__lorawanconnections"
             )
             .order_by("hardware")
     )

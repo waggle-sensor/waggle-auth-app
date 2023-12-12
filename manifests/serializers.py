@@ -12,7 +12,9 @@ class SensorViewSerializer(serializers.ModelSerializer):
     def get_vsns(self, obj):
         compute_sensors = obj.computesensor_set.all()
         node_sensors = obj.nodesensor_set.all()
-        nodes = [s.scope.node for s in compute_sensors] + [s.node for s in node_sensors]
+        lorawan_sensors = obj.lorawandevice_set.all()
+        lorawan_connections = [ld.lorawanconnections.all() for ld in lorawan_sensors] 
+        nodes = [s.scope.node for s in compute_sensors] + [s.node for s in node_sensors] + [lc[0].node for lc in lorawan_connections]
 
         project = self.context['request'].query_params.get("project")
         if project:
@@ -179,7 +181,7 @@ def serialize_compute_hardware(h):
 def serialize_lorawan_devices(l):
     return {
         "deveui": l.deveui,
-        "device_name": l.device_name,
+        "name": l.name,
         "battery_level": l.battery_level,
     }
 
