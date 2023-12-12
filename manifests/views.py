@@ -6,7 +6,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from .models import *
 from .serializers import (
     ManifestSerializer,
-    SensorHardwareSerializer,
+    SensorViewSerializer,
     NodeBuildSerializer,
     ComputeSerializer,
     LorawanDeviceSerializer,
@@ -56,10 +56,32 @@ class ComputeViewSet(ReadOnlyModelViewSet):
 
 
 class SensorHardwareViewSet(ReadOnlyModelViewSet):
-    queryset = SensorHardware.objects.all().order_by("hardware")
-    serializer_class = SensorHardwareSerializer
+    queryset = (
+        SensorHardware.objects.all()
+            .prefetch_related(
+                "nodesensor_set",
+                "nodesensor_set__node",
+                "computesensor_set",
+                "computesensor_set__scope",
+                "computesensor_set__scope__node",
+                "lorawandevice_set",
+                "lorawandevice_set__lorawanconnections"
+            )
+            .order_by("hardware")
+    )
+    serializer_class = SensorViewSerializer
     lookup_field = "hardware"
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def list(self, request, *args, **kwargs):
+        res = super(SensorHardwareViewSet, self).list(request, *args, **kwargs)
+
+        # if filtering, ignore sensors which aren't connected to nodes
+        q = request.query_params
+        if q.get("project") or q.get("phase"):
+            res.data = filter(lambda o: len(o["vsns"]), res.data)
+
+        return res
 
 
 class NodeBuildViewSet(ReadOnlyModelViewSet):
