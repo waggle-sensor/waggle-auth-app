@@ -4,3 +4,5 @@ venv/
 staticfiles/
 fixtures/
 .vscode/
+.coverage
+.DS_Store
