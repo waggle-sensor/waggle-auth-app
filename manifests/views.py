@@ -13,9 +13,9 @@ from .serializers import (
     LorawanConnectionSerializer,
     LorawanKeysSerializer,
 )
-from rest_framework.response import Response  
+from rest_framework.response import Response
 from rest_framework import status
-from django.db import IntegrityError 
+from django.db import IntegrityError
 from node_auth.mixins import NodeAuthMixin, NodeOwnedObjectsMixin
 
 
@@ -48,6 +48,7 @@ class ManifestViewSet(ReadOnlyModelViewSet):
 
         return queryset
 
+
 class ComputeViewSet(ReadOnlyModelViewSet):
     queryset = Compute.objects.all().order_by("node__vsn")
     serializer_class = ComputeSerializer
@@ -71,12 +72,15 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+
 class LorawanDeviceView(NodeAuthMixin, ModelViewSet):
-    serializer_class = LorawanDeviceSerializer
     queryset = LorawanDevice.objects.all()
+    serializer_class = LorawanDeviceSerializer
     lookup_field = "deveui"
 
+
 class LorawanConnectionView(NodeOwnedObjectsMixin, ModelViewSet):
+    queryset = LorawanConnection.objects.all()
     serializer_class = LorawanConnectionSerializer
     vsn_field = "node__vsn"
 
@@ -95,6 +99,7 @@ class LorawanConnectionView(NodeOwnedObjectsMixin, ModelViewSet):
         except LorawanConnection.DoesNotExist:
             raise Http404
 
+
 class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
     serializer_class = LorawanKeysSerializer
     lookup_field = "lorawan_connection"
@@ -104,8 +109,12 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
     def vsn_get_func(self, obj, request, foreign_key_name):
         model, field = foreign_key_name.split("__")
         lc_str = request.data.get(model)
-        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
-        lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split("-")
+        lc = LorawanConnection.objects.get(
+            node__vsn=node_vsn,
+            lorawan_device__device_name=lorawan_device_name,
+            lorawan_device__deveui=lorawan_device_deveui,
+        )
         if lc:
             node_obj = getattr(lc, field)
             return node_obj.vsn
@@ -125,6 +134,6 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
             self.check_object_permissions(self.request, lorawan_connection.node)
             return lorawan_connection.lorawankey
         except LorawanConnection.DoesNotExist:
-            raise Http404 #<- should be 400, add later with error msg
+            raise Http404  # <- should be 400, add later with error msg
         except ObjectDoesNotExist:
-            raise Http404 #<- should be 400, add later with error msg
+            raise Http404  # <- should be 400, add later with error msg
