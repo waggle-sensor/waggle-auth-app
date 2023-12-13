@@ -42,7 +42,7 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-You can run the test suite using:
+You can run the test suite using the following [pytest](https://docs.pytest.org/) command:
 
 ```sh
 # This must be done after one time setup, otherwise some tests will fail!
