@@ -18,28 +18,44 @@ router.register(r"computes", ComputeViewSet)
 router.register(r"sensors", SensorHardwareViewSet, basename="sensors")
 router.register(r"node-builds", NodeBuildViewSet)
 router.register(r"lorawandevices", LorawanDeviceView, basename="lorawandevices")
-router.register(r"lorawanconnections", LorawanConnectionView, basename="lorawanconnections")
+router.register(
+    r"lorawanconnections", LorawanConnectionView, basename="lorawanconnections"
+)
 
 urlpatterns = [
     path("", include(router.urls)),
     path(
         "lorawanconnections/",
-        LorawanConnectionView.as_view({'post': 'create'}),
+        LorawanConnectionView.as_view({"post": "create"}),
         name="C_lorawan_connection",
     ),
     path(
         "lorawanconnections/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanConnectionView.as_view({'patch': 'partial_update', 'put': 'update', 'get': 'retrieve', 'delete':'destroy'}),
+        LorawanConnectionView.as_view(
+            {
+                "patch": "partial_update",
+                "put": "update",
+                "get": "retrieve",
+                "delete": "destroy",
+            }
+        ),
         name="URD_lorawan_connection",
     ),
     path(
         "lorawankeys/",
-        LorawanKeysView.as_view({'post': 'create'}),
+        LorawanKeysView.as_view({"post": "create"}),
         name="C_lorawan_key",
     ),
     path(
         "lorawankeys/<str:node_vsn>/<str:lorawan_deveui>/",
-        LorawanKeysView.as_view({'patch': 'partial_update', 'put': 'update', 'get': 'retrieve', 'delete':'destroy'}),
+        LorawanKeysView.as_view(
+            {
+                "patch": "partial_update",
+                "put": "update",
+                "get": "retrieve",
+                "delete": "destroy",
+            }
+        ),
         name="URD_lorawan_key",
-    )
+    ),
 ]

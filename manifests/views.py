@@ -58,16 +58,16 @@ class ComputeViewSet(ReadOnlyModelViewSet):
 class SensorHardwareViewSet(ReadOnlyModelViewSet):
     queryset = (
         SensorHardware.objects.all()
-            .prefetch_related(
-                "nodesensor_set",
-                "nodesensor_set__node",
-                "computesensor_set",
-                "computesensor_set__scope",
-                "computesensor_set__scope__node",
-                "lorawandevice_set",
-                "lorawandevice_set__lorawanconnections"
-            )
-            .order_by("hardware")
+        .prefetch_related(
+            "nodesensor_set",
+            "nodesensor_set__node",
+            "computesensor_set",
+            "computesensor_set__scope",
+            "computesensor_set__scope__node",
+            "lorawandevice_set",
+            "lorawandevice_set__lorawanconnections",
+        )
+        .order_by("hardware")
     )
     serializer_class = SensorViewSerializer
     lookup_field = "hardware"
@@ -134,7 +134,7 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
         node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split("-")
         lc = LorawanConnection.objects.get(
             node__vsn=node_vsn,
-            lorawan_device__device_name=lorawan_device_name,
+            lorawan_device__name=lorawan_device_name,
             lorawan_device__deveui=lorawan_device_deveui,
         )
         if lc:
