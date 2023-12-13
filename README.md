@@ -45,6 +45,7 @@ python manage.py createsuperuser
 You can run the test suite using:
 
 ```sh
+# This must be done after one time setup, otherwise some tests will fail!
 pytest
 ```
 
