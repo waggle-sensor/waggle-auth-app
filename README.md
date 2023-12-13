@@ -34,9 +34,10 @@ After activating your venv, install the dev requirements:
 pip install -r requirements/dev.txt
 ```
 
-Next, run the one time database migrations and create a super user.
+Next, run the one time static file collection, database migrations and create a super user.
 
 ```sh
+python manage.py collectstatic
 python manage.py migrate
 python manage.py createsuperuser
 ```
