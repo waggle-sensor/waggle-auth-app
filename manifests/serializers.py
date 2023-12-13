@@ -13,22 +13,29 @@ class SensorViewSerializer(serializers.ModelSerializer):
         compute_sensors = obj.computesensor_set.all()
         node_sensors = obj.nodesensor_set.all()
         lorawan_sensors = obj.lorawandevice_set.all()
-        lorawan_connections = [ld.lorawanconnections.all() for ld in lorawan_sensors] 
-        nodes = [s.scope.node for s in compute_sensors] + [s.node for s in node_sensors] + [lc[0].node for lc in lorawan_connections]
+        lorawan_connections = [ld.lorawanconnections.all() for ld in lorawan_sensors]
+        nodes = (
+            [s.scope.node for s in compute_sensors]
+            + [s.node for s in node_sensors]
+            + [lc[0].node for lc in lorawan_connections]
+        )
 
-        project = self.context['request'].query_params.get("project")
+        project = self.context["request"].query_params.get("project")
         if project:
-            projects = project.split(',')
+            projects = project.split(",")
             nodes = [
-                node for node in nodes
-                if node.project and node.project.name.lower() in (p.lower() for p in projects)
+                node
+                for node in nodes
+                if node.project
+                and node.project.name.lower() in (p.lower() for p in projects)
             ]
 
-        phase = self.context['request'].query_params.get("phase")
+        phase = self.context["request"].query_params.get("phase")
         if phase:
-            phases = phase.split(',')
+            phases = phase.split(",")
             nodes = [
-                node for node in nodes
+                node
+                for node in nodes
                 if node.phase.lower() in (p.lower() for p in phases)
             ]
 
@@ -48,7 +55,7 @@ class SensorViewSerializer(serializers.ModelSerializer):
             "datasheet",
             "description",
             "capabilities",
-            "vsns"
+            "vsns",
         ]
 
 
@@ -65,7 +72,9 @@ class LorawanDeviceSerializer(serializers.ModelSerializer):
 
 
 class LorawanConnectionSerializer(serializers.ModelSerializer):
-    node = serializers.CharField()  # turn into char field to get rid of error ""Incorrect type. Expected pk value, received str.""
+    node = (
+        serializers.CharField()
+    )  # turn into char field to get rid of error ""Incorrect type. Expected pk value, received str.""
 
     class Meta:
         model = LorawanConnection
@@ -76,31 +85,34 @@ class LorawanConnectionSerializer(serializers.ModelSerializer):
         try:
             node = NodeData.objects.get(vsn=vsn)
         except NodeData.DoesNotExist:
-            raise serializers.ValidationError({"node":[f"Invalid vsn \"{vsn}\" - object does not exist."]}) 
+            raise serializers.ValidationError(
+                {"node": [f'Invalid vsn "{vsn}" - object does not exist.']}
+            )
         return node
 
     def get_lookup_records(self, validated_data):
         """Retrieve lookup field record based on custom logic"""
-        node_data = validated_data.pop('node', None)
+        node_data = validated_data.pop("node", None)
 
         if node_data:
-            validated_data['node'] = self.get_node(node_data)
+            validated_data["node"] = self.get_node(node_data)
 
         return validated_data
 
     def create(self, validated_data):
         """
-        Retrieve lookup field records cbased on validated data 
+        Retrieve lookup field records cbased on validated data
         to then pass in to parent create function
         """
         return super().create(self.get_lookup_records(validated_data))
 
     def update(self, instance, validated_data):
         """
-        Retrieve lookup field records based on validated data 
+        Retrieve lookup field records based on validated data
         to then pass in to parent update function
         """
         return super().update(instance, self.get_lookup_records(validated_data))
+
 
 class LorawanKeysSerializer(serializers.ModelSerializer):
     lorawan_connection = serializers.CharField()
@@ -112,42 +124,55 @@ class LorawanKeysSerializer(serializers.ModelSerializer):
     def validate_lorawan_connection(self, value):
         """Ensure that lorawan_connection is in the format "node-device_name-deveui"""
         try:
-            node_vsn, device_name, deveui = value.split('-')
+            node_vsn, device_name, deveui = value.split("-")
         except ValueError:
-            raise serializers.ValidationError("Invalid lorawan_connection format. Use 'node-device_name-deveui'.")
+            raise serializers.ValidationError(
+                "Invalid lorawan_connection format. Use 'node-device_name-deveui'."
+            )
         return value
 
     def get_lc(self, lc_str):
         """Validate and retrieve the lorawan connection instance"""
         try:
-            node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split('-')
-            lc = LorawanConnection.objects.get(node__vsn=node_vsn, lorawan_device__device_name=lorawan_device_name, lorawan_device__deveui=lorawan_device_deveui)
+            node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split("-")
+            lc = LorawanConnection.objects.get(
+                node__vsn=node_vsn,
+                lorawan_device__name=lorawan_device_name,
+                lorawan_device__deveui=lorawan_device_deveui,
+            )
         except LorawanConnection.DoesNotExist:
-            raise serializers.ValidationError({"lorawan_connection":[f"Invalid connection \"{lc_str}\" - object does not exist."]})
+            raise serializers.ValidationError(
+                {
+                    "lorawan_connection": [
+                        f'Invalid connection "{lc_str}" - object does not exist.'
+                    ]
+                }
+            )
         return lc
 
     def get_lookup_records(self, validated_data):
         """Retrieve lookup field record based on custom logic"""
-        lc = validated_data.pop('lorawan_connection', None)
+        lc = validated_data.pop("lorawan_connection", None)
 
         if lc:
-            validated_data['lorawan_connection'] = self.get_lc(lc)
+            validated_data["lorawan_connection"] = self.get_lc(lc)
 
         return validated_data
 
     def create(self, validated_data):
         """
-        Retrieve lookup field records based on validated data 
+        Retrieve lookup field records based on validated data
         to then pass in to parent create function
         """
         return super().create(self.get_lookup_records(validated_data))
 
     def update(self, instance, validated_data):
         """
-        Retrieve lookup field records based on validated data 
+        Retrieve lookup field records based on validated data
         to then pass in to parent update function
         """
         return super().update(instance, self.get_lookup_records(validated_data))
+
 
 class ManifestSerializer(serializers.ModelSerializer):
     project = serializers.CharField(source="project.name", allow_null=True)

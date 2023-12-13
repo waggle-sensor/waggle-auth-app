@@ -178,7 +178,9 @@ class Compute(models.Model):
 
 
 class AbstractSensor(models.Model):
-    hardware = models.ForeignKey(SensorHardware, on_delete=models.CASCADE, blank=True)
+    hardware = models.ForeignKey(
+        SensorHardware, on_delete=models.CASCADE, blank=True, null=True
+    )
     name = models.CharField(max_length=30, blank=True)
     labels = models.ManyToManyField("Label", blank=True)
     serial_no = models.CharField(max_length=30, default="", blank=True)

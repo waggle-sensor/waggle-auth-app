@@ -32,7 +32,7 @@ class LorawanConnectionViewTestCase(TestCase):
         self.key = self.token.key
         self.nodedata = NodeData.objects.create(vsn=self.Myvsn)
         self.device = LorawanDevice.objects.create(
-            deveui=self.deveui, device_name=self.device_name
+            deveui=self.deveui, name=self.device_name
         )
 
     def tearDown(self):
@@ -374,7 +374,7 @@ class LorawanKeysViewTestCase(TestCase):
         self.key = self.token.key
         self.nodedata = NodeData.objects.create(vsn=self.Myvsn)
         self.device = LorawanDevice.objects.create(
-            deveui=self.deveui, device_name=self.device_name
+            deveui=self.deveui, name=self.device_name
         )
 
     def tearDown(self):
@@ -659,7 +659,7 @@ class LorawanDeviceViewTestCase(TestCase):
         self.key = self.token.key
         self.nodedata = NodeData.objects.create(vsn=self.Myvsn)
         self.device = LorawanDevice.objects.create(
-            deveui=self.deveui, device_name=self.device_name
+            deveui=self.deveui, name=self.device_name
         )
 
     def tearDown(self):
@@ -708,7 +708,7 @@ class LorawanDeviceViewTestCase(TestCase):
         url = reverse("manifests:lorawandevices-list")
         data = {
             "deveui": deveui,
-            "device_name": "test",
+            "name": "test",
         }
         request = self.factory.post(url, data, format="json")
 
@@ -731,7 +731,7 @@ class LorawanDeviceViewTestCase(TestCase):
         url = reverse("manifests:lorawandevices-list")
         data = {
             "deveui": deveui,
-            "device_name": "test",
+            "name": "test",
         }
         request = self.factory.post(url, data, format="json")
 
@@ -773,7 +773,7 @@ class LorawanDeviceViewTestCase(TestCase):
         url = reverse(
             "manifests:lorawandevices-detail", kwargs={"deveui": self.device.deveui}
         )
-        data = {"deveui": "123456789123456789", "device_name": "update"}
+        data = {"deveui": "123456789123456789", "name": "update"}
         request = self.factory.patch(url, data, format="json")
 
         # Use the device view to handle the request
@@ -784,7 +784,7 @@ class LorawanDeviceViewTestCase(TestCase):
 
         # Check that device is not updated in the database
         device = LorawanDevice.objects.get(deveui=self.device.deveui)
-        self.assertNotEqual(device.device_name, data["device_name"])
+        self.assertNotEqual(device.name, data["name"])
 
 
 class LorawanConnectionEndpointTestCase(TestCase):
