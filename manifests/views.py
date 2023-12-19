@@ -12,6 +12,7 @@ from .serializers import (
     LorawanDeviceSerializer,
     LorawanConnectionSerializer,
     LorawanKeysSerializer,
+    SensorHardwareCRUDSerializer
 )
 from rest_framework.response import Response
 from rest_framework import status
@@ -82,6 +83,11 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
             res.data = filter(lambda o: len(o["vsns"]), res.data)
 
         return res
+
+class SensorHardwareViewSet_NodeCRUD(NodeAuthMixin, ModelViewSet):
+    queryset = SensorHardware.objects.all()
+    serializer_class = SensorHardwareCRUDSerializer
+    lookup_field = "hardware"
 
 
 class NodeBuildViewSet(ReadOnlyModelViewSet):
