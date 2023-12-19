@@ -58,6 +58,10 @@ class SensorViewSerializer(serializers.ModelSerializer):
             "vsns",
         ]
 
+class SensorHardwareCRUDSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SensorHardware
+        fields = "__all__"
 
 class ModemSerializer(serializers.ModelSerializer):
     class Meta:
