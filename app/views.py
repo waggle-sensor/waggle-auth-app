@@ -154,10 +154,18 @@ class NodeAuthorizedKeysView(APIView):
         except Node.DoesNotExist:
             raise Http404
 
-        user_ssh_public_keys = node.project_set.filter(
+        queryset = node.project_set.filter(
             usermembership__can_develop=True,
             nodemembership__can_develop=True,
-        ).values_list("users__ssh_public_keys", flat=True)
+        )
+
+        user_filter = request.query_params.get("user")
+        if user_filter:
+            queryset = queryset.filter(users__username=user_filter)
+
+        user_ssh_public_keys = queryset.values_list(
+            "users__ssh_public_keys", flat=True
+        ).distinct()
 
         keys = []
 
@@ -167,6 +175,31 @@ class NodeAuthorizedKeysView(APIView):
         return HttpResponse("\n".join(keys), content_type="text/plain")
         # TODO(sean) figure out correct way to get rest framework to return plain text
         # return Response("\n".join(keys), content_type="text/plain")
+
+
+class NodeUsersView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request: Request, vsn: str) -> Response:
+        try:
+            node = Node.objects.get(vsn=vsn)
+        except Node.DoesNotExist:
+            raise Http404
+
+        items = node.project_set.filter(
+            usermembership__can_develop=True,
+            nodemembership__can_develop=True,
+        ).values_list("users__username", "users__ssh_public_keys")
+
+        results = [
+            {
+                "user": username,
+                "ssh_public_keys": "\n".join(ssh_public_keys.splitlines()),
+            }
+            for username, ssh_public_keys in items
+        ]
+
+        return Response(results)
 
 
 class UpdateSSHPublicKeysView(LoginRequiredMixin, FormView):
