@@ -295,6 +295,7 @@ def serialize_lorawan_connections(l):
         "last_seen_at": l.last_seen_at,
         "margin": l.margin,
         "expected_uplink_interval_sec": l.expected_uplink_interval_sec,
+        "connection_type": l.connection_type,
         "lorawandevice": serialize_lorawan_devices(l.lorawan_device),
     }
 

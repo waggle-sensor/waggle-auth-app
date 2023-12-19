@@ -337,7 +337,7 @@ class LorawanDevice(AbstractSensor):
     battery_level = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )
-    # add more fields later like compatible device classes, compatible connection type, datasheet etc- Flozano
+    # add more fields later like compatible device classes, compatible connection type etc- Flozano
 
     class Meta:
         verbose_name = "Lorawan Device"
