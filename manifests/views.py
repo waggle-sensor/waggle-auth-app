@@ -87,7 +87,7 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
 class SensorHardwareViewSet_NodeCRUD(NodeAuthMixin, ModelViewSet):
     queryset = SensorHardware.objects.all()
     serializer_class = SensorHardwareCRUDSerializer
-    lookup_field = "hardware"
+    lookup_field = "hw_model"
 
 
 class NodeBuildViewSet(ReadOnlyModelViewSet):
