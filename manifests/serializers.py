@@ -284,6 +284,7 @@ def serialize_lorawan_devices(l):
         "deveui": l.deveui,
         "name": l.name,
         "battery_level": l.battery_level,
+        "hardware": serialize_common_hardware(l.hardware)
     }
 
 
