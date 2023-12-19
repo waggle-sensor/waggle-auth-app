@@ -6,3 +6,4 @@ fixtures/
 .vscode/
 .coverage
 .DS_Store
+.coverage.*
