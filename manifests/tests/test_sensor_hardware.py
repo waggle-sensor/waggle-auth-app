@@ -1,5 +1,9 @@
 from django.test import TestCase
 from manifests.models import *
+from node_auth import get_node_token_model, get_node_model
+
+Token = get_node_token_model()
+Node = get_node_model()
 
 class SensorHardwareViewsTest(TestCase):
     def setUp(self):
@@ -127,3 +131,65 @@ class SensorHardwareViewsTest(TestCase):
             },
             item,
         )
+
+class SensorHardwareNodeCRUDViewSetTest(TestCase):
+    def setUp(self):
+        self.Myvsn = "W001"
+        self.mac = "111"
+        self.node = Node.objects.create(vsn=self.Myvsn, mac=self.mac)
+        self.token = Token.objects.get(node=self.node)
+        self.key = self.token.key
+        self.gpsSensor = SensorHardware.objects.create(hardware="gps", hw_model="A GPS")
+        self.raingaugeSensor = SensorHardware.objects.create(hardware="raingauge", hw_model="RG-15")
+
+    def test_create(self):
+        """Test the Sensor Hardware CREATE endpoint for Authenticated Nodes"""
+        data = {"hardware": "test","hw_model": "test-123", "description": "test"}
+        r = self.client.post("/sensorhardwares/", data=data, 
+            content_type="application/json", HTTP_AUTHORIZATION=f"node_auth {self.key}"
+        )
+        self.assertEqual(r.status_code, 201)
+
+        #check if the device was created in the db
+        sensor_exists = SensorHardware.objects.filter(hw_model=data["hw_model"]).exists()
+        self.assertTrue(sensor_exists)
+
+    def test_get(self):
+        """Test the Sensor Hardware GET endpoint for Authenticated Nodes"""
+        r = self.client.get(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"node_auth {self.key}")
+        self.assertEqual(r.status_code, 200)
+
+        #assert the correct device was returned in the request
+        item = r.json()
+        self.assertEqual(item["hw_model"], self.gpsSensor.hw_model)
+
+    def test_update(self):
+        """Test the Sensor Hardware PATCH endpoint for Authenticated Nodes"""
+        data = {"description": "test"}
+        r = self.client.patch(f"/sensorhardwares/{self.gpsSensor.hw_model}/",data=data,
+            content_type="application/json", HTTP_AUTHORIZATION=f"node_auth {self.key}"
+        )
+        self.assertEqual(r.status_code, 200)
+
+        # Check if the device was updated in the db
+        sensor = SensorHardware.objects.get(pk=self.gpsSensor.pk)
+        self.assertEqual(sensor.description, data["description"])
+
+    def test_delete(self):
+        """Test the Sensor Hardware DELETE endpoint for Authenticated Nodes"""
+        r = self.client.delete(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"node_auth {self.key}")
+        self.assertEqual(r.status_code, 204)
+
+        #check if the device was deleted in the db
+        sensor_exists = SensorHardware.objects.filter(hw_model=self.gpsSensor.hw_model).exists()
+        self.assertFalse(sensor_exists)
+
+    def test_unauthenticated(self):
+        """Test non authenticated request return an error"""
+        r = self.client.delete(f"/sensorhardwares/{self.gpsSensor.hw_model}/")
+        self.assertEqual(r.status_code, 401)
+
+    def test_wrongToken(self):
+        """Test request with wrong token returns an error"""
+        r = self.client.get(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"node_auth wrong_token")
+        self.assertEqual(r.status_code, 401)
