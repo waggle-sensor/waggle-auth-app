@@ -1,7 +1,7 @@
 from django.contrib.auth.models import *
 from django.http import Http404
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from .models import *
 from .serializers import (
@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import IntegrityError
 from node_auth.mixins import NodeAuthMixin, NodeOwnedObjectsMixin
+from app.authentication import TokenAuthentication as UserTokenAuthentication
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
@@ -84,11 +85,12 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
 
         return res
 
-class SensorHardwareViewSet_NodeCRUD(NodeAuthMixin, ModelViewSet):
+class SensorHardwareViewSet_CRUD(NodeAuthMixin, ModelViewSet):
     queryset = SensorHardware.objects.all()
     serializer_class = SensorHardwareCRUDSerializer
     lookup_field = "hw_model"
-
+    authentication_classes = (NodeAuthMixin.authentication_classes[0],UserTokenAuthentication)
+    permission_classes = (NodeAuthMixin.permission_classes[0]|IsAdminUser,)    
 
 class NodeBuildViewSet(ReadOnlyModelViewSet):
     queryset = (
