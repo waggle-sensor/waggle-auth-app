@@ -58,6 +58,10 @@ class SensorViewSerializer(serializers.ModelSerializer):
             "vsns",
         ]
 
+class SensorHardwareCRUDSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SensorHardware
+        fields = "__all__"
 
 class ModemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -280,6 +284,7 @@ def serialize_lorawan_devices(l):
         "deveui": l.deveui,
         "name": l.name,
         "battery_level": l.battery_level,
+        "hardware": serialize_common_hardware(l.hardware)
     }
 
 
@@ -290,6 +295,7 @@ def serialize_lorawan_connections(l):
         "last_seen_at": l.last_seen_at,
         "margin": l.margin,
         "expected_uplink_interval_sec": l.expected_uplink_interval_sec,
+        "connection_type": l.connection_type,
         "lorawandevice": serialize_lorawan_devices(l.lorawan_device),
     }
 

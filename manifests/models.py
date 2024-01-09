@@ -104,7 +104,7 @@ class Modem(models.Model):
 
 class AbstractHardware(models.Model):
     hardware = models.CharField(max_length=100)
-    hw_model = models.CharField(max_length=30, blank=True)
+    hw_model = models.CharField(max_length=30, null=False, blank=False, help_text='The model number of your sensor preferably without the manufacturer name in it.')
     hw_version = models.CharField(max_length=30, blank=True)
     sw_version = models.CharField(max_length=30, blank=True)
     manufacturer = models.CharField(max_length=255, default="", blank=True)
@@ -337,7 +337,7 @@ class LorawanDevice(AbstractSensor):
     battery_level = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )
-    # add more fields later like compatible device classes, compatible connection type, datasheet etc- Flozano
+    # add more fields later like compatible device classes, compatible connection type etc- Flozano
 
     class Meta:
         verbose_name = "Lorawan Device"
