@@ -43,6 +43,43 @@ class TestHomeView(TestCase):
         self.assertContains(r, "View admin site")
 
 
+class TestNodeUsersView(TestCase):
+    """
+    TestNodeUsersView tests that the update ssh public keys renders.
+    """
+
+    def testResponse(self):
+        project = Project.objects.create(name="Test")
+
+        node = Node.objects.create(vsn="W123")
+        NodeMembership.objects.create(project=project, node=node, can_develop=True)
+
+        # create user with dev access to this node
+        user = User.objects.create(
+            username="someuser",
+            ssh_public_keys="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0QZW4toqXPDOKToSeSpaax2ISgzlEA+C0ANphhbHAk",
+        )
+        UserMembership.objects.create(project=project, user=user, can_develop=True)
+
+        # create user without dev access to this node
+        User.objects.create_user(
+            username="anotheruser",
+            ssh_public_keys="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0QZW4toqXPDOKToSeSpaax2ISgzlEA+C0ANphhZAZA",
+        )
+
+        r = self.client.get("/nodes/W123/users")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            r.json(),
+            [
+                {
+                    "user": "someuser",
+                    "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0QZW4toqXPDOKToSeSpaax2ISgzlEA+C0ANphhbHAk\n",
+                }
+            ],
+        )
+
+
 class TestUpdateSSHPublicKeysView(TestCase):
     """
     TestUpdateSSHPublicKeysView tests that the update ssh public keys renders.
