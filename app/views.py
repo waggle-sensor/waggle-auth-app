@@ -200,6 +200,7 @@ class NodeUsersView(APIView):
 
         items = node.project_set.filter(
             usermembership__can_develop=True,
+            nodemembership__can_develop=True,
         ).values_list("users__username", "users__ssh_public_keys")
 
         results = [
