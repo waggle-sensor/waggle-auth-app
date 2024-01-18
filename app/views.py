@@ -23,6 +23,7 @@ from .serializers import UserSerializer, UserProfileSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
 from .models import Node
+import re
 
 User = get_user_model()
 
@@ -178,7 +179,18 @@ class NodeAuthorizedKeysView(APIView):
 
 
 class NodeUsersView(APIView):
+    """
+    This view provides the list of users and their ssh public keys who have developer access to a specific node.
+
+    TODO(sean) Consider adding an endpoint which authenticates a username + ssh public key instead of providing
+    the list for local tracking.
+    """
+
     permission_classes = [AllowAny]
+
+    # Used to filter only keys with valid type and content. This also excludes the comment to prevent accidentally
+    # leaking sensitive information about user, even if this is unlikely to happen.
+    ssh_public_key_pattern = re.compile(r"(ssh-\S+\s+\S+)")
 
     def get(self, request: Request, vsn: str) -> Response:
         try:
@@ -188,13 +200,15 @@ class NodeUsersView(APIView):
 
         items = node.project_set.filter(
             usermembership__can_develop=True,
-            nodemembership__can_develop=True,
         ).values_list("users__username", "users__ssh_public_keys")
 
         results = [
             {
                 "user": username,
-                "ssh_public_keys": "\n".join(ssh_public_keys.splitlines()),
+                "ssh_public_keys": "".join(
+                    s + "\n"
+                    for s in self.ssh_public_key_pattern.findall(ssh_public_keys)
+                ),
             }
             for username, ssh_public_keys in items
         ]
