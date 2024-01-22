@@ -13,7 +13,7 @@ class AuthTokenSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, attrs):
-        vsn = attrs.get("vsn")
+        vsn = attrs.get("node")['vsn']
 
         if Node.objects.filter(vsn=vsn).exists():
             node = Node.objects.get(vsn=vsn)
