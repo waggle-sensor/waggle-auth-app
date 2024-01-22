@@ -22,23 +22,25 @@ class TestAuthTokenSerializer(TestCase):
         node = Node.objects.create(vsn="W001")
 
         # Create a serializer instance with vsn from the test node
-        data = {"vsn": "W001"}
+        data = {"node": "W001", "key": "sample_key"}
         serializer = AuthTokenSerializer(data=data)
 
         # Validate the serializer
+        serializer.is_valid()
+        print(serializer.errors)
         self.assertTrue(serializer.is_valid())
         attrs = serializer.validated_data
 
         # Assertions
-        self.assertIn("vsn", attrs)
-        self.assertEqual(attrs["vsn"], node)
+        self.assertIn("node", attrs)
+        self.assertEqual(attrs["node"]['vsn'], 'W001')
 
     def test_validate_invalid_node(self):
         """
         Test that validate method raises a ValidationError for an invalid node.
         """
         # Create a serializer instance with vsn for a non-existent node
-        data = {"vsn": "InvalidVSN"}
+        data = {"node": "InvalidVSN", "key": "sample_key"}
         serializer = AuthTokenSerializer(data=data)
 
         # Validate the serializer
