@@ -1,9 +1,6 @@
-from rest_framework import parsers, renderers
 from .models import Token
 from .serializers import AuthTokenSerializer
 from rest_framework.permissions import IsAdminUser
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from app.authentication import TokenAuthentication as UserTokenAuthentication
 
