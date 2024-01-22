@@ -2,10 +2,15 @@ from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from app.models import Node
+from .models import Token
 
 
-class AuthTokenSerializer(serializers.Serializer):
-    vsn = serializers.CharField()
+class AuthTokenSerializer(serializers.ModelSerializer):
+    node = serializers.CharField(source="node.vsn")
+
+    class Meta:
+        model = Token
+        fields = "__all__"
 
     def validate(self, attrs):
         vsn = attrs.get("vsn")
@@ -16,5 +21,4 @@ class AuthTokenSerializer(serializers.Serializer):
             msg = _("Node not registered")
             raise serializers.ValidationError(msg)
 
-        attrs["vsn"] = node
         return attrs
