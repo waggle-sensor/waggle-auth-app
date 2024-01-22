@@ -32,6 +32,7 @@ urlpatterns = [
     path("", include("django_prometheus.urls")),
     path("", include("app.urls")),
     path("", include("manifests.urls")),
+    path("", include("node_auth.urls")),
     path("_nested_admin/", include("nested_admin.urls")),
     path(
         settings.OIDC_REDIRECT_PATH,
