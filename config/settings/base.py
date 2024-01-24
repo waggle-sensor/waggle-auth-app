@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "manifests",
     "nested_admin",
     "node_auth",
+    "graphene_django"
 ]
 
 AUTH_USER_MODEL = "app.User"
