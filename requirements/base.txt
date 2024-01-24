@@ -11,3 +11,4 @@ whitenoise==6.4.0
 pandas==2.1.0
 sage-data-client==0.7.1
 ipython==8.13.2
+graphene-django==3.2.0
