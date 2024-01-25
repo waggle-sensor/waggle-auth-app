@@ -2,9 +2,10 @@
 File used to define all schemas for graphql endpoint
 """
 import graphene
-from manifests.schema import Query as Manifest_Query
+import manifests.schema
 
-class Query(Manifest_Query, graphene.ObjectType):
+class Query(manifests.schema.Query):
+    """Root for converge Graphql queries"""
     # Combine the queries from different apps
     pass
 
