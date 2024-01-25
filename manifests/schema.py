@@ -10,22 +10,13 @@ from .models import *
 
 APP_NAME = "manifests"
 
-# class HostFilter(django_filters.FilterSet):
-#     class Meta:
-#         model = Host
-#         fields = ['name', 'group', 'var1', 'var2']
-
-# class HostType(DjangoObjectType):
-#     class Meta:
-#         model = Host
-
 class Query(graphene.ObjectType):
-    AnsibleInventory = graphene.Field( #TODO: are the vars required true?
+    AnsibleInventory = graphene.Field( #TODO: implement behavior where groupby can be left out
         graphene.JSONString, 
-        groupby_model=graphene.String(), 
-        groupby_name_attr=graphene.String(), 
-        host_model=graphene.String(), 
-        host_name_attr=graphene.String(), 
+        groupby_model=graphene.String(required=True), 
+        groupby_name_attr=graphene.String(required=True), 
+        host_model=graphene.String(required=True), 
+        host_name_attr=graphene.String(required=True), 
         vars=graphene.List(graphene.String),
         description="Returns a JSON object that can be used to design Ansible inventory scripts for Dynamic Inventory\
             \n- groupby_model: The model to group the host by (must be related to host)\
