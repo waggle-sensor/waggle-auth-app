@@ -20,7 +20,7 @@ APP_NAME = "manifests"
 #         model = Host
 
 class Query(graphene.ObjectType):
-    group_hosts = graphene.Field( #TODO: are the vars required true?
+    AnsibleInventory = graphene.Field( #TODO: are the vars required true?
         graphene.JSONString, 
         groupby_model=graphene.String(), 
         groupby_name_attr=graphene.String(), 
@@ -35,7 +35,7 @@ class Query(graphene.ObjectType):
             \n- vars: The attributes to return as variables for groups and hosts"
     )
 
-    def resolve_group_hosts(self, info, groupby_model, groupby_name_attr, host_model, host_name_attr, vars, **kwargs):
+    def resolve_AnsibleInventory(self, info, groupby_model, groupby_name_attr, host_model, host_name_attr, vars, **kwargs):
 
         # Get the model class's dynamically
         try:
