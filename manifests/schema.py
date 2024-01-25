@@ -14,21 +14,23 @@ class Query(graphene.ObjectType):
         groupby_app=graphene.String(required=True),
         groupby_model=graphene.String(required=True), 
         groupby_name_attr=graphene.String(required=True),
+        groupby_vars=graphene.List(graphene.String),
         host_app=graphene.String(required=True),
         host_model=graphene.String(required=True), 
         host_name_attr=graphene.String(required=True), 
-        vars=graphene.List(graphene.String),
+        host_vars=graphene.List(graphene.String),
         description="Returns a JSON object that can be used to design Ansible inventory scripts for Dynamic Inventory\
             \n- groupby_app: The app the groupby model is apart of\
             \n- groupby_model: The model to group the host by (must be related to host)\
             \n- groupby_name_attr: The attribute to return as names for the group\
+            \n- groupby_vars: The attributes to return as variables for groups\
             \n- host_app: The app the host model is apart of\
             \n- host_model: The model used for hosts\
             \n- host_name_attr: The attribute to return as host names\
-            \n- vars: The attributes to return as variables for groups and hosts"
+            \n- host_vars: The attributes to return as variables for host"
     )
 
-    def resolve_AnsibleInventory(self, info, groupby_app, groupby_model, groupby_name_attr, host_app, host_model, host_name_attr, vars, **kwargs):
+    def resolve_AnsibleInventory(self, info, groupby_app, groupby_model, groupby_name_attr, groupby_vars, host_app, host_model, host_name_attr, host_vars, **kwargs):
 
         #try to get apps
         apps.get_app_config(groupby_app)
@@ -47,28 +49,11 @@ class Query(graphene.ObjectType):
         if not foreign_key_name:
             raise GraphQLError(f"{host_model} does not have a foreign key for {groupby_model}")
 
-        # Validate if the name_attr(s) is a valid field in models
-        parent_model.objects.values_list(groupby_name_attr, flat=True)
-        child_model.objects.values_list(host_name_attr, flat=True)
-
-        #split fields
-        parent_fields = [field.name for field in parent_model._meta.fields]
-        child_fields = [field.name for field in child_model._meta.fields]
-
-        # Validate vars exist in parent_model or child_model
-        all_fields = set(parent_fields) | set(child_fields)
-        missing_fields = [x for x in vars if x not in all_fields]
-        if missing_fields:
-            raise GraphQLError(f"{', '.join(missing_fields)} field(s) do not exist in {groupby_model} and {host_model}")
-
-        # split attr by model
-        parent_vars = []
-        child_vars = []
-        for attr in vars:
-            if attr in parent_fields:
-                parent_vars.append(attr)
-            if attr in child_fields:
-                child_vars.append(attr)
+        # Validate if the inputs are valid field in models
+        temp = groupby_vars + [groupby_name_attr]
+        parent_model.objects.values_list(*temp)
+        temp = host_vars + [host_name_attr]
+        child_model.objects.values_list(*temp)
 
         # Perform grouping based on the specified field
         groups_queryset = parent_model.objects.values_list(groupby_name_attr, flat=True).distinct()
@@ -82,7 +67,7 @@ class Query(graphene.ObjectType):
         # NOTE: do I need to add ungrouped? - FL 01/25/2024
         for item in groups:                                                                
             hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
-            values = {attr: list(parent_model.objects.filter(**{groupby_name_attr: item}).values_list(attr, flat=True))[0] for attr in parent_vars}
+            values = {attr: list(parent_model.objects.filter(**{groupby_name_attr: item}).values_list(attr, flat=True))[0] for attr in groupby_vars}
             result[item] = {
                 "hosts": hosts_bygroup,
                 "vars": values,
@@ -92,7 +77,7 @@ class Query(graphene.ObjectType):
         result["_meta"] = {
             "hostvars": {
                 host_name: {
-                    attr: child_model.objects.filter(**{host_name_attr: host_name}).values_list(attr, flat=True)[0] for attr in child_vars
+                    attr: list(child_model.objects.filter(**{host_name_attr: host_name}).values_list(attr, flat=True))[0] for attr in host_vars
                 } for host_name in all_hosts
             }
         }
