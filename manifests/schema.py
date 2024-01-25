@@ -1,5 +1,5 @@
 """
-File used to define schemas for graphql endpoint
+File used to define schemas for manifest app that will be used in GraphQL endpoint
 """
 import graphene
 import django_filters
@@ -11,14 +11,14 @@ from .models import *
 
 APP_NAME = "manifests"
 
-class HostFilter(django_filters.FilterSet):
-    class Meta:
-        model = Host
-        fields = ['name', 'group', 'var1', 'var2']
+# class HostFilter(django_filters.FilterSet):
+#     class Meta:
+#         model = Host
+#         fields = ['name', 'group', 'var1', 'var2']
 
-class HostType(DjangoObjectType):
-    class Meta:
-        model = Host
+# class HostType(DjangoObjectType):
+#     class Meta:
+#         model = Host
 
 class Query(graphene.ObjectType):
     group_hosts = graphene.Field(
@@ -76,6 +76,7 @@ class Query(graphene.ObjectType):
         all_hosts = []
 
         # configure result based on Ansible inventory scripts
+        # NOTE: do I need to add ungrouped? - FL 01/25/2024
         for item in groups:
             hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{groupby_model}__{groupby_name_attr}": item[groupby_name_attr]}).values(host_name_attr)]
             values = {attr: list(parent_model.objects.filter(**{groupby_name_attr: item[groupby_name_attr]}).values_list(attr, flat=True)).first() for attr in parent_vars}
@@ -92,25 +93,10 @@ class Query(graphene.ObjectType):
                 } for host_name in all_hosts
             }
         }
-
-        #TODO: the next part to configure
-        """
-        {
-            "_meta": { <-- this is done already (was included for perspective)
-            "hostvars": {}
-            },
-            "all": {
-            "children": [
-                "ungrouped"
-            ]
-            },
-            "ungrouped": {
-            "children": [
-            ]
-            }
+        result["all"] = {
+            "children": groups + ["ungrouped"]
         }
-        """
-
-
 
         return result
+
+schema = graphene.Schema(query=Query)
