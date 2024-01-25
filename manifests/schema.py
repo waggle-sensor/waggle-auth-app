@@ -2,11 +2,11 @@
 File used to define schemas for manifest app that will be used in GraphQL endpoint
 """
 import graphene
-import django_filters
+#import django_filters
 from django.apps import apps
 from django.db import models
 from graphene_django.types import DjangoObjectType
-from graphene_django.filter import DjangoFilterConnectionField
+#from graphene_django.filter import DjangoFilterConnectionField
 from .models import *
 
 APP_NAME = "manifests"
@@ -21,13 +21,13 @@ APP_NAME = "manifests"
 #         model = Host
 
 class Query(graphene.ObjectType):
-    group_hosts = graphene.Field(
+    group_hosts = graphene.Field( #TODO: are the vars required true?
         graphene.JSONString, 
         groupby_model=graphene.String(), 
         groupby_name_attr=graphene.String(), 
         host_model=graphene.String(), 
         host_name_attr=graphene.String(), 
-        vars=graphene.List(graphene.String())
+        vars=graphene.List(graphene.String)
     )
 
     def resolve_group_hosts(self, info, groupby_model, groupby_name_attr, host_model, host_name_attr, vars, **kwargs):
