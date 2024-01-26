@@ -724,6 +724,27 @@ class LorawanDeviceViewTestCase(TestCase):
         self.assertIsNotNone(device)
 
     @patch("manifests.views.LorawanDeviceView.permission_classes", [AllowAny])
+    def test_create_lorawan_device_duplicate(self):
+        """Test creating a duplicate lorawan device"""
+        self.device = LorawanDevice.objects.create(deveui="451", name="test")
+        # Create a request to create a device
+        deveui = "451"
+        url = reverse("manifests:lorawandevices-list")
+        data = {
+            "deveui": deveui,
+            "name": "test",
+        }
+        request = self.factory.post(url, data, format="json")
+
+        # Use the device view to handle the request
+        lorawan_device_view = LorawanDeviceView.as_view({"post": "create"})
+        response = lorawan_device_view(request)
+        print(response)
+
+        # Check the response status code and data
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("manifests.views.LorawanDeviceView.permission_classes", [AllowAny])
     def test_create_lorawan_device_serializer_error(self):
         """Test for getting a serializer error when creating a lorawan device"""
         # Create a request to create a device
