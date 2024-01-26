@@ -204,6 +204,27 @@ class LorawanConnectionViewTestCase(TestCase):
             )
 
     @patch("manifests.views.LorawanConnectionView.permission_classes", [AllowAny])
+    def test_create_lorawan_connection_duplicate(self):
+        """Test creating a duplicate lorawan connection (unique_together = ["node", "lorawan_device"])"""
+        LorawanConnection.objects.create(node=self.nodedata, lorawan_device=self.device)
+
+        # Create a request to create a LorawanConnection
+        url = reverse("manifests:C_lorawan_connection")
+        data = {
+            "node": self.nodedata.vsn,
+            "lorawan_device": self.device.deveui,
+            "connection_type": "OTAA",
+        }
+        request = self.factory.post(url, data, format="json")
+
+        # Use the LorawanConnectionView to handle the request
+        lorawan_connection_view = LorawanConnectionView.as_view({"post": "create"})
+        response = lorawan_connection_view(request)
+
+        #Check the response status code
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("manifests.views.LorawanConnectionView.permission_classes", [AllowAny])
     def test_update_lorawan_connection_success(self):
         """Test correctly updating a lorawan connection"""
         # Create a LorawanConnection
@@ -466,6 +487,37 @@ class LorawanKeysViewTestCase(TestCase):
         # Check if the key is created in the database
         lorawan_connection = LorawanKeys.objects.get(lorawan_connection=lc)
         self.assertIsNotNone(lorawan_connection)
+
+    @patch("manifests.views.LorawanKeysView.permission_classes", [AllowAny])
+    def test_create_lorawan_key_duplicate(self):
+        """Test creating a duplicate lorawan key"""
+        # Create a LorawanConnection for testing
+        lc = LorawanConnection.objects.create(
+            node=self.nodedata, lorawan_device=self.device
+        )
+        LorawanKeys.objects.create(
+            lorawan_connection=lc, 
+            network_Key="123",
+            app_session_key="13",
+            dev_address="14"
+        )
+
+        # Create a request to create a key
+        url = reverse("manifests:C_lorawan_key")
+        data = {
+            "lorawan_connection": str(lc),
+            "network_Key": "123",
+            "app_session_key": "13",
+            "dev_address": "14",
+        }
+        request = self.factory.post(url, data, format="json")
+
+        # Use the key view to handle the request
+        lorawan_key_view = LorawanKeysView.as_view({"post": "create"})
+        response = lorawan_key_view(request)
+
+        # Check the response status code and data
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch("manifests.views.LorawanKeysView.permission_classes", [AllowAny])
     def test_create_lorawan_key_invalid_lc(self):
