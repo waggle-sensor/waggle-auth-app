@@ -105,10 +105,17 @@ class LorawanConnectionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Retrieve lookup field records cbased on validated data
+        Retrieve lookup field records based on validated data
         to then pass in to parent create function
         """
-        return super().create(self.get_lookup_records(validated_data))
+        validated_data = self.get_lookup_records(validated_data)
+        # this has to be added because serializer is checking for node pk and lorawan device pk so it passes since im using node vsn NOT pk
+        #  serializer thinks a lc has not been created with this combination of node and lorawan device and causes a server error - FL 01/26/24
+        if LorawanConnection.objects.filter(node=validated_data["node"], lorawan_device=validated_data["lorawan_device"]).exists():
+            raise serializers.ValidationError(
+                {"node-lorawan_device": [f'Lorawan connection with this node and lorawan_device already exists']}
+            )
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """
@@ -168,7 +175,13 @@ class LorawanKeysSerializer(serializers.ModelSerializer):
         Retrieve lookup field records based on validated data
         to then pass in to parent create function
         """
-        return super().create(self.get_lookup_records(validated_data))
+        # same issue here as lorawan connection serializer - FL
+        validated_data = self.get_lookup_records(validated_data)
+        if LorawanKeys.objects.filter(lorawan_connection=validated_data["lorawan_connection"]).exists():
+            raise serializers.ValidationError(
+                {"lorawan_connection": [f'Lorawan Key with this lorawan_connection already exists']}
+            )
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """

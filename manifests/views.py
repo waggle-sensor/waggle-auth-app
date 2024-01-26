@@ -19,6 +19,7 @@ from rest_framework import status
 from django.db import IntegrityError
 from node_auth.mixins import NodeAuthMixin, NodeOwnedObjectsMixin
 from app.authentication import TokenAuthentication as UserTokenAuthentication
+from rest_framework.serializers import ValidationError
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
@@ -139,7 +140,12 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
     def vsn_get_func(self, obj, request, foreign_key_name):
         model, field = foreign_key_name.split("__")
         lc_str = request.data.get(model)
-        node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split("-")
+        try:
+            node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split("-")
+        except ValueError:
+            raise ValidationError(
+                "Invalid lorawan_connection format. Use 'node-device_name-deveui'."
+            )
         lc = LorawanConnection.objects.get(
             node__vsn=node_vsn,
             lorawan_device__name=lorawan_device_name,
