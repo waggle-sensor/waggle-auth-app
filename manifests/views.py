@@ -89,7 +89,7 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
 class SensorHardwareViewSet_CRUD(NodeAuthMixin, ModelViewSet):
     queryset = SensorHardware.objects.all()
     serializer_class = SensorHardwareCRUDSerializer
-    lookup_field = "hw_model"
+    lookup_field = "hw_model" #TODO: this can cause a "multiple response returned" server error on GET as hw_model is not unique - FL 01/29/2024
     authentication_classes = (NodeAuthMixin.authentication_classes[0],UserTokenAuthentication)
     permission_classes = (NodeAuthMixin.permission_classes[0]|IsAdminUser,)    
 
