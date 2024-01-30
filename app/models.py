@@ -53,11 +53,14 @@ class User(AbstractUser):
 
 class Node(AbstractNode):
     mac = models.CharField("MAC", max_length=16, unique=True, null=True, blank=True)
+    files_public = models.BooleanField(default=False)
+
 
 @receiver(post_save, sender=Node)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(node=instance)
+
 
 # NOTE This Project is more like a permissions group a node / user can be a part of
 # as opposed to an organizational project (ex. Sage, DAWN, VTO) who owns a node.
@@ -120,9 +123,6 @@ class NodeMembership(models.Model):
         "Develop?",
         default=False,
         help_text="Designates whether node allows developer access.",
-    )
-    can_access_files = models.BooleanField(
-        "Files?", default=False, help_text="Designates whether node allows file access."
     )
 
     def __str__(self):
