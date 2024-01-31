@@ -75,14 +75,23 @@ class Query(graphene.ObjectType):
 
         # configure result based on Ansible inventory scripts
         # NOTE: do I need to add ungrouped? - FL 01/25/2024
-        for item in groups:                                                                
-            hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
+        for item in groups: 
+            if "vsn" in str(host_name_attr):                                                          
+                hosts_bygroup = [f"node-{host[host_name_attr]}" for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
+
+                org_hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
+
+                all_hosts = all_hosts + org_hosts_bygroup
+            else:
+                hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
+                
+                all_hosts = all_hosts + hosts_bygroup
+
             values = {attr: list(parent_model.objects.filter(**{groupby_name_attr: item}).values_list(attr, flat=True))[0] for attr in groupby_vars}
             result[to_safe(item)] = {
                 "hosts": hosts_bygroup,
                 "vars": values,
             }
-            all_hosts = all_hosts + hosts_bygroup
 
         result["_meta"] = {
             "hostvars": {
