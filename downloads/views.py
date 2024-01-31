@@ -12,6 +12,9 @@ from app.models import Node, Project
 from minio import Minio
 from datetime import datetime, timedelta, timezone
 from django.conf import settings
+import rest_framework.authentication
+import app.authentication
+from .authentication import BasicTokenPasswordAuthentication
 
 
 def get_presigned_url_for_download(
@@ -45,6 +48,14 @@ def get_timestamp_for_timestamp_and_filename_string(s: str) -> datetime:
 
 
 class DownloadsView(APIView):
+    authentication_classes = [
+        BasicTokenPasswordAuthentication,
+        rest_framework.authentication.BasicAuthentication,
+        rest_framework.authentication.SessionAuthentication,
+        rest_framework.authentication.TokenAuthentication,
+        app.authentication.TokenAuthentication,
+    ]
+
     def dispatch(
         self, request: HttpRequest, *args: Any, **kwargs: Any
     ) -> HttpResponseBase:
