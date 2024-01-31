@@ -10,9 +10,13 @@ from graphene_django.types import DjangoObjectType
 from .models import *
 
 def to_safe(word):
-    """ Converts 'bad' characters in a string to underscores so they can be used as Ansible groups """
-
-    return re.sub(r"[^A-Za-z0-9\-]", "_", word)
+    """ 
+    Converts 'bad' characters/patterns in a string to underscores so they can be used as Ansible groups 
+    - adds "_" to preceding numbers
+    """
+    word = re.sub(r"[^A-Za-z0-9]", "_", word)
+    word = re.sub(r"^(?=\d)", lambda match: "_" + match.group(), word)
+    return word
 
 class Query(graphene.ObjectType):
     AnsibleInventory = graphene.Field( #TODO: implement behavior where groupby can be left out
@@ -88,7 +92,7 @@ class Query(graphene.ObjectType):
             }
         }
         result["all"] = {
-            "children": to_safe(item) for item in groups + ["ungrouped"]
+            "children": [to_safe(item) for item in groups] + ["ungrouped"]
         }
 
         return result
