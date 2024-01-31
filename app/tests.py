@@ -406,7 +406,7 @@ class TestAccessView(TestCase):
             (
                 "dawn",
                 "W001",
-                {"can_schedule": True, "can_develop": True, "can_access_files": True},
+                {"can_schedule": True, "can_develop": True},
             ),
         ]
 
