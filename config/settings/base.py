@@ -190,3 +190,5 @@ S3_SECRET_KEY = env("S3_SECRET_KEY", str, "")
 S3_BUCKET_NAME = env("S3_BUCKET_NAME", str, "")
 S3_ROOT_FOLDER = env("S3_ROOT_FOLDER", str, "")
 S3_REGION = env("S3_REGION", str, "")
+
+TIME_ZONE = "UTC"

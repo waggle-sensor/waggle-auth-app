@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from app.models import Node, Project
 from minio import Minio
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from django.conf import settings
 
 
@@ -35,6 +35,13 @@ def get_presigned_url_for_download(
         object_name=object_name,
         expires=timedelta(seconds=60),
     )
+
+
+def get_timestamp_for_timestamp_and_filename_string(s: str) -> datetime:
+    s = s.split("-", maxsplit=1)[0]
+    nanos = float(s)
+    timestamp = nanos / 1e9
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
 
 class DownloadsView(APIView):
@@ -80,7 +87,15 @@ class DownloadsView(APIView):
         timestamp_and_filename: str,
         format=None,
     ):
-        if self.node.files_public:
+        file_timestamp = get_timestamp_for_timestamp_and_filename_string(
+            timestamp_and_filename
+        )
+
+        if (
+            self.node.files_public
+            and self.node.commissioning_date is not None
+            and file_timestamp >= self.node.commissioning_date
+        ):
             return HttpResponseRedirect(
                 get_presigned_url_for_download(
                     "GET",
@@ -90,6 +105,9 @@ class DownloadsView(APIView):
                     timestamp_and_filename,
                 )
             )
+
+        if not request.user.is_authenticated:
+            return Response("Permission denied", status=status.HTTP_403_FORBIDDEN)
 
         has_object_permission = Project.objects.filter(
             usermembership__user=request.user,
