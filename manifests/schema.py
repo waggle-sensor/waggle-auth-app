@@ -2,11 +2,17 @@
 File used to define schemas for manifest app that will be used in GraphQL endpoint
 """
 import graphene
+import re
 from graphql import GraphQLError
 from django.apps import apps
 from django.db import models
 from graphene_django.types import DjangoObjectType
 from .models import *
+
+def to_safe(word):
+    """ Converts 'bad' characters in a string to underscores so they can be used as Ansible groups """
+
+    return re.sub(r"[^A-Za-z0-9\-]", "_", word)
 
 class Query(graphene.ObjectType):
     AnsibleInventory = graphene.Field( #TODO: implement behavior where groupby can be left out
@@ -68,7 +74,7 @@ class Query(graphene.ObjectType):
         for item in groups:                                                                
             hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
             values = {attr: list(parent_model.objects.filter(**{groupby_name_attr: item}).values_list(attr, flat=True))[0] for attr in groupby_vars}
-            result[item] = {
+            result[to_safe(item)] = {
                 "hosts": hosts_bygroup,
                 "vars": values,
             }
@@ -82,7 +88,7 @@ class Query(graphene.ObjectType):
             }
         }
         result["all"] = {
-            "children": groups + ["ungrouped"]
+            "children": to_safe(item) for item in groups + ["ungrouped"]
         }
 
         return result
