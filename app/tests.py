@@ -387,13 +387,13 @@ class TestAccessView(TestCase):
             (
                 "tom",
                 "dawn",
-                {"can_develop": True, "can_schedule": True, "can_access_files": True},
+                {"can_develop": True, "can_schedule": True},
             ),
             ("notapproved", "sage", {"can_develop": True, "can_schedule": True}),
             (
                 "notapproved",
                 "dawn",
-                {"can_develop": True, "can_schedule": True, "can_access_files": True},
+                {"can_develop": True, "can_schedule": True},
             ),
         ]
 
@@ -489,7 +489,7 @@ class TestAccessView(TestCase):
         self.assertEqual(
             r.json(),
             [
-                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
+                {"vsn": "W001", "access": ["develop", "schedule"]},
                 {"vsn": "W002", "access": ["develop"]},
                 {"vsn": "W003", "access": ["develop", "schedule"]},
             ],
@@ -528,7 +528,7 @@ class TestAccessView(TestCase):
         self.assertEqual(
             r.json(),
             [
-                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
+                {"vsn": "W001", "access": ["develop", "schedule"]},
                 {"vsn": "W002", "access": ["develop"]},
                 {"vsn": "W003", "access": ["develop", "schedule"]},
             ],
