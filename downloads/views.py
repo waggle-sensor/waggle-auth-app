@@ -52,10 +52,22 @@ class DownloadsView(APIView):
             self.node = Node.objects.get(mac__iexact=kwargs["node_id"])
         except Node.DoesNotExist:
             return Response("Download not found", status=status.HTTP_404_NOT_FOUND)
+
+        # TODO check ValueError here
+        file_timestamp = get_timestamp_for_timestamp_and_filename_string(
+            kwargs["timestamp_and_filename"]
+        )
+
+        self.file_is_public = (
+            self.node.files_public
+            and self.node.commissioning_date is not None
+            and file_timestamp >= self.node.commissioning_date
+        )
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_permissions(self):
-        if self.request.method == "HEAD" or self.node.files_public:
+        if self.request.method == "HEAD" or self.file_is_public:
             return [AllowAny()]
         return [IsAuthenticated()]
 
@@ -87,15 +99,7 @@ class DownloadsView(APIView):
         timestamp_and_filename: str,
         format=None,
     ):
-        file_timestamp = get_timestamp_for_timestamp_and_filename_string(
-            timestamp_and_filename
-        )
-
-        if (
-            self.node.files_public
-            and self.node.commissioning_date is not None
-            and file_timestamp >= self.node.commissioning_date
-        ):
+        if self.file_is_public:
             return HttpResponseRedirect(
                 get_presigned_url_for_download(
                     "GET",
@@ -106,14 +110,12 @@ class DownloadsView(APIView):
                 )
             )
 
-        if not request.user.is_authenticated:
-            return Response("Permission denied", status=status.HTTP_403_FORBIDDEN)
-
         has_object_permission = Project.objects.filter(
             usermembership__user=request.user,
             usermembership__can_access_files=True,
             nodemembership__node=self.node,
         ).exists()
+
         if not has_object_permission:
             return Response("Permission denied", status=status.HTTP_403_FORBIDDEN)
 
