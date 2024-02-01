@@ -146,6 +146,10 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
             raise ValidationError(
                 "Invalid lorawan_connection format. Use 'node-device_name-deveui'."
             )
+        except Exception as e:
+            raise ValidationError(
+                f"Error: {e}"
+            )
         lc = LorawanConnection.objects.get(
             node__vsn=node_vsn,
             lorawan_device__name=lorawan_device_name,
