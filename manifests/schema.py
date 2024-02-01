@@ -18,6 +18,78 @@ def to_safe(word):
     word = re.sub(r"^(?=\d)", lambda match: "_" + match.group(), word)
     return word
 
+def group_host(groupby_name_val, child_model: models.Model, host_name_attr:str, foreign_key_name:str, groupby_name_attr:str) -> list:
+    """
+    Group host by attribute passed in. The attribute to group-by must have a foreign key in the child model.
+    - If modification is not needed the tuple will return original name, else the tuple will return original name and modified named
+
+    Inputs:
+    - groupby_name_val: A record's value for the groupby_name_attr
+    - child_model: The host's model
+    - host_name_attr: The attribute to return as host name
+    - foreign_key_name: The name of foreign key in child model connecting the parent model
+    - groupby_name_attr: The attribute to return as group's name
+
+    Outputs:
+    - A list of hosts in groupby_name_val
+    """
+    if "vsn" in str(host_name_attr): #match hostname used
+        hosts_bygroup = [(host[host_name_attr],f"node-{host[host_name_attr]}") for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": groupby_name_val}).values(host_name_attr)]
+    else:
+        hosts_bygroup = [(host[host_name_attr],host[host_name_attr]) for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": groupby_name_val}).values(host_name_attr)]
+    
+    return hosts_bygroup
+
+
+def to_ansible_struc(parent_model: models.Model, groupby_name_attr: str, groupby_vars: list, child_model: models.Model, foreign_key_name: str, host_name_attr: str, host_vars: list) -> dict:
+    """
+    Structure values to compatible Ansible JSON Inventory 
+    https://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html#developing-inventory-scripts
+    
+    Inputs:
+    - parent_model: The group-by model
+    - groupby_name_attr: The attribute to return as group's name
+    - groupby_vars: The group attributes to return 
+    - child_model: The host's model
+    - foreign_key_name: The name of foreign key in child model connecting the parent model
+    - host_name_attr: The attribute to return as host name
+    - host_vars: The host attributes to return
+
+    Outputs:
+    - a dictionary in the format Ansible accepts as inventory
+    """
+    # Perform grouping based on the specified field
+    groups_queryset = parent_model.objects.values_list(groupby_name_attr, flat=True).distinct()
+
+    # Convert the QuerySet to a list
+    groups = list(groups_queryset)
+    result = {}
+    all_hosts = []
+
+    for item in groups:                                          
+        hosts_bygroup = group_host(item, child_model, host_name_attr, foreign_key_name, groupby_name_attr)
+
+        all_hosts = all_hosts + hosts_bygroup
+
+        values = {attr: list(parent_model.objects.filter(**{groupby_name_attr: item}).values_list(attr, flat=True))[0] for attr in groupby_vars}
+        result[to_safe(item)] = {
+            "hosts": [host[1] for host in hosts_bygroup],
+            "vars": values,
+        }
+
+    result["_meta"] = {
+        "hostvars": {
+            host_name[1]: {
+                attr: list(child_model.objects.filter(**{host_name_attr: host_name[0]}).values_list(attr, flat=True))[0] for attr in host_vars
+            } for host_name in all_hosts
+        }
+    }
+    result["all"] = { # NOTE: do I need to add ungrouped? - FL 01/25/2024
+        "children": [to_safe(item) for item in groups] + ["ungrouped"]
+    }
+
+    return result
+
 class Query(graphene.ObjectType):
     AnsibleInventory = graphene.Field( #TODO: implement behavior where groupby can be left out
         graphene.JSONString,
@@ -65,43 +137,7 @@ class Query(graphene.ObjectType):
         temp = host_vars + [host_name_attr]
         child_model.objects.values_list(*temp)
 
-        # Perform grouping based on the specified field
-        groups_queryset = parent_model.objects.values_list(groupby_name_attr, flat=True).distinct()
-
-        # Convert the QuerySet to a list
-        groups = list(groups_queryset)
-        result = {}
-        all_hosts = []
-
         # configure result based on Ansible inventory scripts
-        # NOTE: do I need to add ungrouped? - FL 01/25/2024
-        for item in groups: 
-            if "vsn" in str(host_name_attr):                                                          
-                hosts_bygroup = [f"node-{host[host_name_attr]}" for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
-
-                org_hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
-
-                all_hosts = all_hosts + org_hosts_bygroup
-            else:
-                hosts_bygroup = [host[host_name_attr] for host in child_model.objects.filter(**{f"{foreign_key_name}__{groupby_name_attr}": item}).values(host_name_attr)]
-                
-                all_hosts = all_hosts + hosts_bygroup
-
-            values = {attr: list(parent_model.objects.filter(**{groupby_name_attr: item}).values_list(attr, flat=True))[0] for attr in groupby_vars}
-            result[to_safe(item)] = {
-                "hosts": hosts_bygroup,
-                "vars": values,
-            }
-
-        result["_meta"] = {
-            "hostvars": {
-                host_name: {
-                    attr: list(child_model.objects.filter(**{host_name_attr: host_name}).values_list(attr, flat=True))[0] for attr in host_vars
-                } for host_name in all_hosts
-            }
-        }
-        result["all"] = {
-            "children": [to_safe(item) for item in groups] + ["ungrouped"]
-        }
+        result = to_ansible_struc(parent_model, groupby_name_attr, groupby_vars, child_model, foreign_key_name, host_name_attr, host_vars)
 
         return result
