@@ -78,7 +78,9 @@ class DownloadsView(APIView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_permissions(self):
-        if self.request.method == "HEAD" or self.file_is_public:
+        if self.request.method in ["OPTIONS", "HEAD"]:
+            return [AllowAny()]
+        if self.file_is_public:
             return [AllowAny()]
         return [IsAuthenticated()]
 
