@@ -21,6 +21,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from app.views import LogoutView
 from graphene_django.views import GraphQLView
 from .schema import schema
+from django.views.decorators.csrf import csrf_exempt #TODO: remove this once you set up auth token for graphql endpoint
 
 # admin site should use project login instead of custom login
 admin.site.login = staff_member_required(admin.site.login, login_url=settings.LOGIN_URL)
@@ -34,7 +35,7 @@ urlpatterns = [
     path("", include("django_prometheus.urls")),
     path("", include("app.urls")),
     path("", include("manifests.urls")),
-    path("graphql/", GraphQLView.as_view(graphiql=True, schema=schema)),
+    path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))), 
     path("_nested_admin/", include("nested_admin.urls")),
     path(
         settings.OIDC_REDIRECT_PATH,
