@@ -46,10 +46,10 @@ from rest_framework import exceptions
 #   user <---------------------- this service
 #
 #        wget req presigned url (without auth)
-#   user ----------------------> osn (req)
+#   user ----------------------> osn
 #
 #          resp with data
-#   user <---------------------- this service
+#   user <---------------------- osn
 #
 # It also happens to be compatible to examples we showed users in our docs before, which is a nice side effect.
 #
