@@ -16,7 +16,7 @@ from rest_framework import exceptions
 # after getting the presigned URL, wget forwards the header to S3, unlike curl or Python's requests which
 # drop it for security purposes. Once S3 receives this header, it returns 400 Bad Request...
 #
-# As a diagram, with wget we have
+# As a diagram, with wget we have.
 #
 #         wget sends auth header
 #   user ----------------------> this service
