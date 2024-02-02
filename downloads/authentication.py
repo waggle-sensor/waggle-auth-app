@@ -16,10 +16,43 @@ from rest_framework import exceptions
 # after getting the presigned URL, wget forwards the header to S3, unlike curl or Python's requests which
 # drop it for security purposes. Once S3 receives this header, it returns 400 Bad Request...
 #
+# As a diagram, with wget we have
+#
+#         wget sends auth header
+#   user ----------------------> this service
+#
+#         resp presigned url
+#   user <---------------------- this service
+#
+#     wget req presigned url with auth header
+#   user ----------------------> osn
+#
+#         rejects with 400
+#   user <---------------------- osn
+#
 # By sheer luck, the way wget handles HTTP Basic Auth is to hit the endpoint and only sends auth if if a
 # WWW-Authenticate header is returned. This means, the redirect to the presigned URL works!
 #
+#        wget makes request (without auth)
+#   user ----------------------> this service
+#
+#      rejects with www-authenticate
+#   user <---------------------- this service
+#
+#      wget makes request (with basic auth)
+#   user ----------------------> this service
+#
+#          resp with presigned url
+#   user <---------------------- this service
+#
+#        wget req presigned url (without auth)
+#   user ----------------------> osn (req)
+#
+#          resp with data
+#   user <---------------------- this service
+#
 # It also happens to be compatible to examples we showed users in our docs before, which is a nice side effect.
+#
 class BasicTokenPasswordAuthentication(BasicAuthentication):
     def authenticate_credentials(self, userid, password, request=None):
         user, auth = TokenAuthentication().authenticate_credentials(password)
