@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
+
 from .models import *
 
 
@@ -355,3 +357,67 @@ class NodeBuildSerializer(serializers.ModelSerializer):
             "modem",
             "modem_sim_type",
         ]
+
+
+class NodesSerializer(serializers.ModelSerializer):
+    computes = serializers.SerializerMethodField("get_computes")
+    sensors = serializers.SerializerMethodField("get_sensors")
+    modem_sim = SlugRelatedField(read_only=True, slug_field='sim_type', source='modem')
+
+    class Meta:
+        model = NodeData
+        fields = ["id",
+                  "vsn",
+                  # ToDo: "node_id",
+                  "project",  # I still think "SAGE" should be "Sage", but I'll live either way. :)
+                  # ToDo: "focus",
+                  # ToDo: "partner",
+                  # ToDo: "node_type",    # NodeBuild.type ?
+                  "gps_lat",
+                  "gps_lon",
+                  "gps_alt",  # ToDo: or "gps_elevation"?
+                  "address",  # ToDo: validation ?  could be a partial address or even a block address
+                  "address_new",  # ToDo: new field?  descriptions such as "Roof of Utah Natural History Museum", "S. Sacramento & 5th Avenue", "on the dock", "up the hill", etc
+                  "location",  # ToDo: new field?  descriptions such as "Roof of Utah Natural History Museum", "S. Sacramento & 5th Avenue", "on the dock", "up the hill", etc
+                  "commissioned_at",  # ToDo: commission_date might be better, but there's also already registered_at, so I really don't feel strongly.
+                  "registered_at",
+                  "modem_sim",    # ToDo  ?
+                  # ToDo: "files_public",  ?
+                  "phase",
+                  "sensors",
+                  "computes",
+                  "lorawanconnections"  # ToDo  ? // make part of sensors/computes?  Francisco suggested using "capabilities" to differentiate.
+                  ]
+
+    @staticmethod
+    def serialize_compute(c):
+        return {
+            # ToDo: "label": s.label,
+            "name": c.name,
+            "hw_model": c.hardware.hw_model,
+            "manufacturer": c.hardware.manufacturer,
+        }
+
+    def get_computes(self, obj: NodeData):
+        return [self.serialize_compute(c) for c in obj.compute_set.all()]
+
+    def get_sensors(self, obj: NodeData):
+        results = []
+
+        # add all node sensors
+        for s in obj.nodesensor_set.all():
+            results.append(self.serialize_common_sensor(s))
+
+        return results
+
+    @staticmethod
+    def serialize_common_sensor(s):
+        return {
+            # ToDo: "label": s.label,
+            "name": s.name,
+            "hw_model": s.hardware.hw_model,
+            "manufacturer": s.hardware.manufacturer,
+        }
+
+    def get_modem_sim(self, obj: NodeData):
+        return obj.modem.sim_type

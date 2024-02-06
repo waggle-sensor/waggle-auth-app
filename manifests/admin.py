@@ -49,6 +49,14 @@ class ModemInline(nested_admin.NestedStackedInline):
     extra = 0
 
 
+class AddressInline(nested_admin.NestedTabularInline):
+    model = NodeData.address_new.through
+    can_delete = False
+    verbose_name_plural = "Addresses"
+    verbose_name = 'Address'
+    extra = 1  # Number of empty forms to display
+
+
 @admin.register(NodeData)
 class NodeAdmin(nested_admin.NestedModelAdmin):
     # display in admin panel
@@ -82,10 +90,17 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 )
             },
         ),
-        ("Location", {"fields": ("address", "gps_lat", "gps_lon")}),
+        ("Location", {"fields": ("address", "address_new", "gps_lat", "gps_lon")}),
     )
 
-    inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
+    inlines = [AddressInline, ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
+
+    def address_info(self, obj):
+        if obj.address:
+            return f"{obj.address.street_address}, {obj.address.city}, {obj.address.country}"
+        return "No address"
+
+    address_info.short_description = 'Address'
 
     actions = ["autopopulate_from_beekeeper_and_data", "export_as_json"]
 
@@ -151,12 +166,12 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 continue
 
             if (
-                node.registered_at is None
-                or (r.registration_event > node.registered_at)
-                or (
+                    node.registered_at is None
+                    or (r.registration_event > node.registered_at)
+                    or (
                     r.registration_event >= node.registered_at
                     and r.node_id != node.name
-                )
+            )
             ):
                 node.registered_at = r.registration_event
                 node.name = r.node_id
@@ -232,6 +247,12 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
             "json", queryset, stream=response, use_natural_foreign_keys=True
         )
         return response
+
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ('street_address', 'city', 'postal_code', 'country')
+    search_fields = ['street_address', 'city', 'postal_code', 'country']
 
 
 class CSVUploadForm(forms.Form):

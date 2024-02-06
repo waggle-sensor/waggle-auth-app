@@ -17,6 +17,30 @@ class NodeType(models.TextChoices):
     WSN = "WSN", "WSN"
 
 
+
+class Address(models.Model):
+    # Common fields
+    location_notes = models.TextField(blank=True, null=True)
+    street_number = models.CharField(max_length=10, blank=True, null=True)
+    street_address = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state_province = models.CharField(max_length=100, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = "Addresses"
+        verbose_name = 'Address'
+
+    def __str__(self):
+        return (f"{self.street_number} "
+                f"{self.street_address}, "
+                f"{self.city}, "
+                f"{self.country}, "
+                f"{self.state_province}, "
+                f"{self.postal_code}")
+
+
 class NodeData(AbstractNode):
     name = models.CharField("Node ID", max_length=30, blank=True)
     project = models.ForeignKey(
@@ -35,8 +59,12 @@ class NodeData(AbstractNode):
     )
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
+    gps_alt = models.FloatField("Altitude", blank=True, null=True)
     address = models.TextField("Address", blank=True)
+    location = models.TextField("Location", blank=True)
+    address_new = models.ManyToManyField(Address, related_name='nodes', blank=True)
     registered_at = models.DateTimeField(null=True, blank=True)
+    commissioned_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.vsn
@@ -375,6 +403,7 @@ class LorawanConnection(models.Model):
     connection_type = models.CharField(
         max_length=30, choices=CONNECTION_CHOICES, null=False, blank=False
     )
+
     # add more fields later like device class, app name etc- Flozano
 
     class Meta:

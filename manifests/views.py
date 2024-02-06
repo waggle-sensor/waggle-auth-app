@@ -12,7 +12,8 @@ from .serializers import (
     LorawanDeviceSerializer,
     LorawanConnectionSerializer,
     LorawanKeysSerializer,
-    SensorHardwareCRUDSerializer
+    SensorHardwareCRUDSerializer,
+    NodesSerializer
 )
 from rest_framework.response import Response
 from rest_framework import status
@@ -177,3 +178,10 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
             raise Http404  # <- should be 400, add later with error msg
         except ObjectDoesNotExist:
             raise Http404  # <- should be 400, add later with error msg
+
+
+class NodesViewSet(ReadOnlyModelViewSet):
+    queryset = NodeData.objects.all()
+    serializer_class = NodesSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
