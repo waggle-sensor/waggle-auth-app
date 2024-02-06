@@ -22,9 +22,14 @@ INSTALLED_APPS = [
     "manifests",
     "nested_admin",
     "node_auth",
+    "downloads",
 ]
 
 AUTH_USER_MODEL = "app.User"
+AUTH_USER_KEYWORD = "Sage"
+AUTH_NODE_MODEL = "app.Node"
+AUTH_NODE_TOKEN_MODEL = "node_auth.Token"
+AUTH_NODE_KEYWORD = "node_auth"
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
@@ -35,6 +40,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "node_auth.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
@@ -50,6 +56,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+        # keeping custom TokenAuthentication this for backwards compatibility with Sage
         "app.authentication.TokenAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
@@ -150,6 +158,9 @@ else:
 LOGGING = {
     "version": 1,
     "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
         "slack_admins": {
             "level": "ERROR",
             "filters": [],
@@ -159,7 +170,7 @@ LOGGING = {
     "loggers": {
         "django": {
             "level": "ERROR",
-            "handlers": ["slack_admins"],
+            "handlers": ["console", "slack_admins"],
         },
     },
 }
@@ -172,3 +183,12 @@ CORS_ALLOWED_ORIGIN_REGEXES = env("CORS_ALLOWED_ORIGIN_REGEXES", list, [])
 CORS_ALLOW_ALL_ORIGINS = env("CORS_ALLOW_ALL_ORIGINS", bool, False)
 SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", bool, True)
 CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", bool, True)
+
+S3_ENDPOINT = env("S3_ENDPOINT", str, "")
+S3_ACCESS_KEY = env("S3_ACCESS_KEY", str, "")
+S3_SECRET_KEY = env("S3_SECRET_KEY", str, "")
+S3_BUCKET_NAME = env("S3_BUCKET_NAME", str, "")
+S3_ROOT_FOLDER = env("S3_ROOT_FOLDER", str, "")
+S3_REGION = env("S3_REGION", str, "")
+
+TIME_ZONE = "UTC"

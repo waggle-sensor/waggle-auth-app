@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 import uuid
 from .models import Project, Node, UserMembership, NodeMembership
+import pytest
 
 User = get_user_model()
 
@@ -40,6 +41,43 @@ class TestHomeView(TestCase):
         self.assertNotContains(r, "Log in")
         self.assertContains(r, "Log out")
         self.assertContains(r, "View admin site")
+
+
+class TestNodeUsersView(TestCase):
+    """
+    TestNodeUsersView tests that the update ssh public keys renders.
+    """
+
+    def testResponse(self):
+        project = Project.objects.create(name="Test")
+
+        node = Node.objects.create(vsn="W123")
+        NodeMembership.objects.create(project=project, node=node, can_develop=True)
+
+        # create user with dev access to this node
+        user = User.objects.create(
+            username="someuser",
+            ssh_public_keys="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0QZW4toqXPDOKToSeSpaax2ISgzlEA+C0ANphhbHAk",
+        )
+        UserMembership.objects.create(project=project, user=user, can_develop=True)
+
+        # create user without dev access to this node
+        User.objects.create_user(
+            username="anotheruser",
+            ssh_public_keys="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0QZW4toqXPDOKToSeSpaax2ISgzlEA+C0ANphhZAZA",
+        )
+
+        r = self.client.get("/nodes/W123/users")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            r.json(),
+            [
+                {
+                    "user": "someuser",
+                    "ssh_public_keys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0QZW4toqXPDOKToSeSpaax2ISgzlEA+C0ANphhbHAk\n",
+                }
+            ],
+        )
 
 
 class TestUpdateSSHPublicKeysView(TestCase):
@@ -349,13 +387,13 @@ class TestAccessView(TestCase):
             (
                 "tom",
                 "dawn",
-                {"can_develop": True, "can_schedule": True, "can_access_files": True},
+                {"can_develop": True, "can_schedule": True},
             ),
             ("notapproved", "sage", {"can_develop": True, "can_schedule": True}),
             (
                 "notapproved",
                 "dawn",
-                {"can_develop": True, "can_schedule": True, "can_access_files": True},
+                {"can_develop": True, "can_schedule": True},
             ),
         ]
 
@@ -368,7 +406,7 @@ class TestAccessView(TestCase):
             (
                 "dawn",
                 "W001",
-                {"can_schedule": True, "can_develop": True, "can_access_files": True},
+                {"can_schedule": True, "can_develop": True},
             ),
         ]
 
@@ -451,7 +489,7 @@ class TestAccessView(TestCase):
         self.assertEqual(
             r.json(),
             [
-                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
+                {"vsn": "W001", "access": ["develop", "schedule"]},
                 {"vsn": "W002", "access": ["develop"]},
                 {"vsn": "W003", "access": ["develop", "schedule"]},
             ],
@@ -490,7 +528,7 @@ class TestAccessView(TestCase):
         self.assertEqual(
             r.json(),
             [
-                {"vsn": "W001", "access": ["access_files", "develop", "schedule"]},
+                {"vsn": "W001", "access": ["develop", "schedule"]},
                 {"vsn": "W002", "access": ["develop"]},
                 {"vsn": "W003", "access": ["develop", "schedule"]},
             ],

@@ -26,6 +26,7 @@ urlpatterns = [
         "portal-logout/", views.LogoutView.as_view(redirect_field_name="callback")
     ),  # for portal compatibility
     path("nodes/<str:vsn>/authorized_keys", views.NodeAuthorizedKeysView.as_view()),
+    path("nodes/<str:vsn>/users", views.NodeUsersView.as_view()),
 ] + format_suffix_patterns(
     [
         # token views

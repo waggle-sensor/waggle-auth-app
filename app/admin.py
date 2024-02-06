@@ -57,7 +57,8 @@ class UserAdmin(auth_admin.UserAdmin):
 
 @admin.register(Node)
 class NodeAdmin(admin.ModelAdmin):
-    list_display = ("vsn", "mac")
+    list_display = ("vsn", "mac", "commissioning_date", "files_public")
+    list_filter = ("files_public",)
     search_fields = ("vsn", "mac")
     ordering = ("vsn",)
     inlines = (NodeMembershipInline,)

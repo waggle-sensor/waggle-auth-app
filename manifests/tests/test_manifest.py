@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import *
+from manifests.models import *
 
 
 class ManifestInitialTest(TestCase):
@@ -40,6 +40,15 @@ class ManifestTest(TestCase):
             [
                 {"hardware": "bme280", "hw_model": "BME280"},
                 {"hardware": "bme680", "hw_model": "BME680"},
+                {"hardware": "lorawan_1", "hw_model": "1"},
+                {"hardware": "lorawan_2", "hw_model": "2"},
+            ]
+        )
+
+        self.createLorawanDevice(
+            [
+                {"deveui":"123","name":"test","hardware":"lorawan_1"},
+                {"deveui":"111","name":"hello","hardware":"lorawan_2"},
             ]
         )
 
@@ -67,6 +76,26 @@ class ManifestTest(TestCase):
                             "hardware": "rpi4",
                             "sensors": ["bme680"],
                             "zone": "shield",
+                        },
+                    ],
+                    "lorawanconnections": [
+                        {
+                            "connection_type": "OTAA",
+                            "lorawandevice": {
+                                "deveui": "123",
+                                "hardware": {
+                                    "hardware": "lorawan_1",
+                                }
+                            }
+                        },
+                        {
+                            "connection_type": "OTAA",
+                            "lorawandevice": {
+                                "deveui": "111",
+                                "hardware": {
+                                    "hardware": "lorawan_2",
+                                },
+                            },
                         },
                     ],
                 },
@@ -112,6 +141,26 @@ class ManifestTest(TestCase):
                         },
                     },
                 ],
+                "lorawanconnections": [
+                    {
+                        "connection_type": "OTAA",
+                        "lorawandevice": {
+                            "deveui": "123",
+                            "hardware": {
+                                "hardware": "lorawan_1",
+                            }
+                        }
+                    },
+                    {
+                        "connection_type": "OTAA",
+                        "lorawandevice": {
+                            "deveui": "111",
+                            "hardware": {
+                                "hardware": "lorawan_2",
+                            },
+                        },
+                    },
+                ],
             },
         )
 
@@ -154,6 +203,22 @@ class ManifestTest(TestCase):
                         hardware=SensorHardware.objects.get(hardware=sensor),
                         scope=compute_obj,
                     )
+            for lc in manifest["lorawanconnections"]:
+                lc_obj = LorawanConnection.objects.create(
+                    node=node_obj,
+                    connection_type=lc["connection_type"],
+                    lorawan_device=LorawanDevice.objects.get(deveui=lc["lorawandevice"]["deveui"])
+                )
+
+    def createLorawanDevice(self, device):
+        """
+        Helper function which populates lorawan device test data.
+        """
+        for item in device:
+            LorawanDevice.objects.create(
+                deveui=item["deveui"], name=item["name"], hardware=SensorHardware.objects.get(hardware=item["hardware"])
+            )
+
 
     def assertManifestContainsSubset(self, item, expect):
         """
@@ -180,33 +245,6 @@ class ManifestTest(TestCase):
             self.assertAlmostEqual(item, expect)
         else:
             self.assertEqual(item, expect)
-
-
-class SensorHardwareViewsTest(TestCase):
-    def setUp(self):
-        SensorHardware.objects.create(hardware="gps", hw_model="A GPS")
-        SensorHardware.objects.create(hardware="raingauge", hw_model="RG-15")
-
-    def test_list_view(self):
-        r = self.client.get("/sensors/")
-        self.assertEqual(r.status_code, 200)
-        items = r.json()
-        self.assertCountEqual(
-            [item["hardware"] for item in items], ["gps", "raingauge"]
-        )
-
-    def test_detail_view(self):
-        r = self.client.get("/sensors/gps/")
-        self.assertEqual(r.status_code, 200)
-        item = r.json()
-        self.assertDictContainsSubset(
-            {
-                "hardware": "gps",
-                "hw_model": "A GPS",
-            },
-            item,
-        )
-
 
 class NodeBuildsTest(TestCase):
     def test_list(self):

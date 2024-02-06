@@ -2,16 +2,10 @@
 Provides token authentication policies for nodes. - Grabbed from authentication module in rest_framework
 from rest_framework import authentication <- original
 """
-import base64
-import binascii
-
-from django.contrib.auth import authenticate
-from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.translation import gettext_lazy as _
-
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from .models import Token
-
+from node_auth import get_node_token_keyword, get_node_token_model
 
 def get_authorization_header(request):
     """
@@ -25,13 +19,6 @@ def get_authorization_header(request):
         auth = auth.encode(HTTP_HEADER_ENCODING)
     return auth
 
-
-class CSRFCheck(CsrfViewMiddleware):
-    def _reject(self, request, reason):
-        # Return the failure reason instead of an HttpResponse
-        return reason
-
-
 class BaseAuthentication:
     """
     All authentication classes should extend BaseAuthentication.
@@ -39,7 +26,7 @@ class BaseAuthentication:
 
     def authenticate(self, request):
         """
-        Authenticate the request and return a two-tuple of (user, token).
+        Authenticate the request and return a two-tuple of (node, token).
         """
         raise NotImplementedError(".authenticate() must be overridden.")
 
@@ -51,7 +38,6 @@ class BaseAuthentication:
         """
         pass
 
-
 class TokenAuthentication(BaseAuthentication):
     """
     Simple token based authentication.
@@ -62,8 +48,8 @@ class TokenAuthentication(BaseAuthentication):
         Authorization: node_auth 401f7ac837da42b97f613d789819ff93537bee6a
     """
 
-    keyword = "node_auth"
-    model = Token
+    keyword = get_node_token_keyword()
+    model = get_node_token_model()
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()
@@ -95,8 +81,8 @@ class TokenAuthentication(BaseAuthentication):
         except model.DoesNotExist:
             raise exceptions.AuthenticationFailed(_("Invalid token."))
 
-        # if not token.node.is_active: #need to add "is_active" to node model in manifest app
-        #     raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
+        if not token.node.is_active: 
+            raise exceptions.AuthenticationFailed(_('Node inactive or deleted.'))
 
         return (token.node, token)
 

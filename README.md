@@ -2,7 +2,7 @@
 
 This Django project provides a few different APIs and services for Waggle. They are roughly broken down into the following apps:
 
-* `app (to be renamed to something more descriptive)`. Manages user accounts, authentication through Globus, and their permissions across the site. Specfically, scheduler and dev node access is managed by this.
+* `app (to be renamed to something more descriptive)`. Manages user accounts, authentication through Globus, and their permissions across the site. Specifically, scheduler and dev node access is managed by this.
 * `manifests`. Manages data for nodes, hardware and sensors and provides our manifest API.
 
 This list may be expanded upon in the future.
@@ -34,17 +34,19 @@ After activating your venv, install the dev requirements:
 pip install -r requirements/dev.txt
 ```
 
-Next, run the one time database migratations and create a super user.
+Next, run the one time static file collection, database migrations and create a super user.
 
 ```sh
+python manage.py collectstatic
 python manage.py migrate
 python manage.py createsuperuser
 ```
 
-You can run the test suite using:
+You can run the test suite using the following [pytest](https://docs.pytest.org/) command:
 
 ```sh
-python manage.py test
+# This must be done after one time setup, otherwise some tests will fail!
+pytest
 ```
 
 Finally, you can start the dev server:
@@ -92,9 +94,9 @@ You can configure user login via Globus OIDC by performing the following _one ti
 1. Go to [https://developers.globus.org](https://developers.globus.org)
 2. Go to Register your app with Globus
 3. Create an app using `Register a portal, science gateway, or other application you host` with a name like "Test App"
-  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect/`
+  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect/`.
 4. Create a client secret using your new app's dashboard
-  * Copy the following template to `~/waggle-auth-oidc.env` and fill in your Client UUID, client secret and redirect URL:
+  * Copy the following template to `~/waggle-auth-oidc.env` and fill in your Client UUID and client secret:
 
 ```sh
 export OIDC_CLIENT_ID="Your Client UUID!"
@@ -116,7 +118,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 user = User.objects.get(username="MY USERNAME")
 user.is_staff = True
-user.is_admin = True
 user.is_superuser = True
 user.save()
 ```

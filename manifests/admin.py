@@ -422,8 +422,8 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
 
 @admin.register(LorawanDevice)
 class LorawanDeviceAdmin(admin.ModelAdmin):
-    list_display = ["device_name", "deveui", "battery_level"]
-    search_fields = ["device_name", "deveui"]
+    list_display = ["name", "deveui", "battery_level"]
+    search_fields = ["name", "deveui"]
 
 
 @admin.register(LorawanConnection)

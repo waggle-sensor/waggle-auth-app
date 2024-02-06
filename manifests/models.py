@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from node_auth.contrib.auth.models import AbstractNode
 
 
 class NodePhase(models.TextChoices):
@@ -14,6 +15,7 @@ class NodePhase(models.TextChoices):
 class NodeType(models.TextChoices):
     BLADE = "Blade", "Blade"
     WSN = "WSN", "WSN"
+
 
 
 class Address(models.Model):
@@ -39,8 +41,7 @@ class Address(models.Model):
                 f"{self.postal_code}")
 
 
-class NodeData(models.Model):
-    vsn = models.CharField("VSN", max_length=30, unique="True")
+class NodeData(AbstractNode):
     name = models.CharField("Node ID", max_length=30, blank=True)
     project = models.ForeignKey(
         "NodeBuildProject", null=True, blank=True, on_delete=models.SET_NULL
@@ -68,8 +69,8 @@ class NodeData(models.Model):
     def __str__(self):
         return self.vsn
 
-    class Meta:
-        verbose_name_plural = "Nodes"
+    # class Meta:
+    #     verbose_name_plural = "Nodes"
 
 
 ModemModels = [
@@ -131,7 +132,7 @@ class Modem(models.Model):
 
 class AbstractHardware(models.Model):
     hardware = models.CharField(max_length=100)
-    hw_model = models.CharField(max_length=30, blank=True)
+    hw_model = models.CharField(max_length=30, null=False, blank=False, help_text='The model number of your sensor preferably without the manufacturer name in it.')
     hw_version = models.CharField(max_length=30, blank=True)
     sw_version = models.CharField(max_length=30, blank=True)
     manufacturer = models.CharField(max_length=255, default="", blank=True)
@@ -205,7 +206,9 @@ class Compute(models.Model):
 
 
 class AbstractSensor(models.Model):
-    hardware = models.ForeignKey(SensorHardware, on_delete=models.CASCADE, blank=True)
+    hardware = models.ForeignKey(
+        SensorHardware, on_delete=models.CASCADE, blank=True, null=True
+    )
     name = models.CharField(max_length=30, blank=True)
     labels = models.ManyToManyField("Label", blank=True)
     serial_no = models.CharField(max_length=30, default="", blank=True)
@@ -354,23 +357,22 @@ class NodeBuild(models.Model):
             )
 
 
-class LorawanDevice(models.Model):
+class LorawanDevice(AbstractSensor):
     deveui = models.CharField(
         max_length=16, primary_key=True, unique=True, null=False, blank=False
     )
-    device_name = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
     battery_level = models.DecimalField(
         max_digits=5, decimal_places=2, null=True, blank=True
     )
-
-    # add more fields later like compatible device classes, compatible connection type, datasheet etc- Flozano
+    # add more fields later like compatible device classes, compatible connection type etc- Flozano
 
     class Meta:
         verbose_name = "Lorawan Device"
         verbose_name_plural = "Lorawan Devices"
 
     def __str__(self):
-        return str(self.device_name) + "-" + str(self.deveui)
+        return str(self.name) + "-" + str(self.deveui)
 
     def natural_key(self):
         return self.deveui

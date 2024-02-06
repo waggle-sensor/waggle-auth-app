@@ -4,11 +4,46 @@ from rest_framework.relations import SlugRelatedField
 from .models import *
 
 
-class SensorHardwareSerializer(serializers.ModelSerializer):
+class SensorViewSerializer(serializers.ModelSerializer):
     # replace capabilities IDs by their names
     capabilities = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="capability", required=False
     )
+    vsns = serializers.SerializerMethodField()
+
+    def get_vsns(self, obj):
+        compute_sensors = obj.computesensor_set.all()
+        node_sensors = obj.nodesensor_set.all()
+        lorawan_sensors = obj.lorawandevice_set.all()
+        lorawan_connections = [ld.lorawanconnections.all() for ld in lorawan_sensors]
+        nodes = (
+            [s.scope.node for s in compute_sensors]
+            + [s.node for s in node_sensors]
+            + [lc[0].node for lc in lorawan_connections]
+        )
+
+        project = self.context["request"].query_params.get("project")
+        if project:
+            projects = project.split(",")
+            nodes = [
+                node
+                for node in nodes
+                if node.project
+                and node.project.name.lower() in (p.lower() for p in projects)
+            ]
+
+        phase = self.context["request"].query_params.get("phase")
+        if phase:
+            phases = phase.split(",")
+            nodes = [
+                node
+                for node in nodes
+                if node.phase.lower() in (p.lower() for p in phases)
+            ]
+
+        vsns = sorted(set([node.vsn for node in nodes]))
+
+        return vsns
 
     class Meta:
         model = SensorHardware
@@ -22,8 +57,13 @@ class SensorHardwareSerializer(serializers.ModelSerializer):
             "datasheet",
             "description",
             "capabilities",
+            "vsns",
         ]
 
+class SensorHardwareCRUDSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SensorHardware
+        fields = "__all__"
 
 class ModemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,16 +78,119 @@ class LorawanDeviceSerializer(serializers.ModelSerializer):
 
 
 class LorawanConnectionSerializer(serializers.ModelSerializer):
-    node = serializers.CharField(
-        source="node.vsn"
-    )  # Use the 'vsn' field as the source for node field
-    lorawan_device = serializers.CharField(
-        source="lorawan_device.deveui"
-    )  # Use the 'deveui' field as the source for lorawan device field
+    node = (
+        serializers.CharField()
+    )  # turn into char field to get rid of error ""Incorrect type. Expected pk value, received str.""
 
     class Meta:
         model = LorawanConnection
         fields = "__all__"
+
+    def get_node(self, vsn):
+        """Validate and retrieve the NodeData instance"""
+        try:
+            node = NodeData.objects.get(vsn=vsn)
+        except NodeData.DoesNotExist:
+            raise serializers.ValidationError(
+                {"node": [f'Invalid vsn "{vsn}" - object does not exist.']}
+            )
+        return node
+
+    def get_lookup_records(self, validated_data):
+        """Retrieve lookup field record based on custom logic"""
+        node_data = validated_data.pop("node", None)
+
+        if node_data:
+            validated_data["node"] = self.get_node(node_data)
+
+        return validated_data
+
+    def create(self, validated_data):
+        """
+        Retrieve lookup field records based on validated data
+        to then pass in to parent create function
+        """
+        validated_data = self.get_lookup_records(validated_data)
+        # this has to be added because serializer is checking for node pk and lorawan device pk so it passes since im using node vsn NOT pk
+        #  serializer thinks a lc has not been created with this combination of node and lorawan device and causes a server error - FL 01/26/24
+        if LorawanConnection.objects.filter(node=validated_data["node"], lorawan_device=validated_data["lorawan_device"]).exists():
+            raise serializers.ValidationError(
+                {"node-lorawan_device": [f'Lorawan connection with this node and lorawan_device already exists']}
+            )
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Retrieve lookup field records based on validated data
+        to then pass in to parent update function
+        """
+        return super().update(instance, self.get_lookup_records(validated_data))
+
+
+class LorawanKeysSerializer(serializers.ModelSerializer):
+    lorawan_connection = serializers.CharField()
+
+    class Meta:
+        model = LorawanKeys
+        fields = "__all__"
+
+    def validate_lorawan_connection(self, value):
+        """Ensure that lorawan_connection is in the format "node-device_name-deveui"""
+        try:
+            node_vsn, device_name, deveui = value.split("-")
+        except ValueError:
+            raise serializers.ValidationError(
+                "Invalid lorawan_connection format. Use 'node-device_name-deveui'."
+            )
+        return value
+
+    def get_lc(self, lc_str):
+        """Validate and retrieve the lorawan connection instance"""
+        try:
+            node_vsn, lorawan_device_name, lorawan_device_deveui = lc_str.split("-")
+            lc = LorawanConnection.objects.get(
+                node__vsn=node_vsn,
+                lorawan_device__name=lorawan_device_name,
+                lorawan_device__deveui=lorawan_device_deveui,
+            )
+        except LorawanConnection.DoesNotExist:
+            raise serializers.ValidationError(
+                {
+                    "lorawan_connection": [
+                        f'Invalid connection "{lc_str}" - object does not exist.'
+                    ]
+                }
+            )
+        return lc
+
+    def get_lookup_records(self, validated_data):
+        """Retrieve lookup field record based on custom logic"""
+        lc = validated_data.pop("lorawan_connection", None)
+
+        if lc:
+            validated_data["lorawan_connection"] = self.get_lc(lc)
+
+        return validated_data
+
+    def create(self, validated_data):
+        """
+        Retrieve lookup field records based on validated data
+        to then pass in to parent create function
+        """
+        # same issue here as lorawan connection serializer - FL
+        validated_data = self.get_lookup_records(validated_data)
+        if LorawanKeys.objects.filter(lorawan_connection=validated_data["lorawan_connection"]).exists():
+            raise serializers.ValidationError(
+                {"lorawan_connection": [f'Lorawan Key with this lorawan_connection already exists']}
+            )
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Retrieve lookup field records based on validated data
+        to then pass in to parent update function
+        """
+        return super().update(instance, self.get_lookup_records(validated_data))
 
 
 class ManifestSerializer(serializers.ModelSerializer):
@@ -154,8 +297,9 @@ def serialize_compute_hardware(h):
 def serialize_lorawan_devices(l):
     return {
         "deveui": l.deveui,
-        "device_name": l.device_name,
+        "name": l.name,
         "battery_level": l.battery_level,
+        "hardware": serialize_common_hardware(l.hardware)
     }
 
 
@@ -166,6 +310,7 @@ def serialize_lorawan_connections(l):
         "last_seen_at": l.last_seen_at,
         "margin": l.margin,
         "expected_uplink_interval_sec": l.expected_uplink_interval_sec,
+        "connection_type": l.connection_type,
         "lorawandevice": serialize_lorawan_devices(l.lorawan_device),
     }
 

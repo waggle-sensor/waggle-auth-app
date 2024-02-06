@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from node_auth.contrib.auth.models import AbstractNode
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
@@ -50,12 +51,10 @@ class User(AbstractUser):
         return reverse("app:user-detail", kwargs={"username": self.username})
 
 
-class Node(models.Model):
-    vsn = models.CharField("VSN", max_length=10, unique=True)
+class Node(AbstractNode):
     mac = models.CharField("MAC", max_length=16, unique=True, null=True, blank=True)
-
-    def __str__(self):
-        return self.vsn
+    files_public = models.BooleanField(default=False)
+    commissioning_date = models.DateTimeField(null=True, blank=True)
 
 
 @receiver(post_save, sender=Node)
@@ -125,9 +124,6 @@ class NodeMembership(models.Model):
         "Develop?",
         default=False,
         help_text="Designates whether node allows developer access.",
-    )
-    can_access_files = models.BooleanField(
-        "Files?", default=False, help_text="Designates whether node allows file access."
     )
 
     def __str__(self):

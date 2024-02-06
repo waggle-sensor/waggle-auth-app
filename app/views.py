@@ -23,6 +23,7 @@ from .serializers import UserSerializer, UserProfileSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
 from .models import Node
+import re
 
 User = get_user_model()
 
@@ -124,7 +125,7 @@ class UserAccessView(APIView):
 
         access_by_vsn = {}
 
-        for access in ["develop", "schedule", "access_files"]:
+        for access in ["develop", "schedule"]:
             vsns = user.project_set.filter(
                 **{
                     f"usermembership__can_{access}": True,
@@ -154,10 +155,18 @@ class NodeAuthorizedKeysView(APIView):
         except Node.DoesNotExist:
             raise Http404
 
-        user_ssh_public_keys = node.project_set.filter(
+        queryset = node.project_set.filter(
             usermembership__can_develop=True,
             nodemembership__can_develop=True,
-        ).values_list("users__ssh_public_keys", flat=True)
+        )
+
+        user_filter = request.query_params.get("user")
+        if user_filter:
+            queryset = queryset.filter(users__username=user_filter)
+
+        user_ssh_public_keys = queryset.values_list(
+            "users__ssh_public_keys", flat=True
+        ).distinct()
 
         keys = []
 
@@ -167,6 +176,45 @@ class NodeAuthorizedKeysView(APIView):
         return HttpResponse("\n".join(keys), content_type="text/plain")
         # TODO(sean) figure out correct way to get rest framework to return plain text
         # return Response("\n".join(keys), content_type="text/plain")
+
+
+class NodeUsersView(APIView):
+    """
+    This view provides the list of users and their ssh public keys who have developer access to a specific node.
+
+    TODO(sean) Consider adding an endpoint which authenticates a username + ssh public key instead of providing
+    the list for local tracking.
+    """
+
+    permission_classes = [AllowAny]
+
+    # Used to filter only keys with valid type and content. This also excludes the comment to prevent accidentally
+    # leaking sensitive information about user, even if this is unlikely to happen.
+    ssh_public_key_pattern = re.compile(r"(ssh-\S+\s+\S+)")
+
+    def get(self, request: Request, vsn: str) -> Response:
+        try:
+            node = Node.objects.get(vsn=vsn)
+        except Node.DoesNotExist:
+            raise Http404
+
+        items = node.project_set.filter(
+            usermembership__can_develop=True,
+            nodemembership__can_develop=True,
+        ).values_list("users__username", "users__ssh_public_keys")
+
+        results = [
+            {
+                "user": username,
+                "ssh_public_keys": "".join(
+                    s + "\n"
+                    for s in self.ssh_public_key_pattern.findall(ssh_public_keys)
+                ),
+            }
+            for username, ssh_public_keys in items
+        ]
+
+        return Response(results)
 
 
 class UpdateSSHPublicKeysView(LoginRequiredMixin, FormView):

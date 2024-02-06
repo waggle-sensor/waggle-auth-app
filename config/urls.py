@@ -38,4 +38,5 @@ urlpatterns = [
         oidc_views.RedirectView.as_view(complete_login_url="app:complete-login"),
         name="oauth2-redirect",
     ),
+    path("downloads/", include("downloads.urls")),
 ]
