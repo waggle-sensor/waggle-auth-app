@@ -11,6 +11,21 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name="nodedata",
+            name="commissioned_at",
+            field=models.DateTimeField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name="nodedata",
+            name="gps_alt",
+            field=models.FloatField(blank=True, null=True, verbose_name="Altitude"),
+        ),
+        migrations.AddField(
+            model_name="nodedata",
+            name="location",
+            field=models.TextField(blank=True, verbose_name="Location"),
+        ),
         migrations.AlterModelOptions(
             name="nodedata",
             options={"verbose_name": "node", "verbose_name_plural": "nodes"},
