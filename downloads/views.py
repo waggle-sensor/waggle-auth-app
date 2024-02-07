@@ -1,16 +1,17 @@
 from typing import Any
 from django.http import (
     HttpRequest,
+    HttpResponse,
     HttpResponseRedirect,
     HttpResponseNotFound,
 )
 from django.http.response import HttpResponseBase
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from app.models import Node, Project
 from minio import Minio
+from minio.error import S3Error
 from datetime import datetime, timedelta, timezone
 from django.conf import settings
 import rest_framework.authentication
@@ -18,14 +19,8 @@ import app.authentication
 from .authentication import BasicTokenPasswordAuthentication
 
 
-def get_presigned_url_for_download(
-    method: str, job_id: str, task_id: str, node_id: str, timestamp_and_filename: str
-):
-    object_name = "/".join(
-        ["node-data", job_id, task_id, node_id, timestamp_and_filename]
-    )
-
-    client = Minio(
+def get_minio_client():
+    return Minio(
         endpoint=settings.S3_ENDPOINT,
         access_key=settings.S3_ACCESS_KEY,
         secret_key=settings.S3_SECRET_KEY,
@@ -33,11 +28,32 @@ def get_presigned_url_for_download(
         secure=True,
     )
 
+
+def get_object_name(
+    job_id: str, task_id: str, node_id: str, timestamp_and_filename: str
+):
+    return "/".join(["node-data", job_id, task_id, node_id, timestamp_and_filename])
+
+
+def get_presigned_url(
+    job_id: str, task_id: str, node_id: str, timestamp_and_filename: str
+):
+    client = get_minio_client()
+    object_name = get_object_name(job_id, task_id, node_id, timestamp_and_filename)
     return client.get_presigned_url(
-        method=method,
+        method="GET",
         bucket_name=settings.S3_BUCKET_NAME,
         object_name=object_name,
         expires=timedelta(seconds=60),
+    )
+
+
+def stat_object(job_id: str, task_id: str, node_id: str, timestamp_and_filename: str):
+    client = get_minio_client()
+    object_name = get_object_name(job_id, task_id, node_id, timestamp_and_filename)
+    return client.stat_object(
+        bucket_name=settings.S3_BUCKET_NAME,
+        object_name=object_name,
     )
 
 
@@ -94,15 +110,23 @@ class DownloadsView(APIView):
         timestamp_and_filename: str,
         format=None,
     ):
-        return HttpResponseRedirect(
-            get_presigned_url_for_download(
-                "HEAD",
-                job_id,
-                task_id,
-                node_id,
-                timestamp_and_filename,
+        client = get_minio_client()
+        object_name = get_object_name(job_id, task_id, node_id, timestamp_and_filename)
+
+        try:
+            obj = client.stat_object(
+                bucket_name=settings.S3_BUCKET_NAME,
+                object_name=object_name,
             )
-        )
+        except S3Error:
+            return HttpResponseNotFound("File not found")
+
+        headers = {
+            "X-Object-Content-Length": str(obj.size),
+            "X-Object-Content-Type": obj.content_type,
+        }
+
+        return HttpResponse(headers=headers)
 
     def get(
         self,
@@ -115,8 +139,7 @@ class DownloadsView(APIView):
     ):
         if self.file_is_public:
             return HttpResponseRedirect(
-                get_presigned_url_for_download(
-                    "GET",
+                get_presigned_url(
                     job_id,
                     task_id,
                     node_id,
@@ -131,11 +154,10 @@ class DownloadsView(APIView):
         ).exists()
 
         if not has_object_permission:
-            return Response("Permission denied", status=status.HTTP_403_FORBIDDEN)
+            return HttpResponse("Permission denied", status=status.HTTP_403_FORBIDDEN)
 
         return HttpResponseRedirect(
-            get_presigned_url_for_download(
-                "GET",
+            get_presigned_url(
                 job_id,
                 task_id,
                 node_id,
