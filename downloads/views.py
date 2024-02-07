@@ -2,6 +2,7 @@ from typing import Any
 from django.http import (
     HttpRequest,
     HttpResponseRedirect,
+    HttpResponseNotFound,
 )
 from django.http.response import HttpResponseBase
 from rest_framework.response import Response
@@ -62,7 +63,7 @@ class DownloadsView(APIView):
         try:
             self.node = Node.objects.get(mac__iexact=kwargs["node_id"])
         except Node.DoesNotExist:
-            return Response("Download not found", status=status.HTTP_404_NOT_FOUND)
+            return HttpResponseNotFound("File not found")
 
         # TODO check ValueError here
         file_timestamp = get_timestamp_for_timestamp_and_filename_string(
