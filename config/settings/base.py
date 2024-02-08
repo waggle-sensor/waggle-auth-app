@@ -185,6 +185,11 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS", list, [])
 CORS_ALLOWED_ORIGIN_REGEXES = env("CORS_ALLOWED_ORIGIN_REGEXES", list, [])
 CORS_ALLOW_ALL_ORIGINS = env("CORS_ALLOW_ALL_ORIGINS", bool, False)
 CORS_ALLOW_CREDENTIALS = env("CORS_ALLOW_CREDENTIALS", bool, False)
+CORS_EXPOSE_HEADERS = [
+    # These x-object headers are sent by the downloads app.
+    "x-object-content-length",
+    "x-object-content-type",
+]
 
 SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", bool, True)
 SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", str, "Lax")
