@@ -23,7 +23,10 @@ INSTALLED_APPS = [
     "nested_admin",
     "node_auth",
     "downloads",
+    "address"
 ]
+
+GOOGLE_API_KEY = 'AIzaSyAjSNS__iwNzXRZOyIqlYxQ9qAwAqYdpWc' #<-TODO:create a waggle google acct and replace
 
 AUTH_USER_MODEL = "app.User"
 AUTH_USER_KEYWORD = "Sage"

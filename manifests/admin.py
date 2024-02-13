@@ -90,7 +90,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 )
             },
         ),
-        ("Location", {"fields": ("address", "address_new", "gps_lat", "gps_lon")}),
+        ("Location", {"fields": ("address", "address_new", "address_2", "gps_lat", "gps_lon")}),
     )
 
     inlines = [AddressInline, ModemInline, ComputeInline, NodeSensorInline, ResourceInline]

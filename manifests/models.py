@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from node_auth.contrib.auth.models import AbstractNode
-
+from address.models import AddressField
 
 class NodePhase(models.TextChoices):
     DEPLOYED = "Deployed"
@@ -63,6 +63,7 @@ class NodeData(AbstractNode):
     address = models.TextField("Address", blank=True)
     location = models.TextField("Location", blank=True)
     address_new = models.ManyToManyField(Address, related_name='nodes', blank=True)
+    address_2 = AddressField(related_name='node', blank=True, null=True)
     registered_at = models.DateTimeField(null=True, blank=True)
     commissioned_at = models.DateTimeField(null=True, blank=True)
 
