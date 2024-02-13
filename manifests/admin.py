@@ -49,14 +49,6 @@ class ModemInline(nested_admin.NestedStackedInline):
     extra = 0
 
 
-class AddressInline(nested_admin.NestedTabularInline):
-    model = NodeData.address_new.through
-    can_delete = False
-    verbose_name_plural = "Addresses"
-    verbose_name = 'Address'
-    extra = 1  # Number of empty forms to display
-
-
 @admin.register(NodeData)
 class NodeAdmin(nested_admin.NestedModelAdmin):
     # display in admin panel
@@ -90,10 +82,10 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 )
             },
         ),
-        ("Location", {"fields": ("address", "address_new", "address_2", "gps_lat", "gps_lon")}),
+        ("Location", {"fields": ("address", "address_new", "gps_lat", "gps_lon")}),
     )
 
-    inlines = [AddressInline, ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
+    inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
 
     def address_info(self, obj):
         if obj.address:
@@ -247,12 +239,6 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
             "json", queryset, stream=response, use_natural_foreign_keys=True
         )
         return response
-
-
-@admin.register(Address)
-class AddressAdmin(admin.ModelAdmin):
-    list_display = ('street_address', 'city', 'postal_code', 'country')
-    search_fields = ['street_address', 'city', 'postal_code', 'country']
 
 
 class CSVUploadForm(forms.Form):
