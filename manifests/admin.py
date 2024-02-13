@@ -58,7 +58,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         "phase",
         "project",
         "focus",
-        "address",
+        "location",
         "gps_lat",
         "gps_lon",
         "get_computes",
@@ -84,7 +84,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 )
             },
         ),
-        ("Location", {"fields": ("address", "address_new", "gps_lat", "gps_lon")}),
+        ("Location", {"fields": ("location", "address_new", "gps_lat", "gps_lon")}),
     )
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
