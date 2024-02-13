@@ -57,6 +57,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         "name",
         "phase",
         "project",
+        "focus",
         "address",
         "gps_lat",
         "gps_lon",
@@ -76,6 +77,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                     "name",
                     "phase",
                     "project",
+                    "focus",
                     "notes",
                     "tags",
                     "registered_at",
@@ -468,6 +470,7 @@ admin.site.register(Tag)
 admin.site.register(Capability)
 
 admin.site.register(NodeBuildProject)
+admin.site.register(ProjectFocus)
 
 
 @admin.register(NodeBuild)
