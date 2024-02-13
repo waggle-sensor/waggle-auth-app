@@ -39,7 +39,7 @@ class NodeData(AbstractNode):
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
     gps_alt = models.FloatField("Altitude", blank=True, null=True)
     location = models.TextField("Location", blank=True, db_column="location")
-    address_new = AddressField(related_name='node', blank=True, null=True)
+    address = AddressField(related_name='node', blank=True, null=True)
     registered_at = models.DateTimeField(null=True, blank=True)
     commissioned_at = models.DateTimeField(null=True, blank=True)
 

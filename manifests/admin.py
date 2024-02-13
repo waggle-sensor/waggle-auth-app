@@ -58,14 +58,14 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         "phase",
         "project",
         "focus",
-        "location",
+        "address",
         "gps_lat",
         "gps_lon",
         "get_computes",
         "registered_at",
     )
     list_filter = ("phase", "project", "registered_at")
-    search_fields = ("vsn", "name", "phase", "notes", "address", "compute__name")
+    search_fields = ("vsn", "name", "phase", "notes", "location", "compute__name")
     ordering = ("vsn",)
 
     fieldsets = (
@@ -84,7 +84,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 )
             },
         ),
-        ("Location", {"fields": ("location", "address_new", "gps_lat", "gps_lon")}),
+        ("Location", {"fields": ("location", "address", "gps_lat", "gps_lon")}),
     )
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
