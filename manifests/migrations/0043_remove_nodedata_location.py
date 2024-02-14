@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("manifests", "0043_projectfocus_nodedata_focus"),
+        ("manifests", "0042_remove_nodedata_address_2_and_more"),
     ]
 
     operations = [

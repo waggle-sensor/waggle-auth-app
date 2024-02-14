@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("manifests", "0045_rename_address"),
+        ("manifests", "0044_rename_address"),
     ]
 
     operations = [

@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("manifests", "0044_remove_nodedata_location"),
+        ("manifests", "0043_remove_nodedata_location"),
     ]
 
     operations = [

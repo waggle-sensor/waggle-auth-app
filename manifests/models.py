@@ -22,7 +22,10 @@ class NodeData(AbstractNode):
         "NodeBuildProject", null=True, blank=True, on_delete=models.SET_NULL
     )
     focus = models.ForeignKey(
-        "ProjectFocus", null=True, blank=True, on_delete=models.SET_NULL
+        "NodeBuildProjectFocus", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    partner = models.ForeignKey(
+        "NodeBuildProjectPartner", null=True, blank=True, on_delete=models.SET_NULL
     )
     phase = models.CharField(
         "Phase", max_length=30, null=True, choices=NodePhase.choices, blank=True
@@ -419,9 +422,18 @@ class LorawanKeys(models.Model):
     def __str__(self):
         return str(self.lorawan_connection)
 
-class ProjectFocus(models.Model):
+class NodeBuildProjectFocus(models.Model):
     class Meta:
-        verbose_name_plural = "Project Focus"
+        verbose_name_plural = "Node Build Project Focuses"
+
+    name = models.CharField("Name", max_length=64)
+
+    def __str__(self):
+        return self.name
+
+class NodeBuildProjectPartner(models.Model):
+    class Meta:
+        verbose_name_plural = "Node Build Project Partners"
 
     name = models.CharField("Name", max_length=64)
 
