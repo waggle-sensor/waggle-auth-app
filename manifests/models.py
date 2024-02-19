@@ -18,6 +18,18 @@ class NodeType(models.TextChoices):
 
 class NodeData(AbstractNode):
     name = models.CharField("Node ID", max_length=30, blank=True)
+    nodebuild = models.OneToOneField(
+        "NodeBuild",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+    type = models.CharField(
+        "Type",
+        max_length=10,
+        choices=NodeType.choices,
+        default=NodeType.WSN,
+    )
     project = models.ForeignKey(
         "NodeBuildProject", null=True, blank=True, on_delete=models.SET_NULL
     )

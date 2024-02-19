@@ -76,6 +76,8 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                     "vsn",
                     "name",
                     "phase",
+                    "nodebuild",
+                    "type",
                     "project",
                     "partner",
                     "focus",
