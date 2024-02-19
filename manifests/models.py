@@ -272,6 +272,18 @@ class NodeBuild(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
+    focus = models.ForeignKey(
+        "NodeBuildProjectFocus",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+    partner = models.ForeignKey(
+        "NodeBuildProjectPartner",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
     agent = models.BooleanField(
         "Agent",
         default=False,
