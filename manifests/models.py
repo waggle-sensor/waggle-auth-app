@@ -349,6 +349,9 @@ class NodeBuild(models.Model):
         related_name="+",
     )
 
+    def __str__(self):
+        return self.vsn
+
     def clean(self):
         super().clean()
 
