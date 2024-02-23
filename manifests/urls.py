@@ -24,7 +24,7 @@ router.register(
     r"lorawanconnections", LorawanConnectionView, basename="lorawanconnections"
 )
 router.register(r"sensorhardwares", SensorHardwareViewSet_CRUD, basename="sensorhardwares")
-router.register(r"nodes", NodesViewSet)
+router.register(r"api/v-beta/nodes", NodesViewSet)
 
 
 urlpatterns = [

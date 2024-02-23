@@ -179,9 +179,17 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
         except ObjectDoesNotExist:
             raise Http404  # <- should be 400, add later with error msg
 
-
 class NodesViewSet(ReadOnlyModelViewSet):
-    queryset = NodeData.objects.all()
+    queryset = (
+        NodeData.objects.all()
+        .prefetch_related(
+            "nodesensor_set",
+            "compute_set",
+            "lorawanconnections",
+        )
+        .order_by("vsn")
+    )
+    lookup_field = "vsn"
     serializer_class = NodesSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     

@@ -367,39 +367,47 @@ class NodesSerializer(serializers.ModelSerializer):
     computes = serializers.SerializerMethodField("get_computes")
     sensors = serializers.SerializerMethodField("get_sensors")
     modem_sim = SlugRelatedField(read_only=True, slug_field='sim_type', source='modem')
+    project = SlugRelatedField(read_only=True, slug_field='name', source='NodeBuildProject')
+    focus = SlugRelatedField(read_only=True, slug_field='name', source='NodeBuildProjectFocus')
+    partner = SlugRelatedField(read_only=True, slug_field='name', source='NodeBuildProjectPartner')
+    address = SlugRelatedField(read_only=True, slug_field='formatted')
 
     class Meta:
         model = NodeData
         fields = ["id",
                   "vsn",
-                  # ToDo: "node_id",
-                  "project",  # I still think "SAGE" should be "Sage", but I'll live either way. :)
-                  # ToDo: "focus",
-                  # ToDo: "partner",
-                  # ToDo: "node_type",    # NodeBuild.type ?
+                  "name",
+                  "project",
+                  "focus",
+                  "partner",
+                  "type",
                   "gps_lat",
                   "gps_lon",
-                  "gps_alt",  # ToDo: or "gps_elevation"?
-                  "address",  # ToDo: validation ?  could be a partial address or even a block address
-                  "address_new",  # ToDo: new field?  descriptions such as "Roof of Utah Natural History Museum", "S. Sacramento & 5th Avenue", "on the dock", "up the hill", etc
-                  "location",  # ToDo: new field?  descriptions such as "Roof of Utah Natural History Museum", "S. Sacramento & 5th Avenue", "on the dock", "up the hill", etc
-                  "commissioned_at",  # ToDo: commission_date might be better, but there's also already registered_at, so I really don't feel strongly.
+                  "gps_alt",
+                  "address", #TODO: look over not sure how it will print since its a lookup field
+                  "location", 
+                  "commissioned_at",
                   "registered_at",
-                  "modem_sim",    # ToDo  ?
-                  # ToDo: "files_public",  ?
+                  "modem_sim",    #TODO: what other fields are needed
                   "phase",
                   "sensors",
                   "computes",
-                  "lorawanconnections"  # ToDo  ? // make part of sensors/computes?  Francisco suggested using "capabilities" to differentiate.
                   ]
 
     @staticmethod
     def serialize_compute(c):
         return {
-            # ToDo: "label": s.label,
             "name": c.name,
             "hw_model": c.hardware.hw_model,
             "manufacturer": c.hardware.manufacturer,
+        }
+
+    @staticmethod
+    def serialize_common_sensor(s):
+        return {
+            "name": s.name,
+            "hw_model": s.hardware.hw_model,
+            "manufacturer": s.hardware.manufacturer,
         }
 
     def get_computes(self, obj: NodeData):
@@ -412,16 +420,11 @@ class NodesSerializer(serializers.ModelSerializer):
         for s in obj.nodesensor_set.all():
             results.append(self.serialize_common_sensor(s))
 
+        #add all lorawan sensors
+        for s in obj.lorawanconnections.all():
+            results.append(self.serialize_common_sensor(s.lorawan_device))
+
         return results
 
-    @staticmethod
-    def serialize_common_sensor(s):
-        return {
-            # ToDo: "label": s.label,
-            "name": s.name,
-            "hw_model": s.hardware.hw_model,
-            "manufacturer": s.hardware.manufacturer,
-        }
-
-    def get_modem_sim(self, obj: NodeData):
-        return obj.modem.sim_type
+    # def get_modem_sim(self, obj: NodeData):
+    #     return obj.modem.sim_type
