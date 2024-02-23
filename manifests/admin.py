@@ -90,7 +90,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 )
             },
         ),
-        ("Location", {"fields": ("location", "address", "gps_lat", "gps_lon")}),
+        ("Location", {"fields": ("site_id","location", "address", "gps_lat", "gps_lon")}),
     )
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
@@ -479,6 +479,7 @@ admin.site.register(NodeBuildProject)
 admin.site.register(NodeBuildProjectFocus)
 admin.site.register(NodeBuildProjectPartner)
 
+admin.site.register(Site)
 
 @admin.register(NodeBuild)
 class NodeBuildAdmin(admin.ModelAdmin):

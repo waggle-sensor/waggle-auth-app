@@ -18,6 +18,13 @@ class NodeType(models.TextChoices):
 
 class NodeData(AbstractNode):
     name = models.CharField("Node ID", max_length=30, blank=True)
+    site_id = models.ForeignKey(
+        "Site",
+        on_delete=models.SET_NULL,
+        related_name="nodes",
+        null=True,
+        blank=True,
+    )
     nodebuild = models.OneToOneField(
         "NodeBuild",
         null=True,
@@ -466,3 +473,13 @@ class NodeBuildProjectPartner(models.Model):
 
     def __str__(self):
         return self.name
+
+class Site(models.Model):
+    id = models.CharField("Site ID", max_length=10, null=False, blank=False, unique=True, primary_key=True)
+    description = models.TextField("Site Description", null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Sites"
+
+    def __str__(self):
+        return self.site_id
