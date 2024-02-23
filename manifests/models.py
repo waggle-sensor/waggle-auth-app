@@ -482,4 +482,4 @@ class Site(models.Model):
         verbose_name_plural = "Sites"
 
     def __str__(self):
-        return self.site_id
+        return self.id
