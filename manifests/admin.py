@@ -87,6 +87,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                     "notes",
                     "tags",
                     "registered_at",
+                    "commissioned_at"
                 )
             },
         ),
