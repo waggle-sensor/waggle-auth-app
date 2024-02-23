@@ -1,0 +1,27 @@
+{% extends 'admin/change_form.html' %}
+{% block extrahead %}
+{{ block.super }}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script> <!-- TODO: change name? -->
+$(document).ready(function() {
+    $('#id_nodebuild').change(function() {
+        var sourceModelId = $(this).val();
+        if (sourceModelId) {
+            $.ajax({
+                url: '/get_source_data/',
+                data: {
+                    'source_model_id': sourceModelId
+                },
+                dataType: 'json',
+                success: function(data) {
+                    $('#id_type').val(data.type);
+                    $('#id_project').val(data.project);
+                    $('#id_focus').val(data.focus);
+                    $('#id_partner').val(data.partner);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

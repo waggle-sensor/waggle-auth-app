@@ -68,6 +68,9 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
     search_fields = ("vsn", "name", "phase", "notes", "location", "compute__name")
     ordering = ("vsn",)
 
+    #TODO: add script that will transfer fields from node build
+    #change_form_template = "admin/NodeData/change_form.html"
+
     fieldsets = (
         (
             None,
