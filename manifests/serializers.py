@@ -377,18 +377,18 @@ class NodesSerializer(serializers.ModelSerializer):
         fields = ["id",
                   "vsn",
                   "name",
-                  "project",
-                  "focus",
-                  "partner",
+                  "project", #TODO: its not returning the field when I use the slug field
+                  "focus", #TODO: its not returning the field when I use the slug field
+                  "partner", #TODO: its not returning the field when I use the slug field
                   "type",
                   "gps_lat",
                   "gps_lon",
                   "gps_alt",
-                  "address", #TODO: look over not sure how it will print since its a lookup field
+                  "address",
                   "location", 
                   "commissioned_at",
                   "registered_at",
-                  "modem_sim",    #TODO: what other fields are needed
+                  "modem_sim",  #TODO: what other fields are needed
                   "phase",
                   "sensors",
                   "computes",
