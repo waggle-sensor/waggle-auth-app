@@ -434,4 +434,4 @@ class NodesSerializer(serializers.ModelSerializer):
         return results
 
     def get_modem_model(self, obj):
-        return obj.modem.get_model_display() if obj.modem else None
+        return obj.modem.get_model_display() if hasattr(obj, 'modem') else None
