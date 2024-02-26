@@ -453,7 +453,7 @@ class SensorHardwareAdmin(admin.ModelAdmin):
 admin.site.register(
     ResourceHardware,
     list_display=["hardware", "hw_model", "manufacturer"],
-    search_fields=["name"],
+    search_fields=["hardware"],
 )
 
 admin.site.register(Label)
