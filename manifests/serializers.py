@@ -405,6 +405,7 @@ class NodesSerializer(serializers.ModelSerializer):
             "name": c.name,
             "hw_model": c.hardware.hw_model,
             "manufacturer": c.hardware.manufacturer,
+            "capabilities": [cap.capability for cap in c.hardware.capabilities.all()],
         }
 
     @staticmethod
@@ -413,6 +414,7 @@ class NodesSerializer(serializers.ModelSerializer):
             "name": s.name,
             "hw_model": s.hardware.hw_model,
             "manufacturer": s.hardware.manufacturer,
+            "capabilities": [cap.capability for cap in s.hardware.capabilities.all()],
         }
 
     def get_computes(self, obj: NodeData):
