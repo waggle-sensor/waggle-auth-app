@@ -367,6 +367,8 @@ class NodesSerializer(serializers.ModelSerializer):
     computes = serializers.SerializerMethodField("get_computes")
     sensors = serializers.SerializerMethodField("get_sensors")
     modem_sim = SlugRelatedField(read_only=True, slug_field='sim_type', source='modem')
+    modem_model = serializers.SerializerMethodField()
+    modem_carrier = SlugRelatedField(read_only=True, slug_field='carrier', source='modem')
     project = SlugRelatedField(read_only=True, slug_field='name')
     focus = SlugRelatedField(read_only=True, slug_field='name')
     partner = SlugRelatedField(read_only=True, slug_field='name')
@@ -390,7 +392,9 @@ class NodesSerializer(serializers.ModelSerializer):
                   "phase",
                   "commissioned_at",
                   "registered_at",
-                  "modem_sim",  #TODO: what other fields are needed
+                  "modem_sim",
+                  "modem_model",
+                  "modem_carrier",
                   "sensors",
                   "computes",
                   ]
@@ -427,5 +431,5 @@ class NodesSerializer(serializers.ModelSerializer):
 
         return results
 
-    # def get_modem_sim(self, obj: NodeData):
-    #     return obj.modem.sim_type
+    def get_modem_model(self, obj):
+        return obj.modem.get_model_display() if obj.modem else None

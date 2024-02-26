@@ -186,6 +186,7 @@ class NodesViewSet(ReadOnlyModelViewSet):
             "nodesensor_set",
             "compute_set",
             "lorawanconnections",
+            "modem"
         )
         .order_by("vsn")
     )
