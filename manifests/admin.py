@@ -96,13 +96,6 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
 
-    def address_info(self, obj):
-        if obj.address:
-            return f"{obj.address.street_address}, {obj.address.city}, {obj.address.country}"
-        return "No address"
-
-    address_info.short_description = 'Address'
-
     actions = ["autopopulate_from_beekeeper_and_data", "export_as_json"]
 
     def get_queryset(self, request):
