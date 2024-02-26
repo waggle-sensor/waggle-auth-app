@@ -69,7 +69,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
     ordering = ("vsn",)
 
     #TODO: add script that will transfer fields from node build
-    #change_form_template = "admin/NodeData/change_form.html"
+    change_form_template = "admin/NodeData/change_form.html"
 
     fieldsets = (
         (

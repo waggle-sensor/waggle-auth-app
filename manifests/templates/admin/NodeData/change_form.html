@@ -2,26 +2,41 @@
 {% block extrahead %}
 {{ block.super }}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script> <!-- TODO: change name? -->
+<script>
 $(document).ready(function() {
     $('#id_nodebuild').change(function() {
-        var sourceModelId = $(this).val();
-        if (sourceModelId) {
+        if ($(this).find('option:first').is(':selected')) {
+            return;
+        }
+        var vsn = $(this).find('option:selected').text();
+        if (vsn) {
             $.ajax({
-                url: '/get_source_data/',
-                data: {
-                    'source_model_id': sourceModelId
-                },
+                url: '/node-builds/' + vsn, 
                 dataType: 'json',
                 success: function(data) {
-                    $('#id_type').val(data.type);
-                    $('#id_project').val(data.project);
-                    $('#id_focus').val(data.focus);
-                    $('#id_partner').val(data.partner);
+                    setSelectedOption('#id_type', data.type);
+                    setSelectedOption('#id_focus', data.focus);
+                    setSelectedOption('#id_partner', data.partner);
+                    setSelectedOption('#id_project', data.project);
                 }
             });
         }
     });
+
+    function setSelectedOption(dropdownId, value) {
+        var dropdown = $(dropdownId);
+        
+        if (!value) {
+            dropdown.find('option:first').prop('selected', true);
+        }
+        else {
+            dropdown.find('option').each(function() {
+                if ($(this).text() === value) {
+                    $(this).prop('selected', true);
+                }
+            });
+        }
+    }
 });
 </script>
 {% endblock %}
