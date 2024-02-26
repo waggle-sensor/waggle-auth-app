@@ -367,9 +367,9 @@ class NodesSerializer(serializers.ModelSerializer):
     computes = serializers.SerializerMethodField("get_computes")
     sensors = serializers.SerializerMethodField("get_sensors")
     modem_sim = SlugRelatedField(read_only=True, slug_field='sim_type', source='modem')
-    project = SlugRelatedField(read_only=True, slug_field='name', source='NodeBuildProject')
-    focus = SlugRelatedField(read_only=True, slug_field='name', source='NodeBuildProjectFocus')
-    partner = SlugRelatedField(read_only=True, slug_field='name', source='NodeBuildProjectPartner')
+    project = SlugRelatedField(read_only=True, slug_field='name')
+    focus = SlugRelatedField(read_only=True, slug_field='name')
+    partner = SlugRelatedField(read_only=True, slug_field='name')
     address = SlugRelatedField(read_only=True, slug_field='formatted')
 
     class Meta:
@@ -377,19 +377,20 @@ class NodesSerializer(serializers.ModelSerializer):
         fields = ["id",
                   "vsn",
                   "name",
-                  "project", #TODO: its not returning the field when I use the slug field
-                  "focus", #TODO: its not returning the field when I use the slug field
-                  "partner", #TODO: its not returning the field when I use the slug field
+                  "project", 
+                  "focus", 
+                  "partner", 
                   "type",
+                  "site_id",
                   "gps_lat",
                   "gps_lon",
                   "gps_alt",
                   "address",
                   "location", 
+                  "phase",
                   "commissioned_at",
                   "registered_at",
                   "modem_sim",  #TODO: what other fields are needed
-                  "phase",
                   "sensors",
                   "computes",
                   ]
