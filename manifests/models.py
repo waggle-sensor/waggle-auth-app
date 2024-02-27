@@ -475,7 +475,7 @@ class NodeBuildProjectPartner(models.Model):
         return self.name
 
 class Site(models.Model):
-    id = models.CharField("Site ID", max_length=10, null=False, blank=False, unique=True, primary_key=True)
+    id = models.CharField("Site ID", max_length=4, null=False, blank=False, unique=True, primary_key=True)
     description = models.TextField("Site Description", null=True, blank=True)
 
     class Meta:
