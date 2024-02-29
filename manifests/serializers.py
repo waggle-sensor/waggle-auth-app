@@ -372,15 +372,15 @@ class NodesSerializer(serializers.ModelSerializer):
     project = serializers.CharField(source='project.name', read_only=True)
     focus = serializers.CharField(source='focus.name', read_only=True)
     partner = serializers.CharField(source='partner.name', read_only=True)
-    address_formatted = serializers.CharField(source='address.formatted', read_only=True)
-    address_streetnum = serializers.CharField(source='address.street_number', read_only=True)
-    address_route = serializers.CharField(source='address.route', read_only=True)
-    address_town = serializers.CharField(source='address.locality.name', read_only=True)
-    address_postal_code = serializers.CharField(source='address.locality.postal_code', read_only=True)
-    address_state = serializers.CharField(source='address.locality.state.name', read_only=True)
-    address_state_code = serializers.CharField(source='address.locality.state.code', read_only=True)
-    address_country = serializers.CharField(source='address.locality.state.country.name', read_only=True)
-    address_country_code = serializers.CharField(source='address.locality.state.country.code', read_only=True)
+    addr_formatted = serializers.CharField(source='address.formatted', read_only=True)
+    streetnum = serializers.CharField(source='address.street_number', read_only=True)
+    route = serializers.CharField(source='address.route', read_only=True)
+    town = serializers.CharField(source='address.locality.name', read_only=True)
+    postal_code = serializers.CharField(source='address.locality.postal_code', read_only=True)
+    state = serializers.CharField(source='address.locality.state.name', read_only=True)
+    state_code = serializers.CharField(source='address.locality.state.code', read_only=True)
+    country = serializers.CharField(source='address.locality.state.country.name', read_only=True)
+    country_code = serializers.CharField(source='address.locality.state.country.code', read_only=True)
 
     class Meta:
         model = NodeData
@@ -395,15 +395,15 @@ class NodesSerializer(serializers.ModelSerializer):
                   "gps_lat",
                   "gps_lon",
                   "gps_alt",
-                  "address_formatted",
-                  "address_streetnum",
-                  "address_route",
-                  "address_town",
-                  "address_state",
-                  "address_state_code",
-                  "address_postal_code",
-                  "address_country",
-                  "address_country_code",
+                  "addr_formatted",
+                  "streetnum",
+                  "route",
+                  "town",
+                  "state",
+                  "state_code",
+                  "postal_code",
+                  "country",
+                  "country_code",
                   "location", 
                   "phase",
                   "commissioned_at",
