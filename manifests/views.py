@@ -21,6 +21,9 @@ from django.db import IntegrityError
 from node_auth.mixins import NodeAuthMixin, NodeOwnedObjectsMixin
 from app.authentication import TokenAuthentication as UserTokenAuthentication
 from rest_framework.serializers import ValidationError
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet, CharFilter
+from django.db.models import Q
 
 
 class ManifestViewSet(ReadOnlyModelViewSet):
@@ -179,6 +182,23 @@ class LorawanKeysView(NodeOwnedObjectsMixin, ModelViewSet):
         except ObjectDoesNotExist:
             raise Http404  # <- should be 400, add later with error msg
 
+class NodesFilter(FilterSet):
+    phase = CharFilter(method='or_filter')
+    project__name = CharFilter(method='or_filter')
+
+    def or_filter(self, queryset, name, value):
+        # Split the value by comma to handle multiple conditions
+        phases = value.split(',')
+        # Use Q objects to construct an OR condition
+        filter_condition = Q()
+        for phase in phases:
+            filter_condition |= Q(**{name: phase.strip()})
+        return queryset.filter(filter_condition)
+
+    class Meta:
+        model = NodeData
+        fields = ['project__name', 'phase']
+
 class NodesViewSet(ReadOnlyModelViewSet):
     queryset = (
         NodeData.objects.all()
@@ -193,4 +213,6 @@ class NodesViewSet(ReadOnlyModelViewSet):
     lookup_field = "vsn"
     serializer_class = NodesSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NodesFilter
     

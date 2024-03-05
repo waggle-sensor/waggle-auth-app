@@ -23,7 +23,8 @@ INSTALLED_APPS = [
     "nested_admin",
     "node_auth",
     "downloads",
-    "address"
+    "address",
+    "django_filters"
 ]
 
 GOOGLE_API_KEY = 'AIzaSyAjSNS__iwNzXRZOyIqlYxQ9qAwAqYdpWc' #<-TODO:create a waggle google acct and replace
