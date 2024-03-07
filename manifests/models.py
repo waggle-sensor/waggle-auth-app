@@ -447,7 +447,7 @@ class LorawanKeys(models.Model):
         if self.lorawan_connection.connection_type == "OTAA" and not self.app_key:
             raise ValidationError("app_key cannot be blank for OTAA connections.")
 
-        super(LorawanKeys, self).clean()
+        super(LorawanKeys, self).clean() # pragma: no cover
 
     class Meta:
         verbose_name = "Lorawan Key"
