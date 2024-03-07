@@ -292,6 +292,9 @@ class NodeBuildsTest(TestCase):
         )
 
 class NodesViewSetTestCase(TestCase):
+    """
+    Test Case for endpoint /api/v-beta/nodes/
+    """
     def setUp(self):
         createComputeHardware(
             [
