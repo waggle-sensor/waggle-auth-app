@@ -162,29 +162,3 @@ def createManifests(manifests):
                 hardware=ComputeHardware.objects.get(hw_model=compute["hw_model"]),
                 name=compute["name"],
             )
-
-def assertManifestContainsSubset(self, item, expect):
-    """
-    Helper function which checks that expect is a "submanifest" of item.
-
-    NOTE(sean) Unlike the built-in assertDictContainsSubset, this function
-    recursively asserts child fields are equal.
-
-    TODO(sean) I would personally like to keep test code as simple as possible
-    and this is borderline too complicated. We should see if we can change
-    how we're checking all this later.
-    """
-    if isinstance(expect, dict):
-        self.assertIsInstance(item, dict)
-        for k, v in expect.items():
-            self.assertIn(k, item)
-            self.assertManifestContainsSubset(item[k], v)
-    elif isinstance(expect, list):
-        self.assertIsInstance(item, list)
-        self.assertEqual(len(item), len(expect))
-        for a, b in zip(item, expect):
-            self.assertManifestContainsSubset(a, b)
-    elif isinstance(expect, float):
-        self.assertAlmostEqual(item, expect)
-    else:
-        self.assertEqual(item, expect)
