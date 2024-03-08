@@ -661,3 +661,45 @@ class NodesViewSetTestCase(TestCase):
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['vsn'], self.W123_data['vsn'])
+
+@mark.rn
+class NodeData_change_form_TestCase(TestCase):
+    """
+    Test case for manifests/templates/admin/NodeData/change_form.html. As of 03/08/2024, 
+    this is used to transfer values from node build to node data when a node build record 
+    is selected in the node data admin form.
+    """
+    def setUp(self):
+        self.vsn = "W002"
+        self.type = "WSN"
+        self.project = NodeBuildProject.objects.create(name="project")
+        self.focus = NodeBuildProjectFocus.objects.create(name="focus")
+        self.partner = NodeBuildProjectPartner.objects.create(name="partner")
+        NodeBuild.objects.create(
+            vsn=self.vsn, 
+            type=self.type, 
+            project=self.project,
+            focus=self.focus,
+            partner=self.partner
+            )
+        return
+        
+    def test_node_build_endpoint(self):
+        """
+        Test the node build endpoint used in change_form.html specifically the fields retrieved
+        to transfer
+        """
+        r = self.client.get("/node-builds/W002/")
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+
+        self.assertDictContainsSubset(
+            {
+                "vsn": self.vsn,
+                "type": self.type,
+                "project": self.project.name,
+                "focus": self.focus.name,
+                "partner": self.partner.name,
+            },
+            data,
+        )
