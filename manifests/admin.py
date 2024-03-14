@@ -68,7 +68,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
     search_fields = ("vsn", "name", "phase", "notes", "location", "compute__name")
     ordering = ("vsn",)
 
-    change_form_template = "admin/NodeData/change_form.html"
+    # change_form_template = "admin/NodeData/change_form.html"
 
     fieldsets = (
         (
