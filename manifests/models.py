@@ -25,12 +25,6 @@ class NodeData(AbstractNode):
         null=True,
         blank=True,
     )
-    nodebuild = models.OneToOneField(
-        "NodeBuild",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL
-    )
     type = models.CharField(
         "Type",
         max_length=10,
