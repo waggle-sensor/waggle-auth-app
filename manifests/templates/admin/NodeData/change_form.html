@@ -3,11 +3,16 @@
 {{ block.super }}
 <script>
 $(document).ready(function() {
-    $('#id_nodebuild').change(function() {
-        if ($(this).find('option:first').is(':selected')) {
-            return;
-        }
-        var vsn = $(this).find('option:selected').text();
+    var typingTimer;
+    var doneTypingInterval = 800;
+
+    $('#id_vsn').on('input', function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(doneTyping, doneTypingInterval);
+    });
+
+    function doneTyping() {
+        var vsn = $('#id_vsn').val();
         if (vsn) {
             $.ajax({
                 url: '/node-builds/' + vsn, 
@@ -20,7 +25,7 @@ $(document).ready(function() {
                 }
             });
         }
-    });
+    }
 
     function setSelectedOption(dropdownId, value) {
         var dropdown = $(dropdownId);
