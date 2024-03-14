@@ -662,7 +662,6 @@ class NodesViewSetTestCase(TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['vsn'], self.W123_data['vsn'])
 
-@mark.rn
 class NodeData_change_form_TestCase(TestCase):
     """
     Test case for manifests/templates/admin/NodeData/change_form.html. As of 03/08/2024, 
