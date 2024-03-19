@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     "django_filters"
 ]
 
-GOOGLE_API_KEY = 'AIzaSyAjSNS__iwNzXRZOyIqlYxQ9qAwAqYdpWc' #<-TODO:create a waggle google acct and replace
+#Enable to add google address completion
+# GOOGLE_API_KEY = ''
 
 AUTH_USER_MODEL = "app.User"
 AUTH_USER_KEYWORD = "Sage"
