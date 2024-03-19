@@ -12,5 +12,5 @@ pandas==2.1.0
 sage-data-client==0.7.1
 ipython==8.13.2
 minio==7.2.3
-django-address==0.2.8
 django-filter==23.5
+git+https://github.com/waggle-sensor/django-address
