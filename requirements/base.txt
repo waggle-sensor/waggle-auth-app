@@ -14,3 +14,5 @@ ipython==8.13.2
 minio==7.2.3
 django-filter==23.5
 git+https://github.com/waggle-sensor/django-address
+# setuptools needed for python 3.12+
+setuptools==69.2.0
