@@ -8,7 +8,11 @@ django-slack==5.19.0
 django-nested-admin==4.0.2
 django-environ==0.10.0
 whitenoise==6.4.0
-pandas==2.1.0
+pandas==2.2.1
 sage-data-client==0.7.1
 ipython==8.13.2
 minio==7.2.3
+django-filter==23.5
+git+https://github.com/waggle-sensor/django-address
+# setuptools needed for python 3.12+
+setuptools==69.2.0

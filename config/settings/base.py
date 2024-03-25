@@ -23,7 +23,12 @@ INSTALLED_APPS = [
     "nested_admin",
     "node_auth",
     "downloads",
+    "address",
+    "django_filters"
 ]
+
+#Enable to add google address completion
+# GOOGLE_API_KEY = ''
 
 AUTH_USER_MODEL = "app.User"
 AUTH_USER_KEYWORD = "Sage"

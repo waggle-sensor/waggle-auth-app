@@ -57,6 +57,7 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         "name",
         "phase",
         "project",
+        "focus",
         "address",
         "gps_lat",
         "gps_lon",
@@ -64,8 +65,10 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
         "registered_at",
     )
     list_filter = ("phase", "project", "registered_at")
-    search_fields = ("vsn", "name", "phase", "notes", "address", "compute__name")
+    search_fields = ("vsn", "name", "phase", "notes", "location", "compute__name")
     ordering = ("vsn",)
+
+    # change_form_template = "admin/NodeData/change_form.html"
 
     fieldsets = (
         (
@@ -75,14 +78,18 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                     "vsn",
                     "name",
                     "phase",
+                    "type",
                     "project",
+                    "partner",
+                    "focus",
                     "notes",
                     "tags",
                     "registered_at",
+                    "commissioned_at"
                 )
             },
         ),
-        ("Location", {"fields": ("address", "gps_lat", "gps_lon")}),
+        ("Location", {"fields": ("site_id","location", "address", "gps_lat", "gps_lon","gps_alt")}),
     )
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
@@ -151,12 +158,12 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 continue
 
             if (
-                node.registered_at is None
-                or (r.registration_event > node.registered_at)
-                or (
+                    node.registered_at is None
+                    or (r.registration_event > node.registered_at)
+                    or (
                     r.registration_event >= node.registered_at
                     and r.node_id != node.name
-                )
+            )
             ):
                 node.registered_at = r.registration_event
                 node.name = r.node_id
@@ -461,7 +468,10 @@ admin.site.register(Tag)
 admin.site.register(Capability)
 
 admin.site.register(NodeBuildProject)
+admin.site.register(NodeBuildProjectFocus)
+admin.site.register(NodeBuildProjectPartner)
 
+admin.site.register(Site)
 
 @admin.register(NodeBuild)
 class NodeBuildAdmin(admin.ModelAdmin):

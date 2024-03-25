@@ -1,0 +1,46 @@
+{% extends 'admin/change_form.html' %}
+{% block extrahead %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    var typingTimer;
+    var doneTypingInterval = 800;
+
+    $('#id_vsn').on('input', function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(doneTyping, doneTypingInterval);
+    });
+
+    function doneTyping() {
+        var vsn = $('#id_vsn').val();
+        if (vsn) {
+            $.ajax({
+                url: '/node-builds/' + vsn, 
+                dataType: 'json',
+                success: function(data) {
+                    setSelectedOption('#id_type', data.type);
+                    setSelectedOption('#id_focus', data.focus);
+                    setSelectedOption('#id_partner', data.partner);
+                    setSelectedOption('#id_project', data.project);
+                }
+            });
+        }
+    }
+
+    function setSelectedOption(dropdownId, value) {
+        var dropdown = $(dropdownId);
+        
+        if (!value) {
+            dropdown.find('option:first').prop('selected', true);
+        }
+        else {
+            dropdown.find('option').each(function() {
+                if ($(this).text() === value) {
+                    $(this).prop('selected', true);
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

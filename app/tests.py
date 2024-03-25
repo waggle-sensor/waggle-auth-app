@@ -5,7 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 import uuid
 from .models import Project, Node, UserMembership, NodeMembership
-import pytest
+from test_utils import assertDictContainsSubset
 
 User = get_user_model()
 
@@ -272,13 +272,13 @@ class TestUserDetailView(TestCase):
         self.client.force_login(create_random_admin_user())
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(self.want, r.json())
+        assertDictContainsSubset(self.want, r.json())
 
     def testGetAsSelf(self):
         self.client.force_login(self.user)
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(self.want, r.json())
+        assertDictContainsSubset(self.want, r.json())
 
     def testGetAsOther(self):
         self.client.force_login(create_random_user())
@@ -296,7 +296,7 @@ class TestUserSelfDetailView(TestCase):
         self.client.force_login(user)
         r = self.client.get("/users/~self")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(
+        assertDictContainsSubset(
             {
                 "username": user.username,
                 "name": user.name,
@@ -332,13 +332,13 @@ class TestUserProfileView(TestCase):
         self.client.force_login(create_random_admin_user())
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(self.want, r.json())
+        assertDictContainsSubset(self.want, r.json())
 
     def testGetAsSelf(self):
         self.client.force_login(self.user)
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertDictContainsSubset(self.want, r.json())
+        assertDictContainsSubset(self.want, r.json())
 
     def testGetAsOther(self):
         self.client.force_login(create_random_user())

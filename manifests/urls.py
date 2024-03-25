@@ -8,7 +8,8 @@ from .views import (
     LorawanDeviceView,
     LorawanConnectionView,
     LorawanKeysView,
-    SensorHardwareViewSet_CRUD
+    SensorHardwareViewSet_CRUD,
+    NodesViewSet
 )
 
 app_name = "manifests"
@@ -23,6 +24,8 @@ router.register(
     r"lorawanconnections", LorawanConnectionView, basename="lorawanconnections"
 )
 router.register(r"sensorhardwares", SensorHardwareViewSet_CRUD, basename="sensorhardwares")
+router.register(r"api/v-beta/nodes", NodesViewSet)
+
 
 urlpatterns = [
     path("", include(router.urls)),

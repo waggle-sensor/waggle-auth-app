@@ -22,7 +22,7 @@ def get_node(request):
 
     try:
         token = auth[1].decode()
-    except UnicodeError:
+    except UnicodeError: # pragma: no cover
         return AnonymousNode()
 
     return authenticate_credentials(token)
