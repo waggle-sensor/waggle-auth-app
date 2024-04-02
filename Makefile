@@ -2,7 +2,7 @@ start:
 	@docker-compose up --build -d
 
 stop:
-	@docker-compose down --volumes
+	@docker-compose down --volumes --remove-orphans
 
 migrate:
 	@docker-compose exec django python manage.py migrate
