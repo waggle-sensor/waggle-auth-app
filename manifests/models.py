@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from node_auth.contrib.auth.models import AbstractNode
+from address.models import AddressField
 
 
 class NodePhase(models.TextChoices):
@@ -19,8 +20,27 @@ class NodeType(models.TextChoices):
 
 class NodeData(AbstractNode):
     name = models.CharField("Node ID", max_length=30, blank=True)
+    site_id = models.ForeignKey(
+        "Site",
+        on_delete=models.SET_NULL,
+        related_name="nodes",
+        null=True,
+        blank=True,
+    )
+    type = models.CharField(
+        "Type",
+        max_length=10,
+        choices=NodeType.choices,
+        default=NodeType.WSN,
+    )
     project = models.ForeignKey(
         "NodeBuildProject", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    focus = models.ForeignKey(
+        "NodeBuildProjectFocus", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    partner = models.ForeignKey(
+        "NodeBuildProjectPartner", null=True, blank=True, on_delete=models.SET_NULL
     )
     phase = models.CharField(
         "Phase", max_length=30, null=True, choices=NodePhase.choices, blank=True
@@ -35,8 +55,14 @@ class NodeData(AbstractNode):
     )
     gps_lat = models.FloatField("Latitude", blank=True, null=True)
     gps_lon = models.FloatField("Longitude", blank=True, null=True)
+    gps_alt = models.FloatField("Altitude", blank=True, null=True)
+    location = models.TextField("Location", blank=True, db_column="location")
     address = models.TextField("Address", blank=True)
+    # TODO(sean) Figure out how to migrate to new address field type. I'm temporarily rolling
+    # back to a text field to unblock the rest of the work which was part of this PR.
+    # address = AddressField(related_name='node', blank=True, null=True)
     registered_at = models.DateTimeField(null=True, blank=True)
+    commissioned_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.vsn
@@ -104,7 +130,12 @@ class Modem(models.Model):
 
 class AbstractHardware(models.Model):
     hardware = models.CharField(max_length=100)
-    hw_model = models.CharField(max_length=30, null=False, blank=False, help_text='The model number of your sensor preferably without the manufacturer name in it.')
+    hw_model = models.CharField(
+        max_length=30,
+        null=False,
+        blank=False,
+        help_text="The model number of your sensor preferably without the manufacturer name in it.",
+    )
     hw_version = models.CharField(max_length=30, blank=True)
     sw_version = models.CharField(max_length=30, blank=True)
     manufacturer = models.CharField(max_length=255, default="", blank=True)
@@ -264,6 +295,12 @@ class NodeBuild(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
+    focus = models.ForeignKey(
+        "NodeBuildProjectFocus", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    partner = models.ForeignKey(
+        "NodeBuildProjectPartner", null=True, blank=True, on_delete=models.SET_NULL
+    )
     agent = models.BooleanField(
         "Agent",
         default=False,
@@ -316,6 +353,9 @@ class NodeBuild(models.Model):
         on_delete=models.SET_NULL,
         related_name="+",
     )
+
+    def __str__(self):
+        return self.vsn
 
     def clean(self):
         super().clean()
@@ -375,6 +415,7 @@ class LorawanConnection(models.Model):
     connection_type = models.CharField(
         max_length=30, choices=CONNECTION_CHOICES, null=False, blank=False
     )
+
     # add more fields later like device class, app name etc- Flozano
 
     class Meta:
@@ -404,7 +445,7 @@ class LorawanKeys(models.Model):
         if self.lorawan_connection.connection_type == "OTAA" and not self.app_key:
             raise ValidationError("app_key cannot be blank for OTAA connections.")
 
-        super(LorawanKeys, self).clean()
+        super(LorawanKeys, self).clean()  # pragma: no cover
 
     class Meta:
         verbose_name = "Lorawan Key"
@@ -412,3 +453,36 @@ class LorawanKeys(models.Model):
 
     def __str__(self):
         return str(self.lorawan_connection)
+
+
+class NodeBuildProjectFocus(models.Model):
+    class Meta:
+        verbose_name_plural = "Node Build Project Focuses"
+
+    name = models.CharField("Name", max_length=64)
+
+    def __str__(self):
+        return self.name
+
+
+class NodeBuildProjectPartner(models.Model):
+    class Meta:
+        verbose_name_plural = "Node Build Project Partners"
+
+    name = models.CharField("Name", max_length=64)
+
+    def __str__(self):
+        return self.name
+
+
+class Site(models.Model):
+    id = models.CharField(
+        "Site ID", max_length=4, null=False, blank=False, unique=True, primary_key=True
+    )
+    description = models.TextField("Site Description", null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Sites"
+
+    def __str__(self):
+        return self.id

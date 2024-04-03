@@ -66,7 +66,7 @@ class TokenAuthentication(BaseAuthentication):
 
         try:
             token = auth[1].decode()
-        except UnicodeError:
+        except UnicodeError: # pragma: no cover
             msg = _(
                 "Invalid token header. Token string should not contain invalid characters."
             )

@@ -4,12 +4,14 @@ from node_auth import get_node_token_model, get_node_model, get_node_token_keywo
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token as User_Token
 from app import get_user_token_keyword
+from test_utils import assertDictContainsSubset
 
 Node_Token = get_node_token_model()
 NodeTokenKeyword = get_node_token_keyword()
 Node = get_node_model()
 User = get_user_model()
 UserTokenKeyword = get_user_token_keyword()
+
 
 class SensorHardwareViewsTest(TestCase):
     def setUp(self):
@@ -130,7 +132,7 @@ class SensorHardwareViewsTest(TestCase):
         r = self.client.get("/sensors/gps/")
         self.assertEqual(r.status_code, 200)
         item = r.json()
-        self.assertDictContainsSubset(
+        assertDictContainsSubset(
             {
                 "hardware": "gps",
                 "hw_model": "A GPS",
@@ -138,12 +140,15 @@ class SensorHardwareViewsTest(TestCase):
             item,
         )
 
+
 class SensorHardwareNodeCRUDViewSetTest(TestCase):
     def setUp(self):
         # Create an admin user
-        self.admin_username = 'admin'
-        self.admin_password = 'adminpassword'
-        self.admin_user = User.objects.create_superuser(self.admin_username, 'admin@example.com', self.admin_password)
+        self.admin_username = "admin"
+        self.admin_password = "adminpassword"
+        self.admin_user = User.objects.create_superuser(
+            self.admin_username, "admin@example.com", self.admin_password
+        )
         self.UserToken = User_Token.objects.create(user=self.admin_user)
         self.UserKey = self.UserToken.key
         # Create Node
@@ -153,34 +158,47 @@ class SensorHardwareNodeCRUDViewSetTest(TestCase):
         self.NodeToken = Node_Token.objects.get(node=self.node)
         self.key = self.NodeToken.key
         self.gpsSensor = SensorHardware.objects.create(hardware="gps", hw_model="A GPS")
-        self.raingaugeSensor = SensorHardware.objects.create(hardware="raingauge", hw_model="RG-15")
+        self.raingaugeSensor = SensorHardware.objects.create(
+            hardware="raingauge", hw_model="RG-15"
+        )
 
     def test_create(self):
         """Test the Sensor Hardware CREATE endpoint for Authenticated Nodes"""
-        data = {"hardware": "test","hw_model": "test-123", "description": "test"}
-        r = self.client.post("/sensorhardwares/", data=data, 
-            content_type="application/json", HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}"
+        data = {"hardware": "test", "hw_model": "test-123", "description": "test"}
+        r = self.client.post(
+            "/sensorhardwares/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}",
         )
         self.assertEqual(r.status_code, 201)
 
-        #check if the device was created in the db
-        sensor_exists = SensorHardware.objects.filter(hw_model=data["hw_model"]).exists()
+        # check if the device was created in the db
+        sensor_exists = SensorHardware.objects.filter(
+            hw_model=data["hw_model"]
+        ).exists()
         self.assertTrue(sensor_exists)
 
     def test_get(self):
         """Test the Sensor Hardware GET endpoint for Authenticated Nodes"""
-        r = self.client.get(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}")
+        r = self.client.get(
+            f"/sensorhardwares/{self.gpsSensor.hw_model}/",
+            HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}",
+        )
         self.assertEqual(r.status_code, 200)
 
-        #assert the correct device was returned in the request
+        # assert the correct device was returned in the request
         item = r.json()
         self.assertEqual(item["hw_model"], self.gpsSensor.hw_model)
 
     def test_update(self):
         """Test the Sensor Hardware PATCH endpoint for Authenticated Nodes"""
         data = {"description": "test"}
-        r = self.client.patch(f"/sensorhardwares/{self.gpsSensor.hw_model}/",data=data,
-            content_type="application/json", HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}"
+        r = self.client.patch(
+            f"/sensorhardwares/{self.gpsSensor.hw_model}/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}",
         )
         self.assertEqual(r.status_code, 200)
 
@@ -190,11 +208,16 @@ class SensorHardwareNodeCRUDViewSetTest(TestCase):
 
     def test_delete(self):
         """Test the Sensor Hardware DELETE endpoint for Authenticated Nodes"""
-        r = self.client.delete(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}")
+        r = self.client.delete(
+            f"/sensorhardwares/{self.gpsSensor.hw_model}/",
+            HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.key}",
+        )
         self.assertEqual(r.status_code, 204)
 
-        #check if the device was deleted in the db
-        sensor_exists = SensorHardware.objects.filter(hw_model=self.gpsSensor.hw_model).exists()
+        # check if the device was deleted in the db
+        sensor_exists = SensorHardware.objects.filter(
+            hw_model=self.gpsSensor.hw_model
+        ).exists()
         self.assertFalse(sensor_exists)
 
     def test_unauthenticated(self):
@@ -204,27 +227,41 @@ class SensorHardwareNodeCRUDViewSetTest(TestCase):
 
     def test_wrong_NodeToken(self):
         """Test request with wrong node token returns an error"""
-        r = self.client.get(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"{NodeTokenKeyword} wrong_token")
+        r = self.client.get(
+            f"/sensorhardwares/{self.gpsSensor.hw_model}/",
+            HTTP_AUTHORIZATION=f"{NodeTokenKeyword} wrong_token",
+        )
         self.assertEqual(r.status_code, 401)
 
     def test_create_User(self):
         """Test the Sensor Hardware CREATE endpoint with a User"""
-        data = {"hardware": "test","hw_model": "test-123", "description": "test"}
-        r = self.client.post("/sensorhardwares/", data=data, 
-            content_type="application/json", HTTP_AUTHORIZATION=f"{UserTokenKeyword} {self.UserKey}"
+        data = {"hardware": "test", "hw_model": "test-123", "description": "test"}
+        r = self.client.post(
+            "/sensorhardwares/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"{UserTokenKeyword} {self.UserKey}",
         )
         self.assertEqual(r.status_code, 201)
 
-        #check if the device was created in the db
-        sensor_exists = SensorHardware.objects.filter(hw_model=data["hw_model"]).exists()
+        # check if the device was created in the db
+        sensor_exists = SensorHardware.objects.filter(
+            hw_model=data["hw_model"]
+        ).exists()
         self.assertTrue(sensor_exists)
 
     def test_wrong_UserToken(self):
         """Test request with wrong user token returns an error"""
-        r = self.client.get(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"{UserTokenKeyword} wrong_token")
+        r = self.client.get(
+            f"/sensorhardwares/{self.gpsSensor.hw_model}/",
+            HTTP_AUTHORIZATION=f"{UserTokenKeyword} wrong_token",
+        )
         self.assertEqual(r.status_code, 401)
 
     def test_mismatch_token(self):
         """Test request with mismatching keyword and token returns an error"""
-        r = self.client.get(f"/sensorhardwares/{self.gpsSensor.hw_model}/", HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.UserKey}")
+        r = self.client.get(
+            f"/sensorhardwares/{self.gpsSensor.hw_model}/",
+            HTTP_AUTHORIZATION=f"{NodeTokenKeyword} {self.UserKey}",
+        )
         self.assertEqual(r.status_code, 401)

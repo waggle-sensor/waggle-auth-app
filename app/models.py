@@ -10,7 +10,7 @@ from node_auth.models import Token
 import re
 import uuid
 
-ssh_public_key_re = re.compile("^ssh-(\S+) (\S+)")
+ssh_public_key_re = re.compile(r"^ssh-(\S+) (\S+)")
 
 
 def validate_ssh_public_key_list(value: str):
