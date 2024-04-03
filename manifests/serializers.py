@@ -418,6 +418,7 @@ class NodesSerializer(serializers.ModelSerializer):
             "gps_lat",
             "gps_lon",
             "gps_alt",
+            "address",
             "addr_formatted",
             "streetnum",
             "route",
