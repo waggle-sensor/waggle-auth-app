@@ -60,10 +60,12 @@ class SensorViewSerializer(serializers.ModelSerializer):
             "vsns",
         ]
 
+
 class SensorHardwareCRUDSerializer(serializers.ModelSerializer):
     class Meta:
         model = SensorHardware
         fields = "__all__"
+
 
 class ModemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -113,9 +115,15 @@ class LorawanConnectionSerializer(serializers.ModelSerializer):
         validated_data = self.get_lookup_records(validated_data)
         # this has to be added because serializer is checking for node pk and lorawan device pk so it passes since im using node vsn NOT pk
         #  serializer thinks a lc has not been created with this combination of node and lorawan device and causes a server error - FL 01/26/24
-        if LorawanConnection.objects.filter(node=validated_data["node"], lorawan_device=validated_data["lorawan_device"]).exists():
+        if LorawanConnection.objects.filter(
+            node=validated_data["node"], lorawan_device=validated_data["lorawan_device"]
+        ).exists():
             raise serializers.ValidationError(
-                {"node-lorawan_device": [f'Lorawan connection with this node and lorawan_device already exists']}
+                {
+                    "node-lorawan_device": [
+                        f"Lorawan connection with this node and lorawan_device already exists"
+                    ]
+                }
             )
         return super().create(validated_data)
 
@@ -179,9 +187,15 @@ class LorawanKeysSerializer(serializers.ModelSerializer):
         """
         # same issue here as lorawan connection serializer - FL
         validated_data = self.get_lookup_records(validated_data)
-        if LorawanKeys.objects.filter(lorawan_connection=validated_data["lorawan_connection"]).exists():
+        if LorawanKeys.objects.filter(
+            lorawan_connection=validated_data["lorawan_connection"]
+        ).exists():
             raise serializers.ValidationError(
-                {"lorawan_connection": [f'Lorawan Key with this lorawan_connection already exists']}
+                {
+                    "lorawan_connection": [
+                        f"Lorawan Key with this lorawan_connection already exists"
+                    ]
+                }
             )
         return super().create(validated_data)
 
@@ -299,7 +313,7 @@ def serialize_lorawan_devices(l):
         "deveui": l.deveui,
         "name": l.name,
         "battery_level": l.battery_level,
-        "hardware": serialize_common_hardware(l.hardware)
+        "hardware": serialize_common_hardware(l.hardware),
     }
 
 
@@ -367,53 +381,62 @@ class NodesSerializer(serializers.ModelSerializer):
     computes = serializers.SerializerMethodField("get_computes")
     sensors = serializers.SerializerMethodField("get_sensors")
     modem_model = serializers.SerializerMethodField("get_modem_model")
-    modem_sim = serializers.CharField(source='modem.sim_type', read_only=True)
-    modem_carrier = serializers.CharField(source='modem.carrier', read_only=True)
-    project = serializers.CharField(source='project.name', read_only=True)
-    focus = serializers.CharField(source='focus.name', read_only=True)
-    partner = serializers.CharField(source='partner.name', read_only=True)
-    addr_formatted = serializers.CharField(source='address.formatted', read_only=True)
-    streetnum = serializers.CharField(source='address.street_number', read_only=True)
-    route = serializers.CharField(source='address.route', read_only=True)
-    town = serializers.CharField(source='address.locality.name', read_only=True)
-    postal_code = serializers.CharField(source='address.locality.postal_code', read_only=True)
-    state = serializers.CharField(source='address.locality.state.name', read_only=True)
-    state_code = serializers.CharField(source='address.locality.state.code', read_only=True)
-    country = serializers.CharField(source='address.locality.state.country.name', read_only=True)
-    country_code = serializers.CharField(source='address.locality.state.country.code', read_only=True)
+    modem_sim = serializers.CharField(source="modem.sim_type", read_only=True)
+    modem_carrier = serializers.CharField(source="modem.carrier", read_only=True)
+    project = serializers.CharField(source="project.name", read_only=True)
+    focus = serializers.CharField(source="focus.name", read_only=True)
+    partner = serializers.CharField(source="partner.name", read_only=True)
+    addr_formatted = serializers.CharField(source="address.formatted", read_only=True)
+    streetnum = serializers.CharField(source="address.street_number", read_only=True)
+    route = serializers.CharField(source="address.route", read_only=True)
+    town = serializers.CharField(source="address.locality.name", read_only=True)
+    postal_code = serializers.CharField(
+        source="address.locality.postal_code", read_only=True
+    )
+    state = serializers.CharField(source="address.locality.state.name", read_only=True)
+    state_code = serializers.CharField(
+        source="address.locality.state.code", read_only=True
+    )
+    country = serializers.CharField(
+        source="address.locality.state.country.name", read_only=True
+    )
+    country_code = serializers.CharField(
+        source="address.locality.state.country.code", read_only=True
+    )
 
     class Meta:
         model = NodeData
-        fields = ["id",
-                  "vsn",
-                  "name",
-                  "project", 
-                  "focus", 
-                  "partner", 
-                  "type",
-                  "site_id",
-                  "gps_lat",
-                  "gps_lon",
-                  "gps_alt",
-                  "addr_formatted",
-                  "streetnum",
-                  "route",
-                  "town",
-                  "state",
-                  "state_code",
-                  "postal_code",
-                  "country",
-                  "country_code",
-                  "location", 
-                  "phase",
-                  "commissioned_at",
-                  "registered_at",
-                  "modem_sim",
-                  "modem_model",
-                  "modem_carrier",
-                  "sensors",
-                  "computes",
-                  ]
+        fields = [
+            "id",
+            "vsn",
+            "name",
+            "project",
+            "focus",
+            "partner",
+            "type",
+            "site_id",
+            "gps_lat",
+            "gps_lon",
+            "gps_alt",
+            "addr_formatted",
+            "streetnum",
+            "route",
+            "town",
+            "state",
+            "state_code",
+            "postal_code",
+            "country",
+            "country_code",
+            "location",
+            "phase",
+            "commissioned_at",
+            "registered_at",
+            "modem_sim",
+            "modem_model",
+            "modem_carrier",
+            "sensors",
+            "computes",
+        ]
 
     @staticmethod
     def serialize_compute(c):
@@ -443,11 +466,11 @@ class NodesSerializer(serializers.ModelSerializer):
         for s in obj.nodesensor_set.all():
             results.append(self.serialize_common_sensor(s))
 
-        #add all lorawan sensors
+        # add all lorawan sensors
         for s in obj.lorawanconnections.all():
             results.append(self.serialize_common_sensor(s.lorawan_device))
 
         return results
 
     def get_modem_model(self, obj):
-        return obj.modem.get_model_display() if hasattr(obj, 'modem') else None
+        return obj.modem.get_model_display() if hasattr(obj, "modem") else None
