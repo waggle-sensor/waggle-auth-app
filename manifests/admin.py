@@ -85,11 +85,23 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                     "notes",
                     "tags",
                     "registered_at",
-                    "commissioned_at"
+                    "commissioned_at",
                 )
             },
         ),
-        ("Location", {"fields": ("site_id","location", "address", "gps_lat", "gps_lon","gps_alt")}),
+        (
+            "Location",
+            {
+                "fields": (
+                    "site_id",
+                    "location",
+                    "address",
+                    "gps_lat",
+                    "gps_lon",
+                    "gps_alt",
+                )
+            },
+        ),
     )
 
     inlines = [ModemInline, ComputeInline, NodeSensorInline, ResourceInline]
@@ -158,12 +170,12 @@ class NodeAdmin(nested_admin.NestedModelAdmin):
                 continue
 
             if (
-                    node.registered_at is None
-                    or (r.registration_event > node.registered_at)
-                    or (
+                node.registered_at is None
+                or (r.registration_event > node.registered_at)
+                or (
                     r.registration_event >= node.registered_at
                     and r.node_id != node.name
-            )
+                )
             ):
                 node.registered_at = r.registration_event
                 node.name = r.node_id
@@ -247,9 +259,9 @@ class CSVUploadForm(forms.Form):
 
 @admin.register(Modem)
 class ModemAdmin(admin.ModelAdmin):
-    list_display = ["imei", "imsi", "iccid", "node", "sim_type", "model"]
+    list_display = ["imei", "imsi", "iccid", "smsc", "node", "sim_type", "model"]
     list_filter = ["sim_type", "model", "carrier"]
-    search_fields = ["imei", "imsi", "iccid", "node__vsn", "sim_type"]
+    search_fields = ["imei", "imsi", "iccid", "smsc", "node__vsn", "sim_type"]
     autocomplete_fields = ["node"]
 
     change_list_template = "manifests/modem_change_list.html"
@@ -472,6 +484,7 @@ admin.site.register(NodeBuildProjectFocus)
 admin.site.register(NodeBuildProjectPartner)
 
 admin.site.register(Site)
+
 
 @admin.register(NodeBuild)
 class NodeBuildAdmin(admin.ModelAdmin):
