@@ -6,3 +6,4 @@ djangorestframework-stubs==3.14.2    # better type hints for django rest framewo
 pytest-django==4.7.0                 # better testing
 pytest-cov==4.1.0                    # includes coverage report when testing with pytest
 pytest-xdist==3.5.0                  # allows for running tests on multiple processes for faster testing
+django-debug-toolbar==4.*            # enables a debug toolbar, helps with debugging api endpoints

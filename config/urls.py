@@ -39,4 +39,5 @@ urlpatterns = [
         name="oauth2-redirect",
     ),
     path("downloads/", include("downloads.urls")),
+    path("_debug/", include("debug_toolbar.urls"))
 ]
