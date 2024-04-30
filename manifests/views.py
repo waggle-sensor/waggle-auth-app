@@ -203,10 +203,11 @@ class NodesViewSet(ReadOnlyModelViewSet):
     queryset = (
         NodeData.objects.all()
         .prefetch_related(
-            "nodesensor_set",
-            "compute_set",
-            "lorawanconnections",
-            "modem"
+            "modem",
+            "lorawanconnections__lorawan_device__hardware__capabilities",
+            "compute_set__hardware__capabilities",
+            "nodesensor_set__hardware__capabilities",
+            "project",
         )
         .order_by("vsn")
     )
