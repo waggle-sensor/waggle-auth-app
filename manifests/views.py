@@ -58,7 +58,14 @@ class ManifestViewSet(ReadOnlyModelViewSet):
 
 
 class ComputeViewSet(ReadOnlyModelViewSet):
-    queryset = Compute.objects.all().order_by("node__vsn")
+    queryset = (
+        Compute.objects.all()
+        .prefetch_related(
+            "hardware",
+            "node",
+        )
+        .order_by("node__vsn")
+    )
     serializer_class = ComputeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -67,19 +74,26 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
     queryset = (
         SensorHardware.objects.all()
         .prefetch_related(
-            "nodesensor_set",
             "nodesensor_set__node",
-            "computesensor_set",
-            "computesensor_set__scope",
             "computesensor_set__scope__node",
-            "lorawandevice_set",
-            "lorawandevice_set__lorawanconnections",
+            "capabilities",
+            "lorawandevice_set__lorawanconnections__node",
         )
         .order_by("hardware")
     )
     serializer_class = SensorViewSerializer
     lookup_field = "hardware"
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.query_params.get("project"):
+            queryset = queryset.prefetch_related(
+                "lorawandevice_set__lorawanconnections__node__project",
+                "computesensor_set__scope__node__project",
+                "nodesensor_set__node__project",
+            )
+        return queryset
 
     def list(self, request, *args, **kwargs):
         res = super(SensorHardwareViewSet, self).list(request, *args, **kwargs)
@@ -92,7 +106,12 @@ class SensorHardwareViewSet(ReadOnlyModelViewSet):
         return res
 
 class SensorHardwareViewSet_CRUD(NodeAuthMixin, ModelViewSet):
-    queryset = SensorHardware.objects.all()
+    queryset = (
+        SensorHardware.objects.all()
+        .prefetch_related(
+            "capabilities",
+        )
+    )
     serializer_class = SensorHardwareCRUDSerializer
     lookup_field = "hw_model" #TODO: this can cause a "multiple response returned" server error on GET as hw_model is not unique - FL 01/29/2024
     authentication_classes = (NodeAuthMixin.authentication_classes[0],UserTokenAuthentication)
@@ -101,7 +120,15 @@ class SensorHardwareViewSet_CRUD(NodeAuthMixin, ModelViewSet):
 class NodeBuildViewSet(ReadOnlyModelViewSet):
     queryset = (
         NodeBuild.objects.all()
-        .prefetch_related("top_camera", "bottom_camera", "left_camera", "right_camera")
+        .prefetch_related(
+            "top_camera", 
+            "bottom_camera", 
+            "left_camera", 
+            "right_camera",
+            "project",
+            "focus",
+            "partner",
+        )
         .order_by("vsn")
     )
     serializer_class = NodeBuildSerializer
@@ -110,13 +137,23 @@ class NodeBuildViewSet(ReadOnlyModelViewSet):
 
 
 class LorawanDeviceView(NodeAuthMixin, ModelViewSet):
-    queryset = LorawanDevice.objects.all()
+    queryset = (
+        LorawanDevice.objects.all()
+        .prefetch_related(
+            "labels"
+        )
+    )
     serializer_class = LorawanDeviceSerializer
     lookup_field = "deveui"
 
 
 class LorawanConnectionView(NodeOwnedObjectsMixin, ModelViewSet):
-    queryset = LorawanConnection.objects.all()
+    queryset = (
+        LorawanConnection.objects.all()
+        .prefetch_related(
+            "node",
+            "lorawan_device",
+        ))
     serializer_class = LorawanConnectionSerializer
     vsn_field = "node__vsn"
 
