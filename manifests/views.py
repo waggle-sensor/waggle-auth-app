@@ -44,6 +44,7 @@ class ManifestViewSet(ReadOnlyModelViewSet):
                 "compute_set__computesensor_set__hardware__capabilities",
                 "compute_set__computesensor_set__labels",
                 "resource_set__hardware__capabilities",
+                "lorawanconnections__lorawan_device__hardware__capabilities",
                 "tags",
             )
             .order_by("vsn")
