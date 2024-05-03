@@ -38,7 +38,8 @@ class SensorViewSerializer(serializers.ModelSerializer):
             nodes = [
                 node
                 for node in nodes
-                if node.phase.lower() in (p.lower() for p in phases)
+                if node.phase
+                and node.phase.lower() in (p.lower() for p in phases)
             ]
 
         vsns = sorted(set([node.vsn for node in nodes]))
