@@ -24,10 +24,10 @@ INSTALLED_APPS = [
     "node_auth",
     "downloads",
     "address",
-    "django_filters"
+    "django_filters",
 ]
 
-#Enable to add google address completion
+# Enable to add google address completion
 # GOOGLE_API_KEY = ''
 
 AUTH_USER_MODEL = "app.User"
@@ -183,6 +183,8 @@ LOGGING = {
 # Security settings
 ALLOWED_HOSTS = env("ALLOWED_HOSTS", list, [])
 
+CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", str, None)
+CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", str, "Lax")
 CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", bool, True)
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS", list, [])
 
@@ -196,8 +198,9 @@ CORS_EXPOSE_HEADERS = [
     "x-object-content-type",
 ]
 
-SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", bool, True)
+SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", str, None)
 SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", str, "Lax")
+SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", bool, True)
 
 S3_ENDPOINT = env("S3_ENDPOINT", str, "")
 S3_ACCESS_KEY = env("S3_ACCESS_KEY", str, "")
