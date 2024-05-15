@@ -319,6 +319,10 @@ class LogoutView(auth_views.LogoutView):
         response.delete_cookie("sage_username", domain=settings.SAGE_COOKIE_DOMAIN)
         response.delete_cookie("sage_token", domain=settings.SAGE_COOKIE_DOMAIN)
 
+        # TODO(sean) Since we're going to be providing a cross domain session cookie, we
+        # should look at removing these individual cookies and just use the API to get
+        # user info.
+
         # NOTE get_success_url will cause this to redirect through globus logout
         return response
 
