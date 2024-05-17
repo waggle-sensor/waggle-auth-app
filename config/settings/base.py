@@ -164,6 +164,8 @@ LOGGING = {
     "version": 1,
     "handlers": {
         "console": {
+            "level": "INFO",
+            "filters": [],
             "class": "logging.StreamHandler",
         },
         "slack_admins": {
@@ -174,7 +176,7 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "level": "ERROR",
+            "level": "INFO",
             "handlers": ["console", "slack_admins"],
         },
     },
