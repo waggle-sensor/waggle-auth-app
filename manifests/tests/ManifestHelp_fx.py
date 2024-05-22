@@ -161,4 +161,5 @@ def createManifests(manifests):
                 node=node_obj,
                 hardware=ComputeHardware.objects.get(hw_model=compute["hw_model"]),
                 name=compute["name"],
+                serial_no=compute["serial_no"],
             )

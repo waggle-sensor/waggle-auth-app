@@ -479,18 +479,21 @@ class NodesViewSetTestCase(TestCase):
             "computes": [
                 {
                     "name": "nxcore",
+                    "serial_no": "48B02D5BFE93",
                     "hw_model": "xavierNX",
                     "manufacturer": "ConnectTech",
                     "capabilities": ["gpu", "cuda102", "arm64"],
                 },
                 {
                     "name": "rpi",
+                    "serial_no": "58C12D5BDE52",
                     "hw_model": "RPI4B",
                     "manufacturer": "Raspberry Pi",
                     "capabilities": ["arm64", "poe"],
                 },
                 {
                     "name": "rpi.lorawan",
+                    "serial_no": "12302A5BFE93",
                     "hw_model": "RPI4B",
                     "manufacturer": "Raspberry Pi",
                     "capabilities": ["arm64", "poe"],
@@ -543,12 +546,14 @@ class NodesViewSetTestCase(TestCase):
             "computes": [
                 {
                     "name": "nxcore",
+                    "serial_no": "48B02D5BFE93",
                     "hw_model": "xavierNX",
                     "manufacturer": "ConnectTech",
                     "capabilities": ["gpu", "cuda102", "arm64"],
                 },
                 {
                     "name": "rpi",
+                    "serial_no": "58C12D5BDE52",
                     "hw_model": "RPI4B",
                     "manufacturer": "Raspberry Pi",
                     "capabilities": ["arm64", "poe"],
