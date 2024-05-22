@@ -444,6 +444,7 @@ class NodesSerializer(serializers.ModelSerializer):
     def serialize_compute(c):
         return {
             "name": c.name,
+            "serial_no": c.serial_no,
             "hw_model": c.hardware.hw_model,
             "manufacturer": c.hardware.manufacturer,
             "capabilities": [cap.capability for cap in c.hardware.capabilities.all()],
