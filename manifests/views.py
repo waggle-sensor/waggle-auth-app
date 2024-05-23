@@ -245,6 +245,7 @@ class NodesViewSet(ReadOnlyModelViewSet):
             "lorawanconnections__lorawan_device__hardware__capabilities",
             "compute_set__hardware__capabilities",
             "nodesensor_set__hardware__capabilities",
+            "compute_set__computesensor_set__hardware__capabilities",
             "project",
         )
         .order_by("vsn")

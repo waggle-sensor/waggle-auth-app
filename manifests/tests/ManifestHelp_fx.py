@@ -73,7 +73,7 @@ def createPartner(partner):
             name=item['name']
         )
 
-def createSite(site):
+def createSite(site: list):
     """
     Helper function which populates site test data.
     """
@@ -82,7 +82,7 @@ def createSite(site):
             id=item['id'], description=item['description']
         )
 
-def createAddress(address):
+def createAddress(address: list):
     """
     Helper function which populates address test data.
     """
@@ -106,7 +106,7 @@ def createAddress(address):
             locality=Locality.objects.get(postal_code=item['postal_code'])
         )
 
-def createModem(modem):
+def createModem(modem: list):
     """
     Helper function which populates modem test data.
     """        
@@ -117,7 +117,18 @@ def createModem(modem):
             model=item['model'],sim_type=item['sim_type']
         )
 
-def createManifests(manifests):
+def createComputeSensor(cs: list):
+    """
+    Helper function which populates Compute Sensor data.
+    """
+    for item in cs:
+        ComputeSensor.objects.create(
+            name=item['name'],
+            hardware=SensorHardware.objects.get(hw_model=item['hw_model']),
+            scope=Compute.objects.get(name=item["scope"])
+        )
+
+def createManifests(manifests: list):
     """
     Helper function which populates manifest test data.
     """
@@ -161,4 +172,5 @@ def createManifests(manifests):
                 node=node_obj,
                 hardware=ComputeHardware.objects.get(hw_model=compute["hw_model"]),
                 name=compute["name"],
+                serial_no=compute["serial_no"],
             )
