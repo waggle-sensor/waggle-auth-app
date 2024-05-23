@@ -552,7 +552,7 @@ class NodesViewSetTestCase(TestCase):
                     "capabilities": ["gpu", "cuda102", "arm64"],
                 },
                 {
-                    "name": "rpi",
+                    "name": "rpi 2",
                     "serial_no": "58C12D5BDE52",
                     "hw_model": "RPI4B",
                     "manufacturer": "Raspberry Pi",
@@ -562,6 +562,22 @@ class NodesViewSetTestCase(TestCase):
         }
 
         createManifests([self.W123_data, self.W021_data])
+
+        #add compute sensor to W123
+        ComputeSensor = {
+            "name": "bme680",
+            "hw_model": "BME680",
+            "manufacturer": "Bosch",
+            "capabilities": [],
+            "scope": "rpi",
+        }
+        createComputeSensor([ComputeSensor])
+        ComputeSensor.pop("scope")
+        self.W123_data["sensors"].append(ComputeSensor)
+
+        #swap bme680 with CSU_soil_sensor, order matters with the tests
+        sensors = self.W123_data["sensors"]
+        sensors[-1], sensors[-2] = sensors[-2], sensors[-1]
 
     def test_retrieve_node(self):
         """Test node view's happy path for retrieving a record"""
