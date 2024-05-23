@@ -469,6 +469,11 @@ class NodesSerializer(serializers.ModelSerializer):
         for s in obj.nodesensor_set.all():
             results.append(self.serialize_common_sensor(s))
 
+        # add all compute sensors
+        for c in obj.compute_set.all():
+            for s in c.computesensor_set.all():
+                results.append(self.serialize_common_sensor(s))
+
         # add all lorawan sensors
         for s in obj.lorawanconnections.all():
             results.append(self.serialize_common_sensor(s.lorawan_device))
