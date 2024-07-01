@@ -20,6 +20,9 @@ from .authentication import BasicTokenPasswordAuthentication
 from pathlib import Path
 from scitokens import SciToken
 from dataclasses import dataclass
+import os.path
+from app.models import User
+import requests
 
 
 @dataclass
@@ -93,7 +96,13 @@ def object_exists_in_osn(item: Item):
 
 
 def get_pelican_path(item: Item):
-    return f"/node-data/{item.job_id}/{item.task_id}/{item.node_id}/{item.timestamp_and_filename}"
+    return os.path.join(
+        settings.PELICAN_ROOT_FOLDER,
+        item.job_id,
+        item.task_id,
+        item.node_id,
+        item.timestamp_and_filename,
+    )
 
 
 def get_pelican_authz_url(item: Item):
@@ -116,13 +125,21 @@ def get_pelican_authz_url(item: Item):
         lifetime=settings.PELICAN_LIFETIME,
     ).decode()
 
-    return f"{settings.PELICAN_BASE_URL}{path}?authz={authz}"
+    return f"{settings.PELICAN_ROOT_URL}{path}?authz={authz}"
 
 
 def get_redirect_url(item: Item):
     if object_exists_in_osn(item):
         return get_osn_presigned_url(item)
     return get_pelican_authz_url(item)
+
+
+def has_object_permission(user: User, node: Node) -> bool:
+    return Project.objects.filter(
+        usermembership__user=user,
+        usermembership__can_access_files=True,
+        nodemembership__node=node,
+    ).exists()
 
 
 class DownloadsView(APIView):
@@ -149,13 +166,13 @@ class DownloadsView(APIView):
             kwargs["timestamp_and_filename"],
         )
 
-        # TODO check ValueError here
-        file_timestamp = item.timestamp()
-
+        # TODO(sean) See if there's a cleaner way to do this. We currently compute here as we use this both in the
+        # method handler and in get_permissions to allow DRF to dynamically turn on / off authentication checks for
+        # public files.
         self.file_is_public = (
             self.node.files_public
             and self.node.commissioning_date is not None
-            and file_timestamp >= self.node.commissioning_date
+            and item.timestamp() >= self.node.commissioning_date
         )
 
         return super().dispatch(request, *args, **kwargs)
@@ -182,6 +199,8 @@ class DownloadsView(APIView):
             node_id,
             timestamp_and_filename,
         )
+
+        # Attempt to stat and return metadata from OSN.
         client = get_minio_client()
         object_name = get_osn_object_name(item)
 
@@ -190,15 +209,29 @@ class DownloadsView(APIView):
                 bucket_name=settings.S3_BUCKET_NAME,
                 object_name=object_name,
             )
+            headers = {
+                "X-Object-Content-Length": str(obj.size),
+                "X-Object-Content-Type": obj.content_type,
+            }
+            return HttpResponse(headers=headers)
         except S3Error:
-            return HttpResponseNotFound("File not found")
+            pass
 
-        headers = {
-            "X-Object-Content-Length": str(obj.size),
-            "X-Object-Content-Type": obj.content_type,
-        }
+        # Otherwise, fallback to Pelican.
+        try:
+            r = requests.head(get_pelican_authz_url(item))
+            r.raise_for_status()
+            headers = {}
+            if "Content-Length" in r.headers:
+                headers["X-Object-Content-Length"] = r.headers["Content-Length"]
+            if "Content-Type" in r.headers:
+                headers["X-Object-Content-Type"] = r.headers["Content-Type"]
+            return HttpResponse(headers=headers)
+        # TODO(sean) Narrow the scope of the exception we handle here.
+        except Exception:
+            pass
 
-        return HttpResponse(headers=headers)
+        return HttpResponseNotFound("File not found")
 
     def get(
         self,
@@ -215,15 +248,6 @@ class DownloadsView(APIView):
             node_id,
             timestamp_and_filename,
         )
-        if self.file_is_public:
+        if self.file_is_public or has_object_permission(request.user, self.node):
             return HttpResponseRedirect(get_redirect_url(item))
-
-        has_object_permission = Project.objects.filter(
-            usermembership__user=request.user,
-            usermembership__can_access_files=True,
-            nodemembership__node=self.node,
-        ).exists()
-
-        if not has_object_permission:
-            return HttpResponse("Permission denied", status=status.HTTP_403_FORBIDDEN)
-        return HttpResponseRedirect(get_redirect_url(item))
+        return HttpResponse("Permission denied", status=status.HTTP_403_FORBIDDEN)
