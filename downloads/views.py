@@ -115,6 +115,8 @@ def get_pelican_authz_url(item: Item):
         algorithm=settings.PELICAN_ALGORITHM,
         key_id=settings.PELICAN_KEY_ID,
     )
+    # See the Scitoken reference for more info on these fields:
+    # https://scitokens.org/technical_docs/Claims
     token["sub"] = "test"
     token["aud"] = "ANY"
     token["ver"] = "scitoken:2.0"
