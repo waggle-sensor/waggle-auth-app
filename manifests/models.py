@@ -11,6 +11,7 @@ class NodePhase(models.TextChoices):
     STANDBY = "Standby"
     AWAITING_DEPLOYMENT = "Awaiting Deployment"
     SHIPMENT_PENDING = "Shipment Pending"
+    RETIRED = "Retired"
 
 
 class NodeType(models.TextChoices):
