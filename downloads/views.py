@@ -108,7 +108,7 @@ def get_pelican_path(item: Item):
 def get_pelican_authz_url(item: Item):
     path = get_pelican_path(item)
 
-    key = Path(settings.PELICAN_KEY).read_bytes()
+    key = Path(settings.PELICAN_KEY_PATH).read_bytes()
 
     token = SciToken(
         key=key,

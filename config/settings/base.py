@@ -213,7 +213,7 @@ S3_BUCKET_NAME = env("S3_BUCKET_NAME", str, "")
 S3_ROOT_FOLDER = env("S3_ROOT_FOLDER", str, "")
 S3_REGION = env("S3_REGION", str, "")
 
-PELICAN_KEY: str = env("PELICAN_KEY", str, "")
+PELICAN_KEY_PATH: str = env("PELICAN_KEY_PATH", str, "")
 PELICAN_ALGORITHM: str = env("PELICAN_ALGORITHM", str, "ES256")
 PELICAN_KEY_ID: str = env("PELICAN_KEY_ID", str, "")
 PELICAN_ISSUER: str = env("PELICAN_ISSUER", str, "")
