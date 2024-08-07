@@ -262,6 +262,7 @@ class ManifestSerializer(serializers.ModelSerializer):
 def serialize_compute(c):
     return {
         "name": c.name,
+        "is_active": c.is_active,
         "serial_no": c.serial_no,
         "zone": c.zone,
         "hardware": serialize_compute_hardware(c.hardware),
@@ -271,6 +272,7 @@ def serialize_compute(c):
 def serialize_common_sensor(s):
     return {
         "name": s.name,
+        "is_active": s.is_active,
         "scope": str(s.scope),
         "labels": [l.label for l in s.labels.all()],
         "serial_no": s.serial_no,
@@ -313,6 +315,7 @@ def serialize_lorawan_devices(l):
     return {
         "deveui": l.deveui,
         "name": l.name,
+        "is_active": l.is_active,
         "battery_level": l.battery_level,
         "hardware": serialize_common_hardware(l.hardware),
     }
@@ -444,6 +447,7 @@ class NodesSerializer(serializers.ModelSerializer):
     def serialize_compute(c):
         return {
             "name": c.name,
+            "is_active": c.is_active,
             "serial_no": c.serial_no,
             "hw_model": c.hardware.hw_model,
             "manufacturer": c.hardware.manufacturer,
@@ -454,6 +458,7 @@ class NodesSerializer(serializers.ModelSerializer):
     def serialize_common_sensor(s):
         return {
             "name": s.name,
+            "is_active": s.is_active,
             "hw_model": s.hardware.hw_model,
             "manufacturer": s.hardware.manufacturer,
             "capabilities": [cap.capability for cap in s.hardware.capabilities.all()],
