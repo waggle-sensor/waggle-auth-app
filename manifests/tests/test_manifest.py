@@ -459,18 +459,21 @@ class NodesViewSetTestCase(TestCase):
             "sensors": [
                 {
                     "name": "bottom_camera",
+                    "is_active": True,
                     "hw_model": "XNV-8081Z",
                     "manufacturer": "Hanwha Techwin",
                     "capabilities": ["camera"],
                 },
                 {
                     "name": "top_camera",
+                    "is_active": True,
                     "hw_model": "XNV-8081Z",
                     "manufacturer": "Hanwha Techwin",
                     "capabilities": ["camera"],
                 },
                 {
                     "name": "CSU_soil_sensor",
+                    "is_active": True,
                     "hw_model": "MKR WAN 1310",
                     "manufacturer": "Arduino",
                     "capabilities": ["lorawan"],
@@ -479,6 +482,7 @@ class NodesViewSetTestCase(TestCase):
             "computes": [
                 {
                     "name": "nxcore",
+                    "is_active": True,
                     "serial_no": "48B02D5BFE93",
                     "hw_model": "xavierNX",
                     "manufacturer": "ConnectTech",
@@ -486,6 +490,7 @@ class NodesViewSetTestCase(TestCase):
                 },
                 {
                     "name": "rpi",
+                    "is_active": True,
                     "serial_no": "58C12D5BDE52",
                     "hw_model": "RPI4B",
                     "manufacturer": "Raspberry Pi",
@@ -493,6 +498,7 @@ class NodesViewSetTestCase(TestCase):
                 },
                 {
                     "name": "rpi.lorawan",
+                    "is_active": True,
                     "serial_no": "12302A5BFE93",
                     "hw_model": "RPI4B",
                     "manufacturer": "Raspberry Pi",
@@ -532,12 +538,14 @@ class NodesViewSetTestCase(TestCase):
             "sensors": [
                 {
                     "name": "top_camera",
+                    "is_active": True,
                     "hw_model": "XNV-8081Z",
                     "manufacturer": "Hanwha Techwin",
                     "capabilities": ["camera"],
                 },
                 {
                     "name": "bottom_camera",
+                    "is_active": True,
                     "hw_model": "XNV-8081Z",
                     "manufacturer": "Hanwha Techwin",
                     "capabilities": ["camera"],
@@ -546,6 +554,7 @@ class NodesViewSetTestCase(TestCase):
             "computes": [
                 {
                     "name": "nxcore",
+                    "is_active": True,
                     "serial_no": "48B02D5BFE93",
                     "hw_model": "xavierNX",
                     "manufacturer": "ConnectTech",
@@ -553,6 +562,7 @@ class NodesViewSetTestCase(TestCase):
                 },
                 {
                     "name": "rpi 2",
+                    "is_active": True,
                     "serial_no": "58C12D5BDE52",
                     "hw_model": "RPI4B",
                     "manufacturer": "Raspberry Pi",
@@ -566,6 +576,7 @@ class NodesViewSetTestCase(TestCase):
         #add compute sensor to W123
         ComputeSensor = {
             "name": "bme680",
+            "is_active": True,
             "hw_model": "BME680",
             "manufacturer": "Bosch",
             "capabilities": [],

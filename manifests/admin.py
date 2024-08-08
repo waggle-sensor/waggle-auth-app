@@ -380,13 +380,14 @@ def add_default_devices_using_zone(modeladmin, request, queryset):
 class ComputeAdmin(nested_admin.NestedModelAdmin):
     list_display = [
         "name",
+        "is_active",
         "node",
         "hardware",
         "serial_no",
         "zone",
         "get_sensors",
     ]
-    list_filter = ["hardware", "zone"]
+    list_filter = ["hardware", "zone", "is_active"]
     search_fields = [
         "name",
         "node__vsn",
@@ -408,8 +409,9 @@ class ComputeAdmin(nested_admin.NestedModelAdmin):
 
 @admin.register(LorawanDevice)
 class LorawanDeviceAdmin(admin.ModelAdmin):
-    list_display = ["name", "deveui", "battery_level"]
+    list_display = ["name", "is_active", "deveui", "battery_level"]
     search_fields = ["name", "deveui"]
+    list_filter = ["is_active"]
 
 
 @admin.register(LorawanConnection)
@@ -528,6 +530,7 @@ class NodeBuildAdmin(admin.ModelAdmin):
 class NodeSensorAdmin(admin.ModelAdmin):
     list_display = [
         "name",
+        "is_active",
         "hardware",
         "serial_no",
         "uri",
@@ -541,6 +544,7 @@ class NodeSensorAdmin(admin.ModelAdmin):
         "hardware__hw_model",
         "node__vsn",
     ]
+    list_filter = ["is_active"]
     # We're excluding scope because it seems to be intended to always be set to "default".
     exclude = ["scope"]
 
@@ -552,6 +556,7 @@ class NodeSensorAdmin(admin.ModelAdmin):
 class ComputeSensorAdmin(admin.ModelAdmin):
     list_display = [
         "name",
+        "is_active",
         "hardware",
         "scope",
         "node",
@@ -563,6 +568,7 @@ class ComputeSensorAdmin(admin.ModelAdmin):
         "scope__name",
         "scope__node__vsn",
     ]
+    list_filter = ["is_active"]
     # We're exclude scope as currently the scope selectbox just lists the compute name (ex. rpi) but not the vsn,
     # so using it properly is confusing. For now, it's just a convinient way to see all compute sensors and update
     # things like name and serial number.

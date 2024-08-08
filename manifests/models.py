@@ -201,6 +201,15 @@ class Compute(models.Model):
     name = models.CharField(max_length=30, default="", blank=True)
     serial_no = models.CharField(max_length=30, default="", blank=True)
     zone = models.CharField(max_length=30, choices=ZONE_CHOICES, null=True, blank=True)
+    is_active = models.BooleanField(
+        "active",
+        default=True,
+        help_text=(
+            "Indicates whether this item is currently expected to be active. "
+            "Unselect this to temporarily mark the item as inactive without deleting it, "
+            "maintaining its configuration."
+        ),
+    )
 
     def __str__(self):
         return self.name
@@ -217,6 +226,15 @@ class AbstractSensor(models.Model):
     labels = models.ManyToManyField("Label", blank=True)
     serial_no = models.CharField(max_length=30, default="", blank=True)
     uri = models.CharField(max_length=256, default="", blank=True)
+    is_active = models.BooleanField(
+        "active",
+        default=True,
+        help_text=(
+            "Indicates whether this item is currently expected to be active. "
+            "Unselect this to temporarily mark the item as inactive without deleting it, "
+            "maintaining its configuration."
+        ),
+    )
 
     class Meta:
         abstract = True
