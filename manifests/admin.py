@@ -418,6 +418,7 @@ class LorawanDeviceAdmin(admin.ModelAdmin):
 class LorawanConnectionAdmin(nested_admin.NestedModelAdmin):
     list_display = [
         "connection_name",
+        "is_active",
         "lorawan_device",
         "node",
         "created_at",
