@@ -15,11 +15,11 @@ class SensorViewSerializer(serializers.ModelSerializer):
         compute_sensors = obj.computesensor_set.all()
         node_sensors = obj.nodesensor_set.all()
         lorawan_sensors = obj.lorawandevice_set.all()
-        lorawan_connections = [ld.lorawanconnections.all() for ld in lorawan_sensors]
+        lorawan_connections = [ld.lorawanconnections.filter(is_active=True) for ld in lorawan_sensors]
         nodes = (
             [s.scope.node for s in compute_sensors]
             + [s.node for s in node_sensors]
-            + [lc[0].node for lc in lorawan_connections]
+            + [lc[0].node for lc in lorawan_connections if lc]
         )
 
         project = self.context["request"].query_params.get("project")
@@ -238,7 +238,7 @@ class ManifestSerializer(serializers.ModelSerializer):
         return [serialize_resource(r) for r in obj.resource_set.all()]
 
     def get_lorawan_connections(self, obj: NodeData):
-        return [serialize_lorawan_connections(l) for l in obj.lorawanconnections.all()]
+        return [serialize_lorawan_connections(l) for l in obj.lorawanconnections.filter(is_active=True)]
 
     class Meta:
         model = NodeData
@@ -480,7 +480,7 @@ class NodesSerializer(serializers.ModelSerializer):
                 results.append(self.serialize_common_sensor(s))
 
         # add all lorawan sensors
-        for s in obj.lorawanconnections.all():
+        for s in obj.lorawanconnections.filter(is_active=True):
             results.append(self.serialize_common_sensor(s.lorawan_device))
 
         return results
