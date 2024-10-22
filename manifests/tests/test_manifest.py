@@ -253,6 +253,84 @@ class ManifestTest(TestCase):
         else:
             self.assertEqual(item, expect)
 
+    def test_lc_activity(self):
+        """Test lorawan connections are returned based on its is_active field"""
+        #create objects
+        self.createComputeHardware(
+            [
+                {"hardware": "nx1", "hw_model": "Nvidia Jetson Xavier"},
+            ]
+        )
+
+        self.createSensorHardware(
+            [
+                {"hardware": "bme280", "hw_model": "BME280"},
+                {"hardware": "lorawan_1", "hw_model": "1"},
+            ]
+        )
+
+        self.createLorawanDevice(
+            [
+                {"deveui": "123", "name": "test", "hardware": "lorawan_1"},
+            ]
+        )
+
+        self.createManifests(
+            [
+                {
+                    "vsn": "W123",
+                    "gps_lat": 41.881832,
+                    "gps_lon": -87.623177,
+                    "computes": [
+                        {
+                            "name": "nxcore",
+                            "hardware": "nx1",
+                            "sensors": ["bme280"],
+                            "zone": "core",
+                        }
+                    ],
+                    "lorawanconnections": [
+                        {
+                            "connection_type": "OTAA",
+                            "lorawandevice": {
+                                "deveui": "123",
+                                "hardware": {
+                                    "hardware": "lorawan_1",
+                                },
+                            },
+                        },
+                    ],
+                },
+            ]
+        )
+
+        #all lc is returned since all are active
+        r = self.client.get("/manifests/W123/")
+        self.assertEqual(r.status_code, 200)
+        manifest = r.json()
+        self.assertManifestContainsSubset(
+            manifest,
+            {
+                "lorawanconnections": [
+                    {
+                        "connection_type": "OTAA",
+                        "lorawandevice": {
+                            "deveui": "123",
+                            "hardware": {
+                                "hardware": "lorawan_1",
+                            },
+                        },
+                    },
+                ],
+            },
+        )
+
+        #no lc is returned since all are inactive
+        LorawanConnection.objects.filter(lorawan_device__deveui="123").update(is_active=False)
+        r = self.client.get("/manifests/W123/")
+        self.assertEqual(r.status_code, 200)
+        manifest = r.json()
+        self.assertEqual(len(manifest["lorawanconnections"]), 0)
 
 class NodeBuildsTest(TestCase):
     def test_list(self):
@@ -675,6 +753,78 @@ class NodesViewSetTestCase(TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["vsn"], self.W123_data["vsn"])
 
+    def test_lc_activity(self):
+        """Test lorawan connections are returned based on its is_active field"""
+
+        # lorawan sensor is returned because lc is active
+        r = self.client.get("/api/v-beta/nodes/W123/")
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertEqual(
+            data["sensors"],
+            [
+                {
+                    "name": "bottom_camera",
+                    "is_active": True,
+                    "hw_model": "XNV-8081Z",
+                    "manufacturer": "Hanwha Techwin",
+                    "capabilities": ["camera"],
+                },
+                {
+                    "name": "top_camera",
+                    "is_active": True,
+                    "hw_model": "XNV-8081Z",
+                    "manufacturer": "Hanwha Techwin",
+                    "capabilities": ["camera"],
+                },
+                {
+                    "name": "bme680",
+                    "is_active": True,
+                    "hw_model": "BME680",
+                    "manufacturer": "Bosch",
+                    "capabilities": [],
+                },
+                {
+                    "name": "CSU_soil_sensor", #<--- lorawan sensor
+                    "is_active": True,
+                    "hw_model": "MKR WAN 1310",
+                    "manufacturer": "Arduino",
+                    "capabilities": ["lorawan"],
+                },
+            ],
+        )
+
+        #lorawan sensor is NOT returned because lc is inactive
+        LorawanConnection.objects.filter(lorawan_device__deveui="123").update(is_active=False)
+        r = self.client.get("/api/v-beta/nodes/W123/")
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertEqual(
+            data["sensors"],
+            [
+                {
+                    "name": "bottom_camera",
+                    "is_active": True,
+                    "hw_model": "XNV-8081Z",
+                    "manufacturer": "Hanwha Techwin",
+                    "capabilities": ["camera"],
+                },
+                {
+                    "name": "top_camera",
+                    "is_active": True,
+                    "hw_model": "XNV-8081Z",
+                    "manufacturer": "Hanwha Techwin",
+                    "capabilities": ["camera"],
+                },
+                {
+                    "name": "bme680",
+                    "is_active": True,
+                    "hw_model": "BME680",
+                    "manufacturer": "Bosch",
+                    "capabilities": [],
+                },
+            ],
+        )
 
 class NodeData_change_form_TestCase(TestCase):
     """

@@ -434,7 +434,15 @@ class LorawanConnection(models.Model):
     connection_type = models.CharField(
         max_length=30, choices=CONNECTION_CHOICES, null=False, blank=False
     )
-
+    is_active = models.BooleanField(
+        "active",
+        default=True,
+        help_text=(
+            "Indicates whether this item is currently expected to be active. "
+            "Unselect this to temporarily mark the item as inactive without deleting it, "
+            "maintaining its configuration."
+        ),
+    )
     # add more fields later like device class, app name etc- Flozano
 
     class Meta:

@@ -140,6 +140,32 @@ class SensorHardwareViewsTest(TestCase):
             item,
         )
 
+    def test_lc_activity(self):
+        """Test lora hardware vsn(s) are returned based on lorawan connection is_active field"""
+        #create objects
+        node_a = NodeData.objects.create(
+            vsn="A123", name="A_name", phase="Deployed"
+        )
+        sensor_c = SensorHardware.objects.create(
+            hardware="lorawan_temp", hw_model="temp"
+        )
+        ld = LorawanDevice.objects.create(deveui="234", hardware=sensor_c, name="test")
+        LorawanConnection.objects.create(
+            node=node_a, connection_type="OTAA", lorawan_device=ld
+        )
+
+        #vsn is returned since lc is active
+        r = self.client.get("/sensors/lorawan_temp/")
+        self.assertEqual(r.status_code, 200)
+        item = r.json()
+        self.assertEqual(item["vsns"][0], "A123")
+
+        #vsn is not returned because lc is not active
+        LorawanConnection.objects.filter(lorawan_device__deveui="234").update(is_active=False)
+        r = self.client.get("/sensors/lorawan_temp/")
+        self.assertEqual(r.status_code, 200)
+        item = r.json()
+        self.assertEqual(len(item["vsns"]), 0)
 
 class SensorHardwareNodeCRUDViewSetTest(TestCase):
     def setUp(self):
