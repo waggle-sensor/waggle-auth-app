@@ -35,6 +35,8 @@ AUTH_USER_KEYWORD = "Sage"
 AUTH_NODE_MODEL = "app.Node"
 AUTH_NODE_TOKEN_MODEL = "node_auth.Token"
 AUTH_NODE_KEYWORD = "node_auth"
+AUTHZ_OPA_HOST = env("AUTHZ_OPA_HOST", str, "")
+AUTHZ_OPA_PORT = env("AUTHZ_OPA_PORT", str, "")
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
