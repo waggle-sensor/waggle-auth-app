@@ -29,5 +29,8 @@ test:
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py test
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py check --deploy
 
+up:
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) up --build
+
 logs:
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f
