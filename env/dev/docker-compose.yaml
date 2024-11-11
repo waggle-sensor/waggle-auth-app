@@ -35,6 +35,6 @@ services:
       - "--watch"
       - "/policies" 
     volumes:
-      - ./opa/policies:/policies:z
+      - ../../opa/policies:/policies:z
     ports:
       - "8181:8181" 
