@@ -6,10 +6,14 @@ services:
       - "MYSQL_ROOT_PASSWORD=waggle"
       - "MYSQL_DATABASE=waggle"
   django:
-    image: django
-    build: .
+    build:
+      context: ../../
+      dockerfile: ./Dockerfile 
     restart: always
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:80 --reload --workers=3
+    command: >
+      sh -c "env/wait-for-it.sh mysql:3306 -- python manage.py migrate && 
+             python manage.py createsuperuser --noinput || true && 
+             gunicorn config.wsgi:application --bind 0.0.0.0:80 --reload --workers=3"
     ports:
       - 127.0.0.1:8000:80
     environment:
@@ -28,5 +32,10 @@ services:
       # Globus oauth2 / oidc settings (optional - see readme)
       - "OIDC_CLIENT_ID"
       - "OIDC_CLIENT_SECRET"
+      # superuser login
+      - "DJANGO_SUPERUSER_USERNAME=admin"
+      - "DJANGO_SUPERUSER_EMAIL=admin@example.com"
+      - "DJANGO_SUPERUSER_PASSWORD=admin"
     volumes:
-      - ./:/app:ro
+      - ../../:/app:ro
+#TODO: add OPA once you have a prod deployment - FL 11/11/2024
