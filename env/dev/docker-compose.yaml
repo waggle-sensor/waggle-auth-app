@@ -1,0 +1,40 @@
+services:
+  django:
+    build:
+      context: ../../
+      dockerfile: ./env/dev/Dockerfile 
+    restart: always
+    command: >
+      sh -c "python manage.py migrate && 
+             python manage.py createsuperuser --noinput || true && 
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      # superuser login
+      - "DJANGO_SETTINGS_MODULE=config.settings.dev"
+      - "DJANGO_SUPERUSER_USERNAME=admin"
+      - "DJANGO_SUPERUSER_EMAIL=admin@example.com"
+      - "DJANGO_SUPERUSER_PASSWORD=admin"
+      # Static file settings.
+      - "STATIC_ROOT=/app/staticfiles"
+    volumes:
+      - ../../:/app:rw
+  opa:
+    image: openpolicyagent/opa:0.70.0
+    platform: linux/amd64
+    command:
+      - run
+      - "--ignore=.*"
+      - --log-level
+      - debug
+      - --server
+      - --set
+      - "decision_logs.console=true"
+      - "--v1-compatible"
+      - "--watch"
+      - "/policies" 
+    volumes:
+      - ./opa/policies:/policies:z
+    ports:
+      - "8181:8181" 
