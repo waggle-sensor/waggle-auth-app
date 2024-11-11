@@ -20,3 +20,4 @@ setuptools==69.2.0
 # when building the image. We can revisit this later if we want to move it to just prod.
 django-debug-toolbar==4.3.0 # enables a debug toolbar, helps with debugging api endpoints
 scitokens==1.8.1
+opa-python-client==2.0.0
