@@ -7,6 +7,11 @@ This Django project provides a few different APIs and services for Waggle. They 
 
 This list may be expanded upon in the future.
 
+# TODO
+- [ ] update Readme to bring up dev/prod environments
+- [ ] update Readme based on Makefile modifications
+- [ ] update Readme with OPA instructions 
+
 ## Configurations
 
 There are two development / deployment configurations:
