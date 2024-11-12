@@ -37,6 +37,8 @@ AUTH_NODE_TOKEN_MODEL = "node_auth.Token"
 AUTH_NODE_KEYWORD = "node_auth"
 AUTHZ_OPA_HOST = env("AUTHZ_OPA_HOST", str, "")
 AUTHZ_OPA_PORT = env("AUTHZ_OPA_PORT", str, "")
+AUTHZ_OPA_DEFAULT_POLICY = env("AUTHZ_OPA_DEFAULT_POLICY", str, "policy")
+AUTHZ_OPA_DEFAULT_RULE = env("AUTHZ_OPA_DEFAULT_RULE", str, "allow")
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
