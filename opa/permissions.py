@@ -14,16 +14,32 @@ class OpaPermission(BasePermission):
         self._policy = get_opa_default_policy()
         self._rule = get_opa_default_rule
 
-    def has_permission(self, request, view):
-        # data sent to OPA
-        input_data = {"input": {
-            "request": request, 
-            "view": view,}}
-
-        # Use the policy_name and rule_name defined on the view class
-        # if not set use default
+    def _check_opa_permission(self, request, view, obj=None):
+        """
+        Helper function to send request data and object data (if available) to OPA.
+        """
+        # Use the policy_name, rule_name, & extra_attrs defined on the view class
+        # If not set, use default
+        extra_attrs = getattr(view, "opa_extra_input_attrs", {})
         policy_name = getattr(view, "opa_policy", self._policy)
         rule_name = getattr(view, "opa_rule", self._rule)
+
+        # Default data sent to OPA
+        input_data = {
+            "user": {
+                "username": request.user.username if request.user.is_authenticated else "AnonymousUser",
+                "groups": list(request.user.groups.values_list("name", flat=True))
+            },
+            "method": request.method,
+            "path": request.path,
+            "query_params": request.query_params.dict(),
+            "view_name": view.__class__.__name__,
+            "extra_attrs": extra_attrs,
+        }
+
+        # If object data is provided, include it in the input to OPA
+        if obj:
+            input_data["record_data"] = obj
 
         try:
             response = self._client.check_permission(
@@ -33,9 +49,22 @@ class OpaPermission(BasePermission):
             )
         except Exception as err:
             return JsonResponse(data={"message": f"[OPA] Internal Error, {err}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        allowed = response["result"]
+
+        allowed = response.get("result", False)
         if not allowed:
             return JsonResponse(data={"message": "[OPA] User not allowed"}, status=status.HTTP_403_FORBIDDEN)
 
         return allowed
+
+    def has_permission(self, request, view) -> bool:
+        """
+        View-level permission check. This checks if the user has permission to access a view in general.
+        """
+        return self._check_opa_permission(request, view)
+
+    def has_object_permission(self, request, view, obj) -> bool:
+        """
+        Object-level permission check. This checks if the user has permission to access a specific object.
+        """
+        return self._check_opa_permission(request, view, obj)
+
