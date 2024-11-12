@@ -9,7 +9,7 @@ def get_opa_host():
         return settings.AUTHZ_OPA_HOST
     except AttributeError:
         raise ImproperlyConfigured(
-            "AUTHZ_OPA_HOST needs to be configured in settings"
+            "AUTHZ_OPA_HOST str needs to be configured in settings"
         )
 
 def get_opa_port():
@@ -20,7 +20,7 @@ def get_opa_port():
         return settings.AUTHZ_OPA_PORT
     except AttributeError:
         raise ImproperlyConfigured(
-            "AUTHZ_OPA_PORT needs to be configured in settings"
+            "AUTHZ_OPA_PORT int needs to be configured in settings"
         )
     
 def get_opa_default_policy():
