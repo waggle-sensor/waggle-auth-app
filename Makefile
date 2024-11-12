@@ -4,6 +4,9 @@ ENV ?= dev
 # Default value for data file path, can be overridden by passing `DATA_FILE`
 DATA_FILE ?= ../waggle-auth-app-fixtures/data.json
 
+# Extract just the filename from the data file path
+DATA_FILENAME := $(notdir $(DATA_FILE))
+
 # Set the compose file based on the environment.
 DOCKER_COMPOSE_FILE := ./env/$(ENV)/docker-compose.yaml
 
@@ -23,7 +26,9 @@ createsuperuser:
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py createsuperuser
 
 loaddata:
-	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py loaddata $(DATA_FILE)
+	@cp $(DATA_FILE) ./$(DATA_FILENAME)
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py loaddata $(DATA_FILENAME)
+	@rm ./$(DATA_FILENAME)
 
 test:
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py test
