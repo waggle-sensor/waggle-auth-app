@@ -32,7 +32,7 @@ class OpaPermission(BasePermission):
                 rule_name=rule_name,
             )
         except Exception as err:
-            return JsonResponse(data={"message": "[OPA] Internal Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(data={"message": f"[OPA] Internal Error, {err}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         allowed = response["result"]
         if not allowed:
