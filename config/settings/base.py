@@ -30,11 +30,11 @@ INSTALLED_APPS = [
 # Enable to add google address completion
 # GOOGLE_API_KEY = ''
 
-AUTH_USER_MODEL = "app.User"
-AUTH_USER_KEYWORD = "Sage"
-AUTH_NODE_MODEL = "app.Node"
-AUTH_NODE_TOKEN_MODEL = "node_auth.Token"
-AUTH_NODE_KEYWORD = "node_auth"
+AUTH_USER_MODEL = env("AUTH_USER_MODEL", str, "app.User")
+AUTH_USER_KEYWORD = env("AUTH_USER_KEYWORD", str, "Sage")
+AUTH_NODE_MODEL = env("AUTH_NODE_MODEL", str, "app.Node")
+AUTH_NODE_TOKEN_MODEL = env("AUTH_NODE_TOKEN_MODEL", str, "node_auth.Token")
+AUTH_NODE_KEYWORD = env("AUTH_NODE_KEYWORD", str, "node_auth")
 AUTHZ_OPA_HOST = env("AUTHZ_OPA_HOST", str, "")
 AUTHZ_OPA_PORT = env("AUTHZ_OPA_PORT", str, "")
 AUTHZ_OPA_DEFAULT_POLICY = env("AUTHZ_OPA_DEFAULT_POLICY", str, "policy")
