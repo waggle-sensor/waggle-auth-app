@@ -33,7 +33,9 @@ services:
       - "decision_logs.console=true"
       - "--v1-compatible"
       - "--watch"
-      - "/policies" 
+      - "/policies"
+      - --addr
+      - 0.0.0.0:8181
     volumes:
       - ../../opa/policies:/policies:z
     ports:
