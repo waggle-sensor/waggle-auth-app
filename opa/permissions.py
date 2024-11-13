@@ -104,15 +104,9 @@ class OpaPermission(BasePermission):
                 rule_name=rule_name,
             )
         except Exception as err:
-            raise err 
-            return False
-            # return JsonResponse(data={"message": f"[OPA] Internal Error, {err}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise Exception(f"[OPA] Internal Error, {err}")
 
         allowed = response.get("result", False)
-        if not allowed:
-            return False
-            # return JsonResponse(data={"message": "[OPA] User not allowed"}, status=status.HTTP_403_FORBIDDEN)
-
         return allowed
 
     def has_permission(self, request, view) -> bool:
