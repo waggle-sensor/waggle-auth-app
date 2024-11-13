@@ -65,6 +65,20 @@ class OpaPermission(BasePermission):
 
         # For non-Django model objects, return the object's __dict__ if it exists
         return obj.__dict__ if hasattr(obj, '__dict__') else {}
+    
+    def _get_client_ip(self,request):
+        """
+        Get the IP address of the request origin
+        """
+        # First check the `HTTP_X_FORWARDED_FOR` header (for cases where there's a proxy or load balancer)
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            # The first IP in the list is the original client IP
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            # If no proxy, use the `REMOTE_ADDR` key which contains the direct IP
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
 
     def _check_opa_permission(self, request, view, obj=None) -> bool:
         """
@@ -89,6 +103,7 @@ class OpaPermission(BasePermission):
                 "method": request.method,
                 "path": request.path,
                 "query_params": request.query_params.dict(),
+                "client_ip_addr": self._get_client_ip(request)
             },
             "view_name": view.__class__.__name__,
             "extra_attrs": extra_attrs,
