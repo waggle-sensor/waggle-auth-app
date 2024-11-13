@@ -35,9 +35,9 @@ AUTH_USER_KEYWORD = env("AUTH_USER_KEYWORD", str, "Sage")
 AUTH_NODE_MODEL = env("AUTH_NODE_MODEL", str, "app.Node")
 AUTH_NODE_TOKEN_MODEL = env("AUTH_NODE_TOKEN_MODEL", str, "node_auth.Token")
 AUTH_NODE_KEYWORD = env("AUTH_NODE_KEYWORD", str, "node_auth")
-AUTHZ_OPA_HOST = env("AUTHZ_OPA_HOST", str, "localhost")
+AUTHZ_OPA_HOST = env("AUTHZ_OPA_HOST", str, "opa")
 AUTHZ_OPA_PORT = env.int("AUTHZ_OPA_PORT", default=8181)
-AUTHZ_OPA_DEFAULT_POLICY = env("AUTHZ_OPA_DEFAULT_POLICY", str, "policy")
+AUTHZ_OPA_DEFAULT_POLICY = env("AUTHZ_OPA_DEFAULT_POLICY", str, "policies/policy.rego")
 AUTHZ_OPA_DEFAULT_RULE = env("AUTHZ_OPA_DEFAULT_RULE", str, "allow")
 
 MIDDLEWARE = [

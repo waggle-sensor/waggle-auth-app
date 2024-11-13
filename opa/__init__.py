@@ -28,7 +28,7 @@ def get_opa_default_policy() -> str:
     Return the default Open Policy Agent policy name.
     Uses "policy" as the default if AUTHZ_OPA_DEFAULT_POLICY is not set in settings.
     """
-    return getattr(settings, "AUTHZ_OPA_DEFAULT_POLICY", "policy")
+    return getattr(settings, "AUTHZ_OPA_DEFAULT_POLICY", "policies/policy.rego")
 
 def get_opa_default_rule() -> str:
     """
