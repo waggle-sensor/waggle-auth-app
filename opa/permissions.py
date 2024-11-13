@@ -19,7 +19,7 @@ class OpaPermission(BasePermission):
         self._policy = get_opa_default_policy()
         self._rule = get_opa_default_rule()
     
-    def _serialize_object(self, obj, top_level=True, get_related=False):
+    def _serialize_object(self, obj, top_level=True, get_related=False) -> dict:
         """
         Serializes a Django model instance into a JSON-compatible dictionary.
         Handles datetime fields by converting them to ISO strings.
@@ -96,7 +96,6 @@ class OpaPermission(BasePermission):
         # If object data is provided, include it in the input to OPA
         if obj:
             input_data["record_data"] = self._serialize_object(obj,top_level=True, get_related=get_related)
-            print(input_data["record_data"])
 
         try:
             response = self._client.check_permission(
