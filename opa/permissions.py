@@ -82,13 +82,14 @@ class OpaPermission(BasePermission):
 
         # Default data sent to OPA
         input_data = {
-            "user": {
+            "request": {
+                "node": request.node.vsn if request.node.vsn else "AnonymousNode",
                 "username": request.user.username if request.user.is_authenticated else "AnonymousUser",
-                "groups": list(request.user.groups.values_list("name", flat=True))
+                "groups": list(request.user.groups.values_list("name", flat=True)),
+                "method": request.method,
+                "path": request.path,
+                "query_params": request.query_params.dict(),
             },
-            "method": request.method,
-            "path": request.path,
-            "query_params": request.query_params.dict(),
             "view_name": view.__class__.__name__,
             "extra_attrs": extra_attrs,
         }
