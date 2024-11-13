@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from .models import Token
 from node_auth import get_node_token_keyword, get_node_token_model
+from node_auth.contrib.auth.models import AnonymousNode
 
 def get_authorization_header(request):
     """
@@ -71,10 +72,10 @@ class TokenAuthentication(BaseAuthentication):
                 "Invalid token header. Token string should not contain invalid characters."
             )
             raise exceptions.AuthenticationFailed(msg)
+        
+        return self.authenticate_credentials(token, request)
 
-        return self.authenticate_credentials(token)
-
-    def authenticate_credentials(self, key):
+    def authenticate_credentials(self, key, request):
         model = self.model
         try:
             token = model.objects.select_related("node").get(key=key)
@@ -84,7 +85,9 @@ class TokenAuthentication(BaseAuthentication):
         if not token.node.is_active: 
             raise exceptions.AuthenticationFailed(_('Node inactive or deleted.'))
 
-        return (token.node, token)
+        request.node = token.node
+
+        return None #return none so request.user doesn't get over written
 
     def authenticate_header(self, request):
         return self.keyword
