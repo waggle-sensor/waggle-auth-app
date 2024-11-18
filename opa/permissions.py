@@ -101,7 +101,7 @@ class OpaPermission(BasePermission):
                 "username": request.user.username if request.user.is_authenticated else "AnonymousUser",
                 "groups": list(request.user.groups.values_list("name", flat=True)),
                 "method": request.method,
-                "path": request.path,
+                "path": request.path.rstrip("/").strip().split("/")[1:],
                 "query_params": request.query_params.dict(),
                 "client_ip_addr": self._get_client_ip(request)
             },
