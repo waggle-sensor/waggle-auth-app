@@ -20,15 +20,15 @@ services:
       - "STATIC_ROOT=/app/staticfiles"
       # S3 settings
       - "S3_ENDPOINT=sdsc.osn.xsede.org"
-      - "S3_ACCESS_KEY=${S3_ACCESS_KEY}" #FILL IN
-      - "S3_SECRET_KEY=${S3_SECRET_KEY}" #FILL IN
+      - "S3_ACCESS_KEY=${S3_ACCESS_KEY}"
+      - "S3_SECRET_KEY=${S3_SECRET_KEY}"
       - "S3_BUCKET_NAME=sage"
       - "S3_ROOT_FOLDER=node-data"
       - "S3_REGION=us-west-2"
       # Pelican settings
-      - "PELICAN_KEY_PATH=${PELICAN_KEY_PATH}" #FILL IN, ex: /config/issuer-key.pem
+      - "PELICAN_KEY_PATH=${PELICAN_KEY_PATH}"
       - "PELICAN_ALGORITHM=ES256"
-      - "PELICAN_KEY_ID=${PELICAN_KEY_ID}" #FILL IN
+      - "PELICAN_KEY_ID=${PELICAN_KEY_ID}"
       - "PELICAN_ISSUER=https://sagecontinuum.org"
       - "PELICAN_LIFETIME=60"
       - "PELICAN_ROOT_URL=https://nrdstor.nationalresearchplatform.org:8443/sage"
