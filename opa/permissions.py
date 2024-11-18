@@ -98,8 +98,10 @@ class OpaPermission(BasePermission):
         input_data = {
             "request": {
                 "node": request.node.vsn if request.node.vsn else "AnonymousNode",
-                "username": request.user.username if request.user.is_authenticated else "AnonymousUser",
-                "groups": list(request.user.groups.values_list("name", flat=True)),
+                "user": {
+                    "username": request.user.username if request.user.is_authenticated else "AnonymousUser",
+                    "groups": list(request.user.groups.values_list("name", flat=True)),
+                },
                 "method": request.method,
                 "path": request.path.rstrip("/").strip().split("/")[1:],
                 "query_params": request.query_params.dict(),
