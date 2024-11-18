@@ -8,8 +8,12 @@ This Django project provides a few different APIs and services for Waggle. They 
 This list may be expanded upon in the future.
 
 # TODO
-- [ ] update Readme to bring up dev/prod environments (remember to add access to django is localhost:8000/admin)
+- [ ] update Readme to bring up dev/prod environments (remember to add "to access django visit localhost:8000/admin")
+  - how to add keys to access artifacts (downloads view)
+  - etc
 - [ ] update Readme based on Makefile modifications
+  - how to load data using make command
+  - etc
 - [ ] update Readme with OPA instructions 
 
 ## Configurations
