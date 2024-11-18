@@ -25,18 +25,19 @@ services:
     platform: linux/amd64
     command:
       - run
+      - /policies
+      - --server
+      - --addr
+      - 0.0.0.0:8181
+      - --watch 
       - "--ignore=.*"
       - --log-level
       - debug
-      - --server
+      - "--log-format=json-pretty"
       - --set
       - "decision_logs.console=true"
-      - "--v1-compatible"
-      - "--watch"
-      - "/policies"
-      - --addr
-      - 0.0.0.0:8181
+      - --v1-compatible
     volumes:
-      - ../../opa/policies:/policies:z
+      - ../../opa/policies:/policies
     ports:
       - "8181:8181" 
