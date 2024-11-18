@@ -4,6 +4,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.forms.models import model_to_dict
 from datetime import datetime
+import uuid
 
 def get_opa_host() -> str:
     """
@@ -60,6 +61,8 @@ def serialize_model(obj, top_level=True, get_related=False) -> dict:
                 record_data[field] = value.isoformat()
             elif isinstance(value, decimal.Decimal):  # Handle Decimal fields
                 record_data[field] = float(value)  # Convert Decimal to float
+            elif isinstance(value, uuid.UUID):  # Handle UUID fields
+                record_data[field] = str(value)  # Convert UUID to string
             elif isinstance(value, list) and all(isinstance(item, models.Model) for item in value):  # Handle list of models
                 if get_related:
                     record_data[field] = [serialize_model(item, top_level=False, get_related=get_related) for item in value]
