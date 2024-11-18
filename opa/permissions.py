@@ -50,7 +50,8 @@ class OpaPermission(BasePermission):
             "request": {
                 "node": request.node.vsn if request.node.vsn else "AnonymousNode",
                 "user": {
-                    "username": request.user.username if request.user.is_authenticated else "AnonymousUser",
+                    "id": str(request.user.id) if request.user.is_authenticated else "",
+                    "username": str(request.user.username) if request.user.is_authenticated else "AnonymousUser",
                     "groups": list(request.user.groups.values_list("name", flat=True)),
                 },
                 "method": request.method,
