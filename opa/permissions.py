@@ -1,13 +1,11 @@
 from rest_framework.permissions import BasePermission
-from django.http import JsonResponse
-from rest_framework import status
 from opa_client import OpaClient
-from opa import get_opa_host, get_opa_port, get_opa_default_policy, get_opa_default_rule
-from django.forms.models import model_to_dict
-from datetime import datetime
-from django.db import models
-from collections.abc import Iterable
-import decimal
+from opa import (
+    get_opa_host, 
+    get_opa_port, 
+    get_opa_default_policy, 
+    get_opa_default_rule,
+    serialize_model)
 
 class OpaPermission(BasePermission):
     """
@@ -18,53 +16,6 @@ class OpaPermission(BasePermission):
         self._client = OpaClient(host=get_opa_host(), port=get_opa_port())
         self._policy = get_opa_default_policy()
         self._rule = get_opa_default_rule()
-    
-    def _serialize_object(self, obj, top_level=True, get_related=False) -> dict:
-        """
-        Serializes a Django model instance into a JSON-compatible dictionary.
-        Handles datetime fields by converting them to ISO strings.
-        This function only checks fields of the top-level model (obj), not the related models of child relationships.
-        """
-        # Check if obj is a Django model instance
-        if isinstance(obj, models.Model):
-
-            # Serialize main fields of the model instance
-            record_data = model_to_dict(obj)
-
-            # Convert fields
-            for field, value in list(record_data.items()):
-                if isinstance(value, datetime):
-                    record_data[field] = value.isoformat()
-                elif isinstance(value, decimal.Decimal):  # Handle Decimal fields
-                    record_data[field] = float(value)  # Convert Decimal to float
-                elif isinstance(value, list) and all(isinstance(item, models.Model) for item in value):  # Handle list of models
-                    if get_related:
-                        record_data[field] = [self._serialize_object(item, top_level=False, get_related=get_related) for item in value]
-                    else:
-                        record_data.pop(field)
-
-
-            # Handle related fields at the top level
-            if top_level and get_related:
-                for related_obj in obj._meta.get_fields():
-                    if isinstance(related_obj, (models.OneToOneRel, models.ForeignKey)):
-                        # Single related instance (OneToOneRel, ForeignKey)
-                        related_instance = getattr(obj, related_obj.name, None)
-                        if related_instance:
-                            record_data[related_obj.name] = self._serialize_object(related_instance, top_level=False, get_related=get_related)
-
-                    elif isinstance(related_obj, (models.ManyToOneRel, models.ManyToManyRel)):
-                        # Multiple related instances (Many-to-One, Many-to-Many)
-                        related_manager = getattr(obj, related_obj.get_accessor_name(), None)
-                        if related_manager:
-                            record_data[related_obj.get_accessor_name()] = [
-                                self._serialize_object(related_instance, top_level=False, get_related=get_related) for related_instance in related_manager.all()
-                            ]
-
-            return record_data
-
-        # For non-Django model objects, return the object's __dict__ if it exists
-        return obj.__dict__ if hasattr(obj, '__dict__') else {}
     
     def _get_client_ip(self,request):
         """
@@ -113,7 +64,7 @@ class OpaPermission(BasePermission):
 
         # If object data is provided, include it in the input to OPA
         if obj:
-            input_data["record_data"] = self._serialize_object(obj,top_level=True, get_related=get_related)
+            input_data["record_data"] = serialize_model(obj,top_level=True, get_related=get_related)
 
         try:
             response = self._client.check_permission(
