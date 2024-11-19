@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.forms.models import model_to_dict
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 def get_opa_host() -> str:
@@ -58,7 +58,8 @@ def serialize_model(obj, top_level=True, get_related=False) -> dict:
         # Convert fields
         for field, value in list(record_data.items()):
             if isinstance(value, datetime):
-                record_data[field] = value.isoformat()
+                # Convert datetime to RFC3339 format (UTC)
+                record_data[field] = value.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
             elif isinstance(value, decimal.Decimal):  # Handle Decimal fields
                 record_data[field] = float(value)  # Convert Decimal to float
             elif isinstance(value, uuid.UUID):  # Handle UUID fields
