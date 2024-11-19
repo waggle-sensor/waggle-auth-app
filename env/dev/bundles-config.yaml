@@ -1,0 +1,15 @@
+services:
+  github: #TODO: create the repo in waggle org
+    url: https://raw.githubusercontent.com/FranciscoLozCoding/waggle-Policies
+    credentials:
+      bearer: #TODO: change to a waggle generated token, right now it is my personal account token
+        scheme: "Bearer"
+        token: "${BUNDLES_GITHUB_TOKEN}"
+
+bundles:
+  waggle-Policies:
+    service: github
+    resource: "main/bundle.tar.gz"
+    polling:
+      min_delay_seconds: 60
+      max_delay_seconds: 120
