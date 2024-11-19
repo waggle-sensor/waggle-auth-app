@@ -33,6 +33,8 @@ services:
       - "PELICAN_LIFETIME=60"
       - "PELICAN_ROOT_URL=https://nrdstor.nationalresearchplatform.org:8443/sage"
       - "PELICAN_ROOT_FOLDER=/node-data"
+    env_file:
+      - .env
     volumes:
       - ../../:/app:rw
   opa:
@@ -52,6 +54,8 @@ services:
       - --set
       - "decision_logs.console=true"
       - --v1-compatible
+    env_file:
+      - .env
     volumes:
       - ./bundles-config.yaml:/bundles-config.yaml
     ports:

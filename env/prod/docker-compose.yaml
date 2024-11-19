@@ -51,6 +51,8 @@ services:
       - "PELICAN_LIFETIME=60"
       - "PELICAN_ROOT_URL=https://nrdstor.nationalresearchplatform.org:8443/sage"
       - "PELICAN_ROOT_FOLDER=/node-data"
+    env_file:
+      - .env
     volumes:
       - ../../:/app:ro
 #TODO: add OPA once you have a prod deployment - FL 11/11/2024
