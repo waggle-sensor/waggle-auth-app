@@ -40,7 +40,7 @@ services:
     platform: linux/amd64
     command:
       - run
-      - /policies
+      - "--config-file=/bundles-config.yaml"
       - --server
       - --addr
       - 0.0.0.0:8181
@@ -53,6 +53,6 @@ services:
       - "decision_logs.console=true"
       - --v1-compatible
     volumes:
-      - ../../opa/policies:/policies
+      - ./bundles-config.yaml:/bundles-config.yaml
     ports:
       - "8181:8181" 
