@@ -19,10 +19,13 @@ import app.authentication
 from .authentication import BasicTokenPasswordAuthentication
 from pathlib import Path
 from scitokens import SciToken
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import os.path
 from app.models import User
 import requests
+from opa.permissions import OpaPermission
+from opa import serialize_model
+import json
 
 
 @dataclass
@@ -32,12 +35,22 @@ class Item:
     node_id: str
     timestamp_and_filename: str
 
-    def timestamp(self):
+    def timestamp(self) -> datetime:
         s = self.timestamp_and_filename.split("-", maxsplit=1)[0]
         nanos = float(s)
         timestamp = nanos / 1e9
         return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
+    def to_dict(self) -> dict:
+        """Converts the Item object into a JSON-compatible dictionary."""
+        data = asdict(self)
+        # Serialize datetime as an ISO string in RFC3339 format
+        data["timestamp"] = self.timestamp().strftime('%Y-%m-%dT%H:%M:%SZ')
+        return data
+
+    def to_json(self) -> str:
+        """Serializes the Item object to a JSON string."""
+        return json.dumps(self.to_dict())
 
 def get_minio_client():
     return Minio(
@@ -152,6 +165,10 @@ class DownloadsView(APIView):
         rest_framework.authentication.TokenAuthentication,
         app.authentication.TokenAuthentication,
     ]
+    permission_classes = [OpaPermission]
+    opa_policy = "waggle-Policies/waggle-auth-app.bdl/user_policy.rego"
+    opa_rule = "file_access"
+    opa_extra_input_attrs = {}
 
     def dispatch(
         self, request: HttpRequest, *args: Any, **kwargs: Any
@@ -168,23 +185,19 @@ class DownloadsView(APIView):
             kwargs["timestamp_and_filename"],
         )
 
-        # TODO(sean) See if there's a cleaner way to do this. We currently compute here as we use this both in the
-        # method handler and in get_permissions to allow DRF to dynamically turn on / off authentication checks for
-        # public files.
-        self.file_is_public = (
-            self.node.files_public
-            and self.node.commissioning_date is not None
-            and item.timestamp() >= self.node.commissioning_date
-        )
+        #serialize projects
+        projects = Project.objects.filter(nodemembership__node=self.node)
+        serialized_projects = [serialize_model(project, get_related=True) for project in projects]
+
+        #create a dict of file attr 
+        artifact = item.to_dict()
+        artifact["node"] = serialize_model(self.node)
+        artifact["project"] = serialized_projects
+
+        # Add additional attributes to opa_extra_input_attrs
+        self.opa_extra_input_attrs["file"] = artifact
 
         return super().dispatch(request, *args, **kwargs)
-
-    def get_permissions(self):
-        if self.request.method in ["OPTIONS", "HEAD"]:
-            return [AllowAny()]
-        if self.file_is_public:
-            return [AllowAny()]
-        return [IsAuthenticated()]
 
     def head(
         self,
@@ -250,6 +263,5 @@ class DownloadsView(APIView):
             node_id,
             timestamp_and_filename,
         )
-        if self.file_is_public or has_object_permission(request.user, self.node):
-            return HttpResponseRedirect(get_redirect_url(item))
-        return HttpResponse("Permission denied", status=status.HTTP_403_FORBIDDEN)
+
+        return HttpResponseRedirect(get_redirect_url(item))
