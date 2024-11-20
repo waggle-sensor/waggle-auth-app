@@ -9,7 +9,7 @@ services:
 bundles:
   waggle-Policies:
     service: github
-    resource: "main/bundles/waggle-auth-app.tar.gz"
+    resource: "dev/bundles/waggle-auth-app.tar.gz"
     polling:
       min_delay_seconds: 60
       max_delay_seconds: 120
