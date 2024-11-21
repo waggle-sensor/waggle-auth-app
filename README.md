@@ -81,9 +81,7 @@ To implement the model edits to the server run:
 make migrate
 ```
 
-To edit policies, modify policies in your dev branch and push to origin. More details at [waggle-policies](https://github.com/FranciscoLozCoding/waggle-Policies). The server will take care of the rest as long as you defined the correct branch in `env/dev/bundles-config.yaml`. 
-
-TODO (FL): create waggle-policies under waggle org
+To edit policies, modify policies in your dev branch and push to origin. More details at [waggle-policies](https://github.com/waggle-sensor/waggle-policies). The server will take care of the rest as long as you defined the correct branch in `env/dev/bundles-config.yaml`. 
 
 ### Running a local production server
 
