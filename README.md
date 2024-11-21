@@ -7,21 +7,20 @@ This Django project provides a few different APIs and services for Waggle. They 
 
 This list may be expanded upon in the future.
 
-# TODO
-- [ ] update Readme to bring up dev/prod environments (remember to add "to access django visit localhost:8000/admin")
-  - how to add keys to access artifacts (downloads view)
-  - etc
-- [ ] update Readme based on Makefile modifications
-  - how to load data using make command
-  - etc
-- [ ] update Readme with OPA instructions 
-
 ## Configurations
 
-There are two development / deployment configurations:
+There are two development / deployment configurations both in `env` folder:
 
 * dev: intended for fast, local dev on host machine. debug flags are enabled.
 * prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
+
+For both environments, you will have to set up the keys in `env/<environment>/.env` so that the environments can run successfully.
+
+- S3_ACCESS_KEY: This is the access key for your S3 storage
+- S3_SECRET_KEY: This is the secret key for your S3 storage
+- PELICAN_KEY_PATH: This is the path to the .pem file for Pelican in the docker container
+- PELICAN_KEY_ID: The id for the jwt public key used for Pelican found in `jwks.json` (https://sagecontinuum.org/.well-known/openid-configuration)
+- BUNDLES_GITHUB_TOKEN: This is the github token Open Policy Agent will use to download bundles from a repo.
 
 Optionally, you can configure user login via Globus OIDC for either of these environments.
 
@@ -43,13 +42,17 @@ After activating your venv, install the dev requirements:
 pip install -r requirements/dev.txt
 ```
 
-Next, run the one time static file collection, database migrations and create a super user.
+Next, you can start the dev server. The server will start in a docker container first running `migrate`, `createsuperuser`, and then `runserver`:
 
 ```sh
-python manage.py collectstatic
-python manage.py migrate
-python manage.py createsuperuser
+make up #to run and see logs or...
+make start #to run in the background
 ```
+
+To access the server once it's running visit [http://localhost:8000/admin/](http://localhost:8000/admin/) and log in using:
+
+- Username: `admin`
+- Password: `admin`
 
 You can run the test suite using the following [pytest](https://docs.pytest.org/) command:
 
@@ -58,42 +61,52 @@ You can run the test suite using the following [pytest](https://docs.pytest.org/
 pytest
 ```
 
-Finally, you can start the dev server:
+If you want to load test data run: (Our test data is hosted in this [repo](https://github.com/waggle-sensor/waggle-auth-app-fixtures))
 
 ```sh
-python manage.py runserver
+make loaddata DATA_FILE=<path_to_data.json> #default is ../waggle-auth-app-fixtures/data.json
 ```
 
-### Running in docker compose using prod configuration
+After, making some edits to the models you can run:
+
+```sh
+python manage.py makemigrations
+```
+
+To implement the model edits to the server run:
+
+```sh
+make migrate
+```
+
+To edit policies, modify policies in your dev branch and push to origin. More details at [waggle-policies](https://github.com/FranciscoLozCoding/waggle-Policies). The server will take care of the rest as long as you defined the correct branch in `env/dev/bundles-config.yaml`. 
+
+TODO (FL): create waggle-policies under waggle org
+
+### Running a local production server
 
 To stand up the prod environment in docker compose, simply run:
 
 ```sh
-make start
-```
-
-Wait a moment for all the containers to start, then run:
-
-```sh
-make migrate
-make collectstatic
-make createsuperuser
+make start ENV=prod #to run in the background
 ```
 
 This will perform the one time database migrations, compilation of all static assets and creation of a super user.
+To access the server once it's running visit [http://localhost:8000/admin/](http://localhost:8000/admin/) and log in using:
 
-Try visiting [http://localhost:8000/admin/](http://localhost:8000/admin/) to ensure the app is running.
+- Username: `admin`
+- Password: `admin`
 
 The test suite can be run using:
 
 ```sh
-make test
+make test ENV=prod
 ```
 
 Finally, when you're done working, you can stop everything using:
 
 ```sh
-make stop
+make stop ENV=prod
 ```
 
 ### Enable user login via Globus OIDC
@@ -131,3 +144,20 @@ user.is_superuser = True
 user.save()
 ```
 7. You should now be able to run your django server and log in to the admin site succesfully
+
+## Make Commands
+
+| Command                | Description                                                                                   |
+|------------------------|-----------------------------------------------------------------------------------------------|
+| `make start ENV=<env>` | Starts the server in the background (`dev` by default).                                       |
+| `make stop ENV=<env>`  | Stops the background server (`dev` by default).                                               |
+| `make migrate ENV=<env>` | Applies database migrations (`dev` by default).                                            |
+| `make collectstatic ENV=<env>` | Collects static files (`dev` by default).                                          |
+| `make createsuperuser ENV=<env>` | Creates a superuser (`dev` by default).                                        |
+| `make loaddata DATA_FILE=<path> ENV=<env>` | Loads fixture data (`dev` and `../waggle-auth-app-fixtures/data.json` by default).                  |
+| `make test ENV=<env>`  | Runs tests (`dev` by default).                                                                |
+| `make up ENV=<env>`    | Starts the server and displays logs (`dev` by default).                                      |
+| `make logs ENV=<env>`  | Displays logs for a running server (`dev` by default).                                        |
+--- 
+
+> ENV can be `dev` or `prod`
