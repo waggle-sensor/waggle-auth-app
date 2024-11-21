@@ -14,13 +14,15 @@ There are two development / deployment configurations both in `env` folder:
 * dev: intended for fast, local dev on host machine. debug flags are enabled.
 * prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
 
-For both environments, you will have to set up the keys in `env/<environment>/.env` so that the `downloads` app can work. If you are not working on `downloads` this can be ignored.
+For both environments, you will have to set up the keys in `env/<environment>/.env` so that the `downloads` app can work. 
 
 - S3_ACCESS_KEY: This is the access key for your S3 storage
 - S3_SECRET_KEY: This is the secret key for your S3 storage
 - PELICAN_KEY_PATH: This is the path to the .pem file for Pelican in the docker container
 - PELICAN_KEY_ID: The id for the jwt public key used for Pelican found in `jwks.json` (https://sagecontinuum.org/.well-known/openid-configuration)
 - BUNDLES_GITHUB_TOKEN: This is the github token Open Policy Agent will use to download bundles from a repo.
+
+>NOTE: If you are not working on the `downloads` app this can be ignored.
 
 Optionally, you can configure user login via Globus OIDC for either of these environments.
 
