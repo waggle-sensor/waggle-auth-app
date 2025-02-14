@@ -16,13 +16,19 @@ from datetime import datetime, timedelta, timezone
 from django.conf import settings
 import rest_framework.authentication
 import app.authentication
-from .authentication import BasicTokenPasswordAuthentication
 from pathlib import Path
 from scitokens import SciToken
 from dataclasses import dataclass
 import os.path
 from app.models import User
 import requests
+from .authentication import BasicTokenPasswordAuthentication
+from rest_framework.authentication import (
+    BasicAuthentication,
+    SessionAuthentication,
+    TokenAuthentication,
+)
+from app.authentication import TokenAuthentication as SageTokenAuthentication
 import time
 from unittest.mock import patch
 
@@ -173,13 +179,28 @@ def has_object_permission(user: User, node: Node) -> bool:
 
 
 class DownloadsView(APIView):
-    authentication_classes = [
-        BasicTokenPasswordAuthentication,
-        rest_framework.authentication.BasicAuthentication,
-        rest_framework.authentication.SessionAuthentication,
-        rest_framework.authentication.TokenAuthentication,
-        app.authentication.TokenAuthentication,
-    ]
+
+    def get_authenticators(self):
+        # This is a hack to disable prompting users for basic auth when previewing protected
+        # downloads from the browser.
+        user_agent = self.request.headers.get("User-Agent", "").lower()
+
+        # If user agent is any major browser, we only want to use session and token auth.
+        if any(
+            browser in user_agent
+            for browser in ["chrome", "firefox", "safari", "edge", "opera"]
+        ):
+            # If it's a browser, disable Basic Auth
+            return [SessionAuthentication(), TokenAuthentication()]
+
+        # Otherwise, use all auth classes.
+        return [
+            BasicTokenPasswordAuthentication(),
+            BasicAuthentication(),
+            SessionAuthentication(),
+            TokenAuthentication(),
+            SageTokenAuthentication(),
+        ]
 
     def dispatch(
         self, request: HttpRequest, *args: Any, **kwargs: Any
