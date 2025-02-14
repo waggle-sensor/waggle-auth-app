@@ -23,6 +23,8 @@ from dataclasses import dataclass
 import os.path
 from app.models import User
 import requests
+import time
+from unittest.mock import patch
 
 
 @dataclass
@@ -122,12 +124,38 @@ def get_pelican_authz_url(item: Item):
     token["ver"] = "scitoken:2.0"
     token["scope"] = f"read:{path}"
 
-    authz = token.serialize(
+    authz = serialize_scitoken_with_lag(
+        token,
         issuer=settings.PELICAN_ISSUER,
         lifetime=settings.PELICAN_LIFETIME,
+        lag=60,
     ).decode()
 
     return f"{settings.PELICAN_ROOT_URL}{path}?authz={authz}"
+
+
+# serialize_scitoken_with_lag is a **hack** to get around not being able to override the "not before"
+# claim in the scitokens library. The details of this claim can be found here:
+# https://scitokens.org/technical_docs/Claims
+#
+# As a reference, the scitokens library simply uses time.time to set the "not before" claim:
+# https://github.com/scitokens/scitokens/blob/3f6400e87a76c7c25cbb4e4e6bc35f6b120c22f1/src/scitokens/scitokens.py#L142
+#
+# The reason we want this is that our use case redirects users to Pelican immediately and we suspect that slight
+# time differences between our machines and the Pelican machines may cause some tokens to be flagged as invalid.
+#
+# Adding a slight buffer should allow more tolerence between these machines.
+def serialize_scitoken_with_lag(token, issuer, lifetime, lag):
+    current_time = time.time()
+
+    def lag_time():
+        return current_time - lag
+
+    with patch("time.time", lag_time):
+        return token.serialize(
+            issuer=issuer,
+            lifetime=lifetime + lag,
+        )
 
 
 def get_redirect_url(item: Item):
