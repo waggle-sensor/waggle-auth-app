@@ -125,7 +125,7 @@ class UserAccessView(APIView):
 
         access_by_vsn = {}
 
-        for access in ["develop", "schedule"]:
+        for access in ["develop", "schedule", "access_files"]:
             vsns = user.project_set.filter(
                 **{
                     f"usermembership__can_{access}": True,
