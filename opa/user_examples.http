@@ -1,0 +1,81 @@
+### Example OPA authorization request
+POST http://localhost:8181/v1/data/policy/user/allow
+Content-Type: application/json
+
+{
+  "input": {
+    "extra_attrs": {},
+    "record_data": {
+      "address": "ATMOS, ANL, IL",
+      "commissioned_at": null,
+      "date_joined": "2023-12-13T19:31:15.607000+00:00",
+      "focus": null,
+      "gps_alt": null,
+      "gps_lat": 41.701689,
+      "gps_lon": -87.995179,
+      "id": 722,
+      "is_active": true,
+      "location": "",
+      "name": "000048B02D15BC8C",
+      "notes": "First 30 node\r\n2022.12.08: (this is old) needs USB hub replaced",
+      "partner": null,
+      "phase": "Deployed",
+      "project": 1,
+      "registered_at": "2021-04-23T20:29:34+00:00",
+      "site_id": "test",
+      "type": "WSN",
+      "vsn": "W039"
+    },
+    "request": {
+      "client_ip_addr": "172.20.0.1",
+      "groups": [
+        "Job1"
+      ],
+      "method": "GET",
+      "node": "AnonymousNode",
+      "path": [
+        "opatest",
+        "W039"
+      ],
+      "query_params": {},
+      "username": "admin"
+    },
+    "view_name": "temp"
+  }
+}
+
+### OPA Get policies
+GET http://localhost:8181/v1/policies/
+
+# CURRENT FILE ACCESS POLICY
+
+### current request for downloads using token auth [W08E] (!!!remember to add admin to SAGE project!!!)
+GET http://localhost:8000/downloads/imagesampler-bottom-540/sage-imagesampler-bottom-0.3.5/000048b02d35a87e/1731945610616965544-bottom_camera.jpg
+Authorization: Sage e20e003ae2485241a1699b71537847c7a4c629b0
+
+
+# EXPERIMENTING FILE ACCESS POLICY (!!!remember to remove admin from SAGE project!!!)
+
+### django_opa request for downloads using token auth, authz based on job, SUCCESS [W067]
+GET http://localhost:8000/downloads/imagesampler-left-2316/sage-imagesampler-left-0.3.5/000048b02d3ae337/1731481208574712859-sample.jpg
+Authorization: Sage e20e003ae2485241a1699b71537847c7a4c629b0
+
+### django_opa request for downloads using token auth, authz based on job, DENIED [W096]
+GET http://localhost:8000/downloads/cloud-motion-v1-368/sage-cloud-motion-v1-1.24.11.8/000048b02dd3c543/1732034912880045386-img2_1732034912880045386.jpg
+Authorization: Sage e20e003ae2485241a1699b71537847c7a4c629b0
+
+### django_opa request for downloads using token auth, authz based on camera position, SUCCESS [W067]
+GET http://localhost:8000/downloads/imagesampler-top-2316/sage-imagesampler-top-0.3.5/000048b02d3ae337/1732035615040343531-top_camera.jpg
+Authorization: Sage e20e003ae2485241a1699b71537847c7a4c629b0
+
+### django_opa request for downloads using token auth, authz based on camera position, DENIED [W067]
+GET http://localhost:8000/downloads/imagesampler-bottom-2316/sage-imagesampler-bottom-0.3.5/000048b02d3ae337/1732035616119712533-bottom_camera.jpg
+Authorization: Sage e20e003ae2485241a1699b71537847c7a4c629b0
+
+### django_opa request for downloads using token auth, authz based on file timestamp, SUCCESS [W029]
+GET http://localhost:8000/downloads/imagesampler-left-12/sage-imagesampler-left-0.3.5/000048b02d15bdcd/1732039219513651501-left_camera.jpg
+Authorization: Sage e20e003ae2485241a1699b71537847c7a4c629b0
+
+### django_opa request for downloads using token auth, authz based on file timestamp, DENIED [W029]
+GET http://localhost:8000/downloads/imagesampler-left-12/sage-imagesampler-left-0.3.5/000048b02d15bdcd/1731445220060773212-left_camera.jpg
+Authorization: Sage e20e003ae2485241a1699b71537847c7a4c629b0

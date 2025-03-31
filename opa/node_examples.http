@@ -1,0 +1,54 @@
+### Example OPA authorization request
+POST http://localhost:8181/v1/data/policy/user/allow
+Content-Type: application/json
+
+{
+  "input": {
+    "extra_attrs": {},
+    "record_data": {
+      "address": "ATMOS, ANL, IL",
+      "commissioned_at": null,
+      "date_joined": "2023-12-13T19:31:15.607000+00:00",
+      "focus": null,
+      "gps_alt": null,
+      "gps_lat": 41.701689,
+      "gps_lon": -87.995179,
+      "id": 722,
+      "is_active": true,
+      "location": "",
+      "name": "000048B02D15BC8C",
+      "notes": "First 30 node\r\n2022.12.08: (this is old) needs USB hub replaced",
+      "partner": null,
+      "phase": "Deployed",
+      "project": 1,
+      "registered_at": "2021-04-23T20:29:34+00:00",
+      "site_id": "test",
+      "type": "WSN",
+      "vsn": "W039"
+    },
+    "request": {
+      "client_ip_addr": "172.20.0.1",
+      "groups": [],
+      "method": "GET",
+      "node": "W039",
+      "path": [
+        "opatest",
+        "W039"
+      ],
+      "query_params": {},
+      "username": "AnonymousUser"
+    },
+    "view_name": "temp"
+  }
+}
+
+### OPA Get policies
+GET http://localhost:8181/v1/policies/
+
+### current Node auth to get lorawan devices, using W039 token
+GET http://localhost:8000/lorawandevices
+Authorization: node_auth 841f05637efc0c7f3ef525a1c1be5792180c65a0 
+
+### Example django_opa request, using W039 token
+GET http://localhost:8000/opatest
+Authorization: node_auth 841f05637efc0c7f3ef525a1c1be5792180c65a0 
