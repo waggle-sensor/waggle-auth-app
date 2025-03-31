@@ -8,4 +8,4 @@ fixtures/
 .DS_Store
 .coverage.*
 issuer-key.pem
-.env
+*.env
