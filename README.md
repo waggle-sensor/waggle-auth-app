@@ -43,8 +43,7 @@ After activating your venv, install the dev requirements:
 pip install -r requirements/dev.txt
 ```
 
-You can can also start a dev server. The server will start in a docker container first running `migrate`, `createsuperuser`, and then `runserver`:
-
+You can also start a dev server. The server will start in a docker container first running `migrate`, `createsuperuser`, and then `runserver`:
 ```sh
 make up #to run and see logs or...
 make start #to run in the background
