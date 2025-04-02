@@ -228,3 +228,6 @@ if PELICAN_ROOT_FOLDER and not PELICAN_ROOT_FOLDER.startswith("/"):
     raise ValueError("Setting PELICAN_ROOT_FOLDER must start with /")
 
 TIME_ZONE = "UTC"
+
+# Inventory Tools Repo
+INVENTORY_TOOLS = env("INVENTORY_TOOLS", str, None)
