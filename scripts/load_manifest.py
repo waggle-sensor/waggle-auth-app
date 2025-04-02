@@ -43,7 +43,9 @@ def get_vsns():
     Get all node VSNs from the database.
     """
     # Get all node VSNs from DB
-    vsns = NodeData.objects.values_list("vsn", flat=True)
+    #TODO: Get rid of the circular dependency here, inventory tools wont run unless node 
+    # is added to manifest app which is what we are trying to update with INVENTORY_TOOLS
+    vsns = NodeData.objects.values_list("vsn", flat=True) 
     return vsns
 
 def scrape_nodes(vsns):
