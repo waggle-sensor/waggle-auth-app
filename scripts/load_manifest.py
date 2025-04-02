@@ -7,7 +7,7 @@ import subprocess
 import json
 import shutil
 import logging
-from manifests.models import NodeData, Modem, Compute, ComputeSensor
+from manifests.models import NodeData, Modem, Compute, ComputeSensor #TODO: Also do auth app node model
 from django.conf import settings
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [INVENTORY_TOOLS]: %(message)s", datefmt="%Y/%m/%d %H:%M:%S")
 logger = logging.getLogger(__name__)
