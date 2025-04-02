@@ -1,18 +1,41 @@
+# Default environment is 'dev'. You can override it by passing `ENV=prod` when running `make`.
+ENV ?= dev
+
+# Default value for data file path, can be overridden by passing `DATA_FILE`
+DATA_FILE ?= ../waggle-auth-app-fixtures/data.json
+
+# Extract just the filename from the data file path
+DATA_FILENAME := $(notdir $(DATA_FILE))
+
+# Set the compose file based on the environment.
+DOCKER_COMPOSE_FILE := ./env/$(ENV)/docker-compose.yaml
+
 start:
-	@docker-compose up --build -d
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) up --build -d
 
 stop:
-	@docker-compose down --volumes --remove-orphans
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) down --volumes --remove-orphans
 
 migrate:
-	@docker-compose exec django python manage.py migrate
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py migrate
 
 collectstatic:
-	@docker-compose exec django python manage.py collectstatic --no-input
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py collectstatic --no-input
 
 createsuperuser:
-	@docker-compose exec django python manage.py createsuperuser
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py createsuperuser
+
+loaddata:
+	@cp $(DATA_FILE) ./$(DATA_FILENAME)
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py loaddata $(DATA_FILENAME)
+	@rm ./$(DATA_FILENAME)
 
 test:
-	@docker-compose exec django python manage.py test
-	@docker-compose exec django python manage.py check --deploy
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py test
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py check --deploy
+
+up:
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) up --build
+
+logs:
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f
