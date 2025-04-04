@@ -10,8 +10,15 @@ DATA_FILENAME := $(notdir $(DATA_FILE))
 # Set the compose file based on the environment.
 DOCKER_COMPOSE_FILE := ./env/$(ENV)/docker-compose.yaml
 
+# If ENV is dev, use --force-recreate to see changes immediately.
+ifeq ($(ENV),dev)
+FORCE_RECREATE := --force-recreate
+else
+FORCE_RECREATE :=
+endif
+
 start:
-	@docker-compose -f $(DOCKER_COMPOSE_FILE) up --build -d
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) up --build $(FORCE_RECREATE) -d
 
 stop:
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) down --volumes --remove-orphans
@@ -35,7 +42,7 @@ test:
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) exec django python manage.py check --deploy
 
 up:
-	@docker-compose -f $(DOCKER_COMPOSE_FILE) up --build
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) up --build $(FORCE_RECREATE)
 
 logs:
 	@docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f
