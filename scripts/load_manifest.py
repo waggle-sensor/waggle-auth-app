@@ -12,30 +12,55 @@ from django.conf import settings
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [INVENTORY_TOOLS]: %(message)s", datefmt="%Y/%m/%d %H:%M:%S")
 logger = logging.getLogger(__name__)
 
-# Check if INVENTORY_TOOLS is set in settings
-if not hasattr(settings, 'INVENTORY_TOOLS') or not settings.INVENTORY_TOOLS:
-    logging.info("INVENTORY_TOOLS setting is not set. Manifest loading will not proceed.")
+# Check if INV_TOOLS_REPO is set in settings
+if not hasattr(settings, 'INV_TOOLS_REPO') or not settings.INV_TOOLS_REPO:
+    logging.info("INV_TOOLS_REPO setting is not set. Manifest loading will not proceed.")
     exit(0)
 
 # Set up constants
 WORKDIR = "/app"
+REPO_URL = settings.INV_TOOLS_REPO
+REPO_VERSION = settings.INV_TOOLS_VERSION
 REPO_DIR = os.path.join(WORKDIR, "waggle-inventory-tools")
 DATA_DIR = os.path.join(REPO_DIR, "data")
 
+def is_commit_sha(ref):
+    """Return True if ref looks like a git commit SHA."""
+    return len(ref) >= 7 and all(c in "0123456789abcdef" for c in ref.lower())
+
 def get_repo():
     """
-    Clone the inventory tools repository if it doesn't exist, or pull the latest changes.
+    Clone the inventory tools repository if it doesn't exist, or use the cached one.
+    Then checkout the specified version (branch, tag, or commit SHA).
     """
-    #clone repo
-    if os.path.exists(REPO_DIR) and os.path.samefile(REPO_DIR, os.getcwd()):
-        logging.info("Skipping clone, already in the inventory tools repo.")
+    if not os.path.exists(REPO_DIR):
+        logging.info(f"Cloning repo from {REPO_URL} to {REPO_DIR}")
+        subprocess.run(["git", "clone", REPO_URL, REPO_DIR], check=True)
     else:
-        if os.path.exists(REPO_DIR):
-            shutil.rmtree(REPO_DIR)
-        subprocess.run(["git", "clone", settings.INVENTORY_TOOLS, REPO_DIR], check=True)
+        logging.info(f"Using cached repo at {REPO_DIR}")
+        # Just ensure we fetch all remote info
+        subprocess.run(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"], check=True)
 
-    # Pull latest
-    subprocess.run(["git", "-C", REPO_DIR, "pull"], check=True)
+    if REPO_VERSION is None:
+        logging.info("Using latest version from default branch.")
+        subprocess.run(["git", "-C", REPO_DIR, "checkout", "main"], check=True)
+        subprocess.run(["git", "-C", REPO_DIR, "pull", "origin", "main"], check=True)
+    else:
+        logging.info(f"Checking out version: {REPO_VERSION}")
+        subprocess.run(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"], check=True)
+
+        if is_commit_sha(REPO_VERSION):
+            subprocess.run(["git", "-C", REPO_DIR, "checkout", REPO_VERSION], check=True)
+        else:
+            # Check if it's a branch
+            result = subprocess.run(["git", "-C", REPO_DIR, "rev-parse", "--verify", f"origin/{REPO_VERSION}"],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if result.returncode == 0:
+                subprocess.run(["git", "-C", REPO_DIR, "checkout", REPO_VERSION], check=True)
+                subprocess.run(["git", "-C", REPO_DIR, "pull", "origin", REPO_VERSION], check=True)
+            else:
+                # Try tag
+                subprocess.run(["git", "-C", REPO_DIR, "checkout", f"tags/{REPO_VERSION}"], check=True)
 
 def get_vsns():
     """
