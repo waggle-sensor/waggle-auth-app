@@ -18,7 +18,6 @@ if not hasattr(settings, 'INVENTORY_TOOLS') or not settings.INVENTORY_TOOLS:
     exit(0)
 
 # Set up constants
-INVENTORY_REPO = settings.INVENTORY_TOOLS
 WORKDIR = "/app"
 REPO_DIR = os.path.join(WORKDIR, "waggle-inventory-tools")
 DATA_DIR = os.path.join(REPO_DIR, "data")
@@ -33,7 +32,7 @@ def get_repo():
     else:
         if os.path.exists(REPO_DIR):
             shutil.rmtree(REPO_DIR)
-        subprocess.run(["git", "clone", INVENTORY_REPO, REPO_DIR], check=True)
+        subprocess.run(["git", "clone", settings.INVENTORY_TOOLS, REPO_DIR], check=True)
 
     # Pull latest
     subprocess.run(["git", "-C", REPO_DIR, "pull"], check=True)
