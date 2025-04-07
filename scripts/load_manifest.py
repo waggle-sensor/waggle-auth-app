@@ -12,15 +12,23 @@ from django.conf import settings
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [INVENTORY_TOOLS]: %(message)s", datefmt="%Y/%m/%d %H:%M:%S")
 logger = logging.getLogger(__name__)
 
-# Check if INV_TOOLS_REPO is set in settings
+# Check if INVENTORY_TOOLS keys are set in settings
 if not hasattr(settings, 'INV_TOOLS_REPO') or not settings.INV_TOOLS_REPO:
     logging.info("INV_TOOLS_REPO setting is not set. Manifest loading will not proceed.")
+    exit(0)
+elif not hasattr(settings, 'INV_TOOLS_USERNAME') or not settings.INV_TOOLS_USERNAME:
+    logging.info("INV_TOOLS_USERNAME setting is not set. Manifest loading will not proceed.")
+    exit(0)
+elif not hasattr(settings, 'INV_TOOLS_TOKEN') or not settings.INV_TOOLS_TOKEN:
+    logging.info("INV_TOOLS_TOKEN setting is not set. Manifest loading will not proceed.")
     exit(0)
 
 # Set up constants
 WORKDIR = "/app"
 REPO_URL = settings.INV_TOOLS_REPO
 REPO_VERSION = settings.INV_TOOLS_VERSION
+REPO_USER = settings.INV_TOOLS_USERNAME
+REPO_TOKEN = settings.INV_TOOLS_TOKEN
 REPO_DIR = os.path.join(WORKDIR, "waggle-inventory-tools")
 DATA_DIR = os.path.join(REPO_DIR, "data")
 
@@ -33,9 +41,11 @@ def get_repo():
     Clone the inventory tools repository if it doesn't exist, or use the cached one.
     Then checkout the specified version (branch, tag, or commit SHA).
     """
+    auth_repo_url = REPO_URL.replace("https://", f"https://{REPO_USER}:{REPO_TOKEN}@")
+
     if not os.path.exists(REPO_DIR):
         logging.info(f"Cloning repo from {REPO_URL} to {REPO_DIR}")
-        subprocess.run(["git", "clone", REPO_URL, REPO_DIR], check=True)
+        subprocess.run(["git", "clone", auth_repo_url, REPO_DIR], check=True)
     else:
         logging.info(f"Using cached repo at {REPO_DIR}")
         # Just ensure we fetch all remote info
@@ -174,8 +184,8 @@ def main():
     
     logging.info("Manifest loading process completed.")
 
-if __name__ == "__main__":
-    main()
+#Cant use `if __name__ == "__main__":` because it is ran as an input to `django manage.py shell` command
+main() 
 
 # --- 10) Add to cron ---
 # Cron job setup should be handled outside this script, for example:
