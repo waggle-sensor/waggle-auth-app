@@ -35,6 +35,8 @@ services:
       - "PELICAN_LIFETIME=60"
       - "PELICAN_ROOT_URL=https://nrdstor.nationalresearchplatform.org:8443/sage"
       - "PELICAN_ROOT_FOLDER=/node-data"
+      - "INV_TOOLS_REPO=https://github.com/waggle-sensor/waggle-inventory-tools.git"
+      - "INV_TOOLS_VERSION=manifest"
     env_file:
       - .env
     volumes:

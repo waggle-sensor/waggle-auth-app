@@ -229,6 +229,6 @@ if PELICAN_ROOT_FOLDER and not PELICAN_ROOT_FOLDER.startswith("/"):
 
 TIME_ZONE = "UTC"
 
-# Inventory Tools Repo & version
-INV_TOOLS_REPO = env("INV_TOOLS_REPO", str, None)
-INV_TOOLS_VERSION = env("INV_TOOLS_VERSION", str, None)
+# Inventory Tools Keys
+INV_TOOLS_REPO = env("INV_TOOLS_REPO", str, None) # Repo URL
+INV_TOOLS_VERSION = env("INV_TOOLS_VERSION", str, None) # Repo Branch, tag, or commit SHA
