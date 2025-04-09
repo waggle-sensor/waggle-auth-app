@@ -14,7 +14,10 @@ There are two development / deployment configurations both in `env` folder:
 * dev: intended for fast, local dev on host machine. debug flags are enabled.
 * prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
 
-For both environments, you will have to set up the keys in `env/<environment>/.env` so that the `downloads` app can work. 
+Optionally, you can configure user login via Globus OIDC for either of these environments.
+
+### Keys
+For both environments, you will have to set up these keys in `env/<environment>/.env` so that the `downloads` app can work. 
 
 - S3_ACCESS_KEY: This is the access key for your S3 storage
 - S3_SECRET_KEY: This is the secret key for your S3 storage
@@ -23,7 +26,19 @@ For both environments, you will have to set up the keys in `env/<environment>/.e
 
 >NOTE: If you are not working on the `downloads` app this can be ignored.
 
-Optionally, you can configure user login via Globus OIDC for either of these environments.
+You will also have to set up these keys in `env/<environment>/.env` so that `INVENTORY_TOOLS` can work. `INVENTORY_TOOLS` is used to update the manifest automatically.
+
+- INV_TOOLS_TOKEN: This is a github token with clone/pull access to our [inventory tools repo](https://github.com/waggle-sensor/waggle-inventory-tools)
+
+>NOTE: If you don't need `INVENTORY_TOOLS` this can be ignored.
+
+### Volumes
+
+>TODO: Add instructions in setting up /etc/ssh/inv_tools for ssh access to nodes within the django container
+
+>TODO: Do I need to if I am not using inventory tools?
+
+>TODO: Add a make command to set up INVENTORY_TOOLS ssh volume. aka clone repos and set up ssh config file
 
 ### Local development using dev configuration
 
