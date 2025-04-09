@@ -19,14 +19,39 @@ if not hasattr(settings, 'INV_TOOLS_REPO') or not settings.INV_TOOLS_REPO:
 elif not hasattr(settings, 'INV_TOOLS_TOKEN') or not settings.INV_TOOLS_TOKEN:
     logging.info("INV_TOOLS_TOKEN setting is not set. Manifest loading will not proceed.")
     exit(0)
+elif not hasattr(settings, 'INV_TOOLS_SSH_DIR') or not settings.INV_TOOLS_SSH_DIR:
+    logging.info("INV_TOOLS_SSH_DIR setting is not set. Manifest loading will not proceed.")
+    exit(0)
 
 # Set up constants
 WORKDIR = "/app"
 REPO_URL = settings.INV_TOOLS_REPO
 REPO_VERSION = settings.INV_TOOLS_VERSION
 REPO_TOKEN = settings.INV_TOOLS_TOKEN
+SSH_DIR = settings.INV_TOOLS_SSH_DIR
 REPO_DIR = os.path.join(WORKDIR, "waggle-inventory-tools")
 DATA_DIR = os.path.join(REPO_DIR, "data")
+SSH_CONFIG = os.path.join(SSH_DIR, "config")
+HONEYHOUSE_DIR = os.path.join(SSH_DIR, "git/honeyhouse-config")
+PRIV_CONFIG_DIR = os.path.join(SSH_DIR, "git/private_config")
+DEVOPS_DIR = os.path.join(SSH_DIR, "git/devOps")
+
+#check if the ssh directory is correctly set up
+if not os.path.exists(SSH_DIR):
+    logging.info(f"SSH directory {SSH_DIR} does not exist. Manifest loading will not proceed.")
+    exit(0)
+elif not os.path.exists(SSH_CONFIG):
+    logging.info(f"SSH config file {SSH_CONFIG} does not exist. Manifest loading will not proceed.")
+    exit(0)
+elif not os.path.exists(HONEYHOUSE_DIR):
+    logging.info(f"SSH IdentityFile {HONEYHOUSE_DIR} does not exist. Manifest loading will not proceed.")
+    exit(0)
+elif not os.path.exists(PRIV_CONFIG_DIR):
+    logging.info(f"SSH IdentityFile {PRIV_CONFIG_DIR} does not exist. Manifest loading will not proceed.")
+    exit(0)
+elif not os.path.exists(DEVOPS_DIR):
+    logging.info(f"SSH ProxyCommand {DEVOPS_DIR} does not exist. Manifest loading will not proceed.")
+    exit(0)
 
 def is_commit_sha(ref):
     """Return True if ref looks like a git commit SHA."""
@@ -202,10 +227,11 @@ def main():
     get_repo()
     
     # Step 2: Get vsns
-    vsns = get_vsns()
+    # vsns = get_vsns() TODO: Uncomment this line to get all vsns from the database
+    vsns = ["W08E"] # NOTE: for development, I will only load the W08E node
     
     # Step 3: Scrape nodes
-    scrape_nodes(vsns)
+    scrape_nodes(vsns) #TODO: add the ssh config for our nodes so it can ssh into them
     
     # Step 4: Load manifests
     load_manifests(vsns)
