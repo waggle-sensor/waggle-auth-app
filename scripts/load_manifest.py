@@ -16,9 +16,6 @@ logger = logging.getLogger(__name__)
 if not hasattr(settings, 'INV_TOOLS_REPO') or not settings.INV_TOOLS_REPO:
     logging.info("INV_TOOLS_REPO setting is not set. Manifest loading will not proceed.")
     exit(0)
-elif not hasattr(settings, 'INV_TOOLS_USERNAME') or not settings.INV_TOOLS_USERNAME:
-    logging.info("INV_TOOLS_USERNAME setting is not set. Manifest loading will not proceed.")
-    exit(0)
 elif not hasattr(settings, 'INV_TOOLS_TOKEN') or not settings.INV_TOOLS_TOKEN:
     logging.info("INV_TOOLS_TOKEN setting is not set. Manifest loading will not proceed.")
     exit(0)
@@ -27,7 +24,6 @@ elif not hasattr(settings, 'INV_TOOLS_TOKEN') or not settings.INV_TOOLS_TOKEN:
 WORKDIR = "/app"
 REPO_URL = settings.INV_TOOLS_REPO
 REPO_VERSION = settings.INV_TOOLS_VERSION
-REPO_USER = settings.INV_TOOLS_USERNAME
 REPO_TOKEN = settings.INV_TOOLS_TOKEN
 REPO_DIR = os.path.join(WORKDIR, "waggle-inventory-tools")
 DATA_DIR = os.path.join(REPO_DIR, "data")
@@ -41,7 +37,7 @@ def get_repo():
     Clone the inventory tools repository if it doesn't exist, or use the cached one.
     Then checkout the specified version (branch, tag, or commit SHA).
     """
-    auth_repo_url = REPO_URL.replace("https://", f"https://{REPO_USER}:{REPO_TOKEN}@")
+    auth_repo_url = REPO_URL.replace("https://", f"https://{REPO_TOKEN}@")
 
     if not os.path.exists(REPO_DIR):
         logging.info(f"Cloning repo from {REPO_URL} to {REPO_DIR}")

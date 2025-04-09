@@ -232,5 +232,4 @@ TIME_ZONE = "UTC"
 # Inventory Tools Keys
 INV_TOOLS_REPO = env("INV_TOOLS_REPO", str, None) # Repo URL
 INV_TOOLS_VERSION = env("INV_TOOLS_VERSION", str, None) # Repo Branch, tag, or commit SHA
-INV_TOOLS_USERNAME = env("INV_TOOLS_USERNAME", str, None) # Github username
-INV_TOOLS_PASSWORD = env("INV_TOOLS_TOKEN", str, None) # Github Token
+INV_TOOLS_TOKEN = env("INV_TOOLS_TOKEN", str, None) # Github Token

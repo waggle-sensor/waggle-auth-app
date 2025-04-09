@@ -37,7 +37,6 @@ services:
       - "PELICAN_ROOT_FOLDER=/node-data"
       - "INV_TOOLS_REPO=https://github.com/waggle-sensor/waggle-inventory-tools.git"
       - "INV_TOOLS_VERSION=manifest"
-      - "INV_TOOLS_USERNAME=${INV_TOOLS_USERNAME}"
       - "INV_TOOLS_TOKEN=${INV_TOOLS_TOKEN}"
     env_file:
       - .env
