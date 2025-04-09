@@ -5,7 +5,6 @@ Its purpose is to try to automize fields that are not dependent on user input.
 import os
 import subprocess
 import json
-import shutil
 import logging
 from manifests.models import NodeData, Modem, Compute, ComputeSensor #TODO: Also do auth app node model
 from django.conf import settings
