@@ -22,6 +22,9 @@ elif not hasattr(settings, 'INV_TOOLS_TOKEN') or not settings.INV_TOOLS_TOKEN:
 elif not hasattr(settings, 'INV_TOOLS_SSH_DIR') or not settings.INV_TOOLS_SSH_DIR:
     logging.info("INV_TOOLS_SSH_DIR setting is not set. Manifest loading will not proceed.")
     exit(0)
+elif not hasattr(settings, 'INV_TOOLS_SSH_TOOLS') or not settings.INV_TOOLS_SSH_TOOLS:
+    logging.info("INV_TOOLS_SSH_TOOLS setting is not set. Manifest loading will not proceed.")
+    exit(0)
 
 # Set up constants
 WORKDIR = "/app"
@@ -29,12 +32,13 @@ REPO_URL = settings.INV_TOOLS_REPO
 REPO_VERSION = settings.INV_TOOLS_VERSION
 REPO_TOKEN = settings.INV_TOOLS_TOKEN
 SSH_DIR = settings.INV_TOOLS_SSH_DIR
+SSH_TOOLS_DIR = settings.INV_TOOLS_SSH_TOOLS
 REPO_DIR = os.path.join(WORKDIR, "waggle-inventory-tools")
 DATA_DIR = os.path.join(REPO_DIR, "data")
 SSH_CONFIG = os.path.join(SSH_DIR, "config")
-HONEYHOUSE_DIR = os.path.join(SSH_DIR, "git/honeyhouse-config")
-PRIV_CONFIG_DIR = os.path.join(SSH_DIR, "git/private_config")
-DEVOPS_DIR = os.path.join(SSH_DIR, "git/devOps")
+HONEYHOUSE_DIR = os.path.join(SSH_TOOLS_DIR, "honeyhouse-config")
+PRIV_CONFIG_DIR = os.path.join(SSH_TOOLS_DIR, "private_config")
+DEVOPS_DIR = os.path.join(SSH_TOOLS_DIR, "devOps")
 
 #check if the ssh directory is correctly set up
 if not os.path.exists(SSH_DIR):
