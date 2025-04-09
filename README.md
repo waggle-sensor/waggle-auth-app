@@ -37,9 +37,9 @@ You will also have to set up these keys in `env/<environment>/.env` so that `INV
 
 ### Volumes
 
->TODO: Add instructions in setting up /etc/ssh/inv_tools for ssh access to nodes within the django container
+>TODO: Add instructions in setting up /opt/waggle_inv_tools for ssh access to nodes within the django container
 
->TODO: Add a make command to set up INVENTORY_TOOLS ssh volume. aka clone repos and set up ssh config 
+>TODO: Add a make command to set up INVENTORY_TOOLS ssh and ssh tools volume. aka clone repos and set up ssh config 
 
 >NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
 
