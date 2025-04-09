@@ -32,6 +32,37 @@ def is_commit_sha(ref):
     """Return True if ref looks like a git commit SHA."""
     return len(ref) >= 7 and all(c in "0123456789abcdef" for c in ref.lower())
 
+def run_subprocess(cmd, cwd=None, input_data=None):
+    """
+    Run subprocess command and stream output using logging.
+
+    Args:
+        cmd (list): Command to run as a list of arguments.
+        cwd (str): Working directory for the command.
+        input_data (str): Input data to write to stdin.
+    """
+    process = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        stdin=subprocess.PIPE if input_data else None,
+        text=True
+    )
+
+    assert process.stdout is not None
+    if input_data:
+        assert process.stdin is not None
+        process.stdin.write(input_data)
+        process.stdin.close()
+
+    for line in process.stdout:
+        logging.info(line.rstrip())
+
+    return_code = process.wait()
+    if return_code != 0:
+        logging.info(f"Command '{' '.join(cmd)}' exited with return code {return_code}")
+
 def get_repo():
     """
     Clone the inventory tools repository if it doesn't exist, or use the cached one.
@@ -41,32 +72,30 @@ def get_repo():
 
     if not os.path.exists(REPO_DIR):
         logging.info(f"Cloning repo from {REPO_URL} to {REPO_DIR}")
-        subprocess.run(["git", "clone", auth_repo_url, REPO_DIR], check=True)
+        run_subprocess(["git", "clone", auth_repo_url, REPO_DIR])
     else:
         logging.info(f"Using cached repo at {REPO_DIR}")
-        # Just ensure we fetch all remote info
-        subprocess.run(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"], check=True)
+        run_subprocess(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"])
 
     if REPO_VERSION is None:
         logging.info("Using latest version from default branch.")
-        subprocess.run(["git", "-C", REPO_DIR, "checkout", "main"], check=True)
-        subprocess.run(["git", "-C", REPO_DIR, "pull", "origin", "main"], check=True)
+        run_subprocess(["git", "-C", REPO_DIR, "checkout", "main"])
+        run_subprocess(["git", "-C", REPO_DIR, "pull", "origin", "main"])
     else:
         logging.info(f"Checking out version: {REPO_VERSION}")
-        subprocess.run(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"], check=True)
+        run_subprocess(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"])
 
         if is_commit_sha(REPO_VERSION):
-            subprocess.run(["git", "-C", REPO_DIR, "checkout", REPO_VERSION], check=True)
+            run_subprocess(["git", "-C", REPO_DIR, "checkout", REPO_VERSION])
         else:
             # Check if it's a branch
             result = subprocess.run(["git", "-C", REPO_DIR, "rev-parse", "--verify", f"origin/{REPO_VERSION}"],
                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if result.returncode == 0:
-                subprocess.run(["git", "-C", REPO_DIR, "checkout", REPO_VERSION], check=True)
-                subprocess.run(["git", "-C", REPO_DIR, "pull", "origin", REPO_VERSION], check=True)
+                run_subprocess(["git", "-C", REPO_DIR, "checkout", REPO_VERSION])
+                run_subprocess(["git", "-C", REPO_DIR, "pull", "origin", REPO_VERSION])
             else:
-                # Try tag
-                subprocess.run(["git", "-C", REPO_DIR, "checkout", f"tags/{REPO_VERSION}"], check=True)
+                run_subprocess(["git", "-C", REPO_DIR, "checkout", f"tags/{REPO_VERSION}"])
 
 def get_vsns():
     """
@@ -82,9 +111,12 @@ def scrape_nodes(vsns):
     """
     Scrape node data using the scrape-nodes script.
     """
-    # Scrape each node
     scrape_script = os.path.join(REPO_DIR, "scrape-nodes")
-    process = subprocess.run(["xargs", "-n1", "-P4", scrape_script], input="\n".join(vsns), text=True)
+    input_data = "\n".join(vsns)
+    try:
+        run_subprocess(["xargs", "-n1", "-P4", scrape_script], input_data=input_data)
+    except subprocess.CalledProcessError as e:
+        logging.info(f"Error running scrape-nodes: {e}")
 
 def load_manifests(vsns):
     """
