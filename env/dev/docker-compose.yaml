@@ -37,12 +37,10 @@ services:
       - "PELICAN_ROOT_FOLDER=/node-data"
       - "INV_TOOLS_REPO=https://github.com/waggle-sensor/waggle-inventory-tools.git"
       - "INV_TOOLS_VERSION=manifest"
-      - "INV_TOOLS_TOKEN=${INV_TOOLS_TOKEN}"
-      - "INV_TOOLS_SSH_DIR=/root/.ssh"
-      - "INV_TOOLS_SSH_TOOLS=~/git"
+      - "INV_TOOLS_TOKEN=${INV_TOOLS_TOKEN}" #TODO: consider doing the same method as ssh dir, so attach the inv dir instead (this will remove auto update)
+      - "INV_TOOLS_SSH_TOOLS=/root"       # attaching volume for ssh works since the ssh tools don't get updated a lot. They are pretty static
     env_file:
       - .env
     volumes:
       - ../../:/app:rw
-      - /opt/waggle_inv_tools/ssh:/root/.ssh:ro
-      - /opt/waggle_inv_tools/git:~/git:ro
+      - /opt/waggle_inv_tools:/root:ro
