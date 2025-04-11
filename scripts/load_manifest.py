@@ -5,6 +5,7 @@ Its purpose is to try to automize fields that are not dependent on user input.
 import os
 import subprocess
 import json
+import re
 import logging
 from manifests.models import NodeData, Modem, Compute, ComputeSensor #TODO: Also do auth app node model
 from django.conf import settings
@@ -21,27 +22,34 @@ elif not hasattr(settings, 'INV_TOOLS_TOKEN') or not settings.INV_TOOLS_TOKEN:
 elif not hasattr(settings, 'INV_TOOLS_SSH_TOOLS') or not settings.INV_TOOLS_SSH_TOOLS:
     logging.info("INV_TOOLS_SSH_TOOLS setting is not set. Manifest loading will not proceed.")
     exit(0)
+elif not hasattr(settings, 'INV_TOOLS_SSH_CONFIG') or not settings.INV_TOOLS_SSH_CONFIG:
+    logging.info("INV_TOOLS_SSH_CONFIG setting is not set. Manifest loading will not proceed.")
+    exit(0)
+elif not hasattr(settings, 'INV_TOOLS_SSH_TOOLS_PW') or not settings.INV_TOOLS_SSH_TOOLS_PW:
+    logging.info("INV_TOOLS_SSH_TOOLS_PW setting is not set. Manifest loading will not proceed.")
+    exit(0)
 
 # Set up constants
 WORKDIR = "/app"
 REPO_URL = settings.INV_TOOLS_REPO
 REPO_VERSION = settings.INV_TOOLS_VERSION
 REPO_TOKEN = settings.INV_TOOLS_TOKEN
+SSH_PWD = settings.INV_TOOLS_SSH_TOOLS_PW
 SSH_TOOLS_DIR = settings.INV_TOOLS_SSH_TOOLS
-SSH_DIR = os.path.join(SSH_TOOLS_DIR, "ssh")
+SSH_TEMPLATE = settings.INV_TOOLS_SSH_CONFIG
 REPO_DIR = os.path.join(WORKDIR, "waggle-inventory-tools")
 DATA_DIR = os.path.join(REPO_DIR, "data")
-SSH_CONFIG = os.path.join(SSH_DIR, "config")
-HONEYHOUSE_DIR = os.path.join(SSH_TOOLS_DIR, "git", "honeyhouse-config")
-PRIV_CONFIG_DIR = os.path.join(SSH_TOOLS_DIR, "git", "private_config")
-DEVOPS_DIR = os.path.join(SSH_TOOLS_DIR, "git", "devOps")
+SSH_CONFIG_TEMPLATE = os.path.join(SSH_TEMPLATE, "config")
+HONEYHOUSE_DIR = os.path.join(SSH_TOOLS_DIR, "honeyhouse-config")
+PRIV_CONFIG_DIR = os.path.join(SSH_TOOLS_DIR, "private_config")
+DEVOPS_DIR = os.path.join(SSH_TOOLS_DIR, "devOps")
 
 #check if the ssh directory is correctly set up
-if not os.path.exists(SSH_DIR):
-    logging.info(f"SSH directory {SSH_DIR} does not exist. Manifest loading will not proceed.")
+if not os.path.exists(SSH_TEMPLATE):
+    logging.info(f"SSH directory {SSH_TEMPLATE} does not exist. Manifest loading will not proceed.")
     exit(0)
-elif not os.path.exists(SSH_CONFIG):
-    logging.info(f"SSH config file {SSH_CONFIG} does not exist. Manifest loading will not proceed.")
+elif not os.path.exists(SSH_CONFIG_TEMPLATE):
+    logging.info(f"SSH config file {SSH_CONFIG_TEMPLATE} does not exist. Manifest loading will not proceed.")
     exit(0)
 elif not os.path.exists(HONEYHOUSE_DIR):
     logging.info(f"SSH IdentityFile {HONEYHOUSE_DIR} does not exist. Manifest loading will not proceed.")
@@ -101,7 +109,8 @@ def get_repo():
         run_subprocess(["git", "config", "--global", "--add", "safe.directory", REPO_DIR])
     else:
         logging.info(f"Using cached repo at {REPO_DIR}")
-        run_subprocess(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"])
+        run_subprocess(["git", "config", "--global", "--add", "safe.directory", REPO_DIR])
+        run_subprocess(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"]) 
 
     if REPO_VERSION is None:
         logging.info("Using latest version from default branch.")
@@ -122,6 +131,38 @@ def get_repo():
                 run_subprocess(["git", "-C", REPO_DIR, "pull", "origin", REPO_VERSION])
             else:
                 run_subprocess(["git", "-C", REPO_DIR, "checkout", f"tags/{REPO_VERSION}"])
+
+def set_ssh():
+    """
+    Set up SSH configuration for the nodes.
+    """
+    ssh_dir = os.path.expanduser("~/.ssh")
+    ssh_config = os.path.join(ssh_dir, "config")
+    ssh_key_path = os.path.join(PRIV_CONFIG_DIR ,"misc/waggle-sage/ecdsa-sage-waggle")
+
+    # Check if SSH config file exists
+    if os.path.exists(ssh_config):
+        logging.info("SSH config file already exists. Skipping SSH setup.")
+    else:
+        logging.info("Setting up SSH config for nodes.")
+        run_subprocess(["cp", "-r", SSH_TEMPLATE, ssh_dir])
+        run_subprocess(["mkdir", "-p", os.path.join(ssh_dir, "master-socket")])
+        run_subprocess(["mkdir", "-p", "/root/.ssh-agent"])
+    
+    # Start ssh-agent with custom socket path
+    logging.info("Starting ssh-agent...")
+    output = subprocess.check_output(["ssh-agent", "-s"], text=True)
+
+    # Extract SSH_AUTH_SOCK and SSH_AGENT_PID using regex
+    for line in output.splitlines():
+        match = re.match(r'(\w+)=([^;]+);', line)
+        if match:
+            key, value = match.groups()
+            os.environ[key] = value
+            logging.info(f"Set env var: {key}={value}") #TODO: remove this later when you know it works
+
+    # Add the key to the agent
+    run_subprocess(["ssh-add", ssh_key_path], input_data=SSH_PWD + "\n")
 
 def get_vsns():
     """
@@ -223,18 +264,21 @@ def load_manifests(vsns):
 def main():
     logging.info("Starting manifest loading process...")
     os.chdir(WORKDIR)
+
+    # Step 1: Set up SSH config
+    set_ssh()
     
-    # Step 1: Get repo
+    # Step 2: Get repo
     get_repo()
     
-    # Step 2: Get vsns
+    # Step 3: Get vsns
     # vsns = get_vsns() TODO: Uncomment this line to get all vsns from the database
     vsns = ["W08E"] # NOTE: for development, I will only load the W08E node
     
-    # Step 3: Scrape nodes
+    # Step 4: Scrape nodes
     scrape_nodes(vsns) #TODO: add the ssh config for our nodes so it can ssh into them
     
-    # Step 4: Load manifests
+    # Step 5: Load manifests
     load_manifests(vsns)
     
     logging.info("Manifest loading process completed.")
