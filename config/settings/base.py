@@ -234,3 +234,5 @@ INV_TOOLS_REPO = env("INV_TOOLS_REPO", str, None) # Repo URL
 INV_TOOLS_VERSION = env("INV_TOOLS_VERSION", str, None) # Repo Branch, tag, or commit SHA
 INV_TOOLS_TOKEN = env("INV_TOOLS_TOKEN", str, None) # Github Token
 INV_TOOLS_SSH_TOOLS = env("INV_TOOLS_SSH_TOOLS", str, None) # Directory holding SSH tools used for SSHing into nodes
+INV_TOOLS_SSH_CONFIG = env("INV_TOOLS_SSH_CONFIG", str, None) # SSH directory holding 
+INV_TOOLS_SSH_TOOLS_PW = env("INV_TOOLS_SSH_TOOLS_PW", str, None) # Password for SSH IdentityFile
