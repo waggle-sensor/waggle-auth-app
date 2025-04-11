@@ -32,6 +32,7 @@ For both environments, you will have to set up these keys in `env/<environment>/
 You will also have to set up these keys in `env/<environment>/.env` so that `INVENTORY_TOOLS` can work. `INVENTORY_TOOLS` is used to update the manifest automatically.
 
 - INV_TOOLS_TOKEN: This is a github token with clone/pull access to our [inventory tools repo](https://github.com/waggle-sensor/waggle-inventory-tools)
+- INV_TOOLS_SSH_TOOLS_PW: This is the passphrase for our ecdsa-sage-waggle SSH IdentityFile
 
 >NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
 
