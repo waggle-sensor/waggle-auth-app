@@ -8,8 +8,6 @@ WORKDIR /app
 COPY requirements /app/requirements
 RUN pip install --no-cache-dir -r requirements/dev.txt
 COPY . /app
-# add safe directory for git
-RUN git config --global --add safe.directory /app/waggle-inventory-tools
 # include staticfiles for whitenoise
 RUN python manage.py collectstatic --noinput
 # Create cron job file and set permissions

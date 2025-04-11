@@ -98,6 +98,7 @@ def get_repo():
     if not os.path.exists(REPO_DIR):
         logging.info(f"Cloning repo from {REPO_URL} to {REPO_DIR}")
         run_subprocess(["git", "clone", auth_repo_url, REPO_DIR])
+        run_subprocess(["git", "config", "--global", "--add", "safe.directory", REPO_DIR])
     else:
         logging.info(f"Using cached repo at {REPO_DIR}")
         run_subprocess(["git", "-C", REPO_DIR, "fetch", "--all", "--tags"])
