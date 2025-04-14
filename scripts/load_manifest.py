@@ -65,7 +65,7 @@ def is_commit_sha(ref):
     """Return True if ref looks like a git commit SHA."""
     return len(ref) >= 7 and all(c in "0123456789abcdef" for c in ref.lower())
 
-def run_subprocess(cmd, cwd=None, input_data=None):
+def run_subprocess(cmd, cwd=None, input_data=None, shell=False):
     """
     Run subprocess command and stream output using logging.
 
@@ -73,6 +73,7 @@ def run_subprocess(cmd, cwd=None, input_data=None):
         cmd (list): Command to run as a list of arguments.
         cwd (str): Working directory for the command.
         input_data (str): Input data to write to stdin.
+        shell (bool): Whether to run the command in a shell.
     """
     process = subprocess.Popen(
         cmd,
@@ -80,7 +81,9 @@ def run_subprocess(cmd, cwd=None, input_data=None):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         stdin=subprocess.PIPE if input_data else None,
-        text=True
+        text=True,
+        shell=shell,
+        env=os.environ.copy(),
     )
 
     assert process.stdout is not None
@@ -147,9 +150,9 @@ def set_ssh():
         logging.info("Setting up SSH config for nodes.")
         run_subprocess(["cp", "-r", SSH_TEMPLATE, ssh_dir])
         run_subprocess(["mkdir", "-p", os.path.join(ssh_dir, "master-socket")])
-        run_subprocess(["mkdir", "-p", "/root/.ssh-agent"])
     
-    # Start ssh-agent with custom socket path
+    # Start ssh-agent
+    # TODO: figure out why ssh agent is not working in the script but in the container shell it is
     logging.info("Starting ssh-agent...")
     output = subprocess.check_output(["ssh-agent", "-s"], text=True)
 
