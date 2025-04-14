@@ -47,3 +47,4 @@ services:
       - ../../:/app:rw
       - /Users/franciscolozano/waggle_inv_tools/git:/root/git
       - /Users/franciscolozano/waggle_inv_tools/ssh:/root/ssh
+      #TODO: add volume for scrape node data to be accessible outside of container
