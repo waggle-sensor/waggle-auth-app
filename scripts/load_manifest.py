@@ -154,7 +154,6 @@ def set_ssh():
         run_subprocess(["mkdir", "-p", os.path.join(ssh_dir, "master-socket")])
     
     # Start ssh-agent
-    # TODO: figure out why ssh agent is not working in the script but in the container shell it is
     logging.info("Starting ssh-agent...")
     output = subprocess.check_output(["ssh-agent", "-s"], text=True)
 
@@ -164,7 +163,6 @@ def set_ssh():
         if match:
             key, value = match.groups()
             os.environ[key] = value
-            logging.info(f"Set env var: {key}={value}") #TODO: remove this later when you know it works
 
     # Add the key to the agent
     run_subprocess(["ssh-add", ssh_key_path], input_data=SSH_PWD + "\n")
@@ -281,7 +279,7 @@ def main():
     vsns = ["W08E"] # NOTE: for development, I will only load the W08E node
     
     # Step 4: Scrape nodes
-    scrape_nodes(vsns) #TODO: add the ssh config for our nodes so it can ssh into them
+    scrape_nodes(vsns)
     
     # Step 5: Load manifests
     load_manifests(vsns)
