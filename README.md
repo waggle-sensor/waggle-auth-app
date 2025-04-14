@@ -36,9 +36,13 @@ You will also have to set up these keys in `env/<environment>/.env` so that `INV
 
 >NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
 
+## Environment Variables
+
+>TODO: add instructions for INVENTORY_TOOLS env variables and how to set them up
+
 ### Volumes
 
->TODO: Add instructions in setting up /opt/waggle_inv_tools for ssh access to nodes within the django container
+>TODO: Add instructions in setting up waggle_inv_tools for ssh access to nodes within the django container
 
 >TODO: Add a make command to set up INVENTORY_TOOLS ssh and ssh tools volume. aka clone repos and set up ssh config 
 
