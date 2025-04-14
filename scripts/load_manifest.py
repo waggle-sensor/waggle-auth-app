@@ -134,6 +134,8 @@ def get_repo():
                 run_subprocess(["git", "-C", REPO_DIR, "pull", "origin", REPO_VERSION])
             else:
                 run_subprocess(["git", "-C", REPO_DIR, "checkout", f"tags/{REPO_VERSION}"])
+    # Go to the repo directory
+    os.chdir(REPO_DIR)
 
 def set_ssh():
     """
