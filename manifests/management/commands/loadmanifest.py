@@ -24,6 +24,9 @@ class Command(BaseCommand):
 
         # Get the list of VSNs to scrape/load
         vsns = self.get_vsns(options)
+
+        # Scrape nodes and load manifests
+        os.chdir(self.REPO_DIR)
         self.scrape_nodes(vsns)
         self.load_manifests(vsns)
 
