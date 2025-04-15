@@ -36,7 +36,7 @@ You will also have to set up these keys in `env/<environment>/.env` so that `INV
 
 >NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
 
-## Environment Variables
+### Environment Variables
 
 >TODO: add instructions for INVENTORY_TOOLS env variables and how to set them up
 
@@ -48,7 +48,7 @@ You will also have to set up these keys in `env/<environment>/.env` so that `INV
 
 >NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
 
-### Local development using dev configuration
+## Local development using dev configuration
 
 _I highly recommend creating a virtual env when working on the app. I typically use:_
 
@@ -102,7 +102,23 @@ To implement the model edits to the server run:
 make migrate
 ```
 
-### Running a local production server
+### Local development Inventory Tools
+
+>TODO: add docs on running inventory tools locally
+
+```sh
+./manage.py loadmanifest --repo <inventory_tools_local_path> --vsns 
+W08E
+```
+
+or to run for one node
+
+```sh
+./manage.py loadmanifest --repo <inventory_tools_local_path> --vsns 
+W08E
+```
+
+## Running a local production server
 
 To stand up the prod environment in docker compose, simply run:
 
@@ -128,7 +144,7 @@ Finally, when you're done working, you can stop everything using:
 make stop ENV=prod
 ```
 
-### Enable user login via Globus OIDC
+## Enable user login via Globus OIDC
 
 You can configure user login via Globus OIDC by performing the following _one time_ setup:
 
