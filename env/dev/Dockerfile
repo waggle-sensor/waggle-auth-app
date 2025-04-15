@@ -11,5 +11,5 @@ COPY . /app
 # include staticfiles for whitenoise
 RUN python manage.py collectstatic --noinput
 # Create cron job file and set permissions
-RUN echo "*/1 * * * * root /usr/local/bin/python /app/manage.py shell < /app/scripts/load_manifest.py > /proc/1/fd/1 2>&1" > /etc/cron.d/update-manifest && \
+RUN echo "*/30 * * * * root /usr/local/bin/python /app/manage.py autoloadmanifest > /proc/1/fd/1 2>&1" > /etc/cron.d/update-manifest && \
     chmod 0644 /etc/cron.d/update-manifest
