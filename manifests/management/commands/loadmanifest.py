@@ -121,20 +121,20 @@ class Command(BaseCommand):
 
             node, _ = NodeData.objects.get_or_create(vsn=vsn)
             node.name = scraped_data.get("node_id")
-            node.save()
 
-            # # Update Modem
-            # modem_data = scraped_data.get("network", {}).get("modem", {}).get("3gpp", {})
-            # sim_data = scraped_data.get("network", {}).get("sim", {}).get("properties", {})
-            # Modem.objects.update_or_create(
-            #     node=node,
-            #     defaults={
-            #         "imei": modem_data.get("imei"),
-            #         "imsi": sim_data.get("imsi"),
-            #         "iccid": sim_data.get("iccid"),
-            #         "carrier": sim_data.get("operator_id"),
-            #     },
-            # )
+            # Update Modem
+            modem_data = scraped_data.get("network", {}).get("modem", {}).get("3gpp", {})
+            sim_data = scraped_data.get("network", {}).get("sim", {}).get("properties", {})
+            if modem_data and sim_data:
+                Modem.objects.update_or_create(
+                    node=node,
+                    defaults={
+                        "imei": modem_data.get("imei"),
+                        "imsi": sim_data.get("imsi"),
+                        "iccid": sim_data.get("iccid"),
+                        "carrier": sim_data.get("operator_id"),
+                    },
+                )
 
             # # Update Compute
             # device_data = scraped_data.get("devices", {})
@@ -168,7 +168,7 @@ class Command(BaseCommand):
             # sensors = []
             # if "bme280" in iio_devs:
             #     sensors.append("bme280")
-            # if module_names.count("spidev") >= 2:
+            # if module_names.count("spidev") >= 2: #TODO: change this to the lora_gws field
             #     sensors.append("lorawan")
 
             # for sensor_name in sensors:
@@ -179,3 +179,5 @@ class Command(BaseCommand):
             #             # TODO: define how to extract hardware info
             #         },
             #     )
+
+            node.save()
