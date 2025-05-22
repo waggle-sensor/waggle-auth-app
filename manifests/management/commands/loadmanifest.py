@@ -5,7 +5,8 @@ import json
 from datetime import datetime
 from environ import Env
 from django.core.management.base import BaseCommand
-from manifests.models import NodeData, Modem, Compute, ComputeSensor #TODO: Also do auth app node model
+from manifests.models import NodeData, Modem, Compute, ComputeSensor, ComputeHardware
+from app.models import Node  
 
 class Command(BaseCommand):
     help = """
@@ -113,71 +114,88 @@ class Command(BaseCommand):
         for vsn in vsns:
             manifest_path = os.path.join(self.DATA_DIR, vsn, "manifest.json")
             if not os.path.exists(manifest_path):
-                self.log(f"Missing scrape-nodes's manifest.json for {vsn}, skipping.")
+                self.log(f"Missing manifest.json for {vsn}, skipping.")
                 continue
-
-            with open(manifest_path) as f:
-                scraped_data = json.load(f)
-
+            scraped = json.load(open(manifest_path))
             node, _ = NodeData.objects.get_or_create(vsn=vsn)
-            node.name = scraped_data.get("node_id")
+            # update node and app-node
+            self._sync_node_record(node, scraped)
+            # update related models
+            self._sync_modem(node, scraped)
+            serials = self._sync_computes(node, scraped)
+            self._deactivate_missing_computes(node, serials)
+            self.log(f"Loaded manifest for {vsn}.")
 
-            # Update Modem
-            modem_data = scraped_data.get("network", {}).get("modem", {}).get("3gpp", {})
-            sim_data = scraped_data.get("network", {}).get("sim", {}).get("properties", {})
-            if modem_data and sim_data:
-                Modem.objects.update_or_create(
-                    node=node,
-                    defaults={
-                        "imei": modem_data.get("imei"),
-                        "imsi": sim_data.get("imsi"),
-                        "iccid": sim_data.get("iccid"),
-                        "carrier": sim_data.get("operator_id"),
-                    },
-                )
+    def _sync_node_record(self, node, data):
+        """Sync base NodeData fields and app Node mac."""
+        node.name = data.get("node_id")
+        node.save()
+        app_node, _ = Node.objects.get_or_create(vsn=node.vsn)
+        app_node.mac = node.name
+        app_node.save()
 
-            # # Update Compute
-            # device_data = scraped_data.get("devices", {})
-            # hostname = device_data.get("Static hostname", "")
-            # serial = device_data.get("serial")
-            # zone = device_data.get("k8s", {}).get("labels", {}).get("zone")
-            # kernel_modules = device_data.get("kernel_modules", [])
-            # module_names = [m.get("name") for m in kernel_modules]
+    def _sync_modem(self, node, data):
+        """Create or update Modem from manifest"""
+        md = data.get("network", {}).get("modem", {}).get("3gpp", {})
+        sd = data.get("network", {}).get("sim", {}).get("properties", {})
+        if md and sd:
+            Modem.objects.update_or_create(
+                node=node,
+                defaults={
+                    "imei": md.get("imei"),
+                    "imsi": sd.get("imsi"),
+                    "iccid": sd.get("iccid"),
+                    "carrier": md.get("operator_id"),
+                },
+            )
 
-            # if "nxcore" in hostname:
-            #     compute_name = "nxcore"
-            # elif "ws-rpi" in hostname:
-            #     compute_name = "rpi"
-            # elif module_names.count("spidev") >= 2:
-            #     compute_name = "rpi.lorawan"
-            # else:
-            #     compute_name = ""
+    def _sync_computes(self, node, data):
+        """Upsert Compute and ComputeSensor entries; return seen serials."""
+        HARDWARE = {
+            "rpi.lorawan": "rpi-4gb", "rpi": "rpi-8gb",
+            "nxcore": "xaviernx", "sbcore": "dell-xr2",
+            "nxagent": "xaviernx-poe",
+        }
+        saw = []
+        for _, dev in data.get("devices", {}).items():
+            serial = dev.get("serial")
+            saw.append(serial)
+            # determine compute type
+            host = dev.get("Static hostname", "")
+            alias = "Custom"
+            if "nxcore" in host: alias = "nxcore"
+            elif "sb-core" in host: alias = "sbcore"
+            elif "nxagent" in host: alias = "nxagent"
+            elif "ws-rpi" in host:
+                alias = "rpi.lorawan" if dev.get("lora_gws") else "rpi"
+            comp, _ = Compute.objects.update_or_create(
+                node=node, serial_no=serial,
+                defaults={
+                    "name": alias, "zone": dev.get("k8s", {}).get("labels", {}).get("zone"),
+                    "is_active": True, "hardware": ComputeHardware.objects.filter(hardware=HARDWARE.get(alias)).first(),
+                }
+            )
+            # sync sensors
+            self._sync_compute_sensors(comp, dev)
+        return saw
 
-            # Compute.objects.update_or_create(
-            #     node=node,
-            #     defaults={
-            #         "name": compute_name,
-            #         "serial_no": serial,
-            #         "zone": zone,
-            #         # TODO: define how to extract hardware info
-            #     },
-            # )
+    def _sync_compute_sensors(self, comp, dev):
+        """Upsert sensors for a Compute"""
+        # IIO sensors
+        iio_names = dev.get("iio_devices", [])
+        for name in iio_names:
+            hw = ComputeSensor._meta.get_field('hardware').related_model.objects.filter(hardware=name).first()
+            ComputeSensor.objects.update_or_create(scope=comp, name=name, defaults={'hardware': hw, 'is_active': True})
+        # LoRa gateway sensors
+        lorawan_names = []
+        if dev.get("lora_gws"):
+            for lname, lhw in [("lorawan", "lorawan"), ("Lorawan Antenna", "LoRa Fiber Glass Antenna")]:
+                hw = ComputeSensor._meta.get_field('hardware').related_model.objects.filter(hardware=lhw).first()
+                ComputeSensor.objects.update_or_create(scope=comp, name=lname, defaults={'hardware': hw, 'is_active': True})
+                lorawan_names.append(lname)
 
-            # # Update ComputeSensor
-            # iio_devs = device_data.get("iio_devices", [])
-            # sensors = []
-            # if "bme280" in iio_devs:
-            #     sensors.append("bme280")
-            # if module_names.count("spidev") >= 2: #TODO: change this to the lora_gws field
-            #     sensors.append("lorawan")
-
-            # for sensor_name in sensors:
-            #     ComputeSensor.objects.update_or_create(
-            #         scope=serial,
-            #         name=sensor_name,
-            #         defaults={
-            #             # TODO: define how to extract hardware info
-            #         },
-            #     )
-
-            node.save()
+    def _deactivate_missing_computes(self, node, saw):
+        """Mark computes not in manifest as inactive"""
+        for serial in Compute.objects.filter(node=node).values_list('serial_no', flat=True):
+            if serial not in saw:
+                Compute.objects.filter(node=node, serial_no=serial).update(is_active=False)
