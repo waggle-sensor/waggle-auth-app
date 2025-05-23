@@ -154,7 +154,7 @@ class Command(BaseCommand):
         HARDWARE = {
             "rpi.lorawan": "rpi-4gb", "rpi": "rpi-8gb",
             "nxcore": "xaviernx", "sbcore": "dell-xr2",
-            "nxagent": "xaviernx-poe",
+            "nxagent": "xaviernx-poe", "Custom": "custom",
         }
         saw = []
         for _, dev in data.get("devices", {}).items():
@@ -172,7 +172,7 @@ class Command(BaseCommand):
                 node=node, serial_no=serial,
                 defaults={
                     "name": alias, "zone": dev.get("k8s", {}).get("labels", {}).get("zone"),
-                    "is_active": True, "hardware": ComputeHardware.objects.filter(hardware=HARDWARE.get(alias)).first(),
+                    "is_active": True, "hardware": ComputeHardware.objects.get_or_create(hardware=HARDWARE.get(alias))[0],
                 }
             )
             # sync sensors
