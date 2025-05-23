@@ -5,18 +5,10 @@ import json
 from datetime import datetime
 from environ import Env
 from django.core.management.base import BaseCommand
-from manifests.models import NodeData, Modem, Compute, ComputeSensor, ComputeHardware
+from manifests.models import NodeData, Modem, Compute, ComputeSensor
 from app.models import Node 
-
-COMPUTE_ALIAS_MAP = {
-    "nxcore": {"pattern": "nxcore", "hardware": "xaviernx"},
-    "sbcore": {"pattern": "sb-core", "hardware": "dell-xr2"},
-    "nxagent": {"pattern": "nxagent", "hardware": "xaviernx-poe"},
-    "rpi.lorawan": {"pattern": "ws-rpi", "hardware": "rpi-4gb", "condition": lambda d: bool(d.get("lora_gws"))},
-    "rpi": {"pattern": "ws-rpi", "hardware": "rpi-8gb"},
-    "custom": {"pattern": "custom", "hardware": "custom"},
-}
-DEFAULT_COMPUTE_ALIAS = "custom"
+import manifests.management.commands.mappers.compute_mappers as cm
+import manifests.management.commands.mappers.sensor_mappers as sm
 
 class Command(BaseCommand):
     help = """
@@ -167,8 +159,8 @@ class Command(BaseCommand):
             serials_seen.append(serial)
 
             hostname = dev.get("Static hostname", "")
-            alias = self._resolve_compute_alias(hostname, dev)
-            hardware = self._get_hardware_for_alias(alias)
+            alias = cm.Resolve_compute_alias(hostname, dev)
+            hardware = cm.Get_hardware_for_alias(alias)
 
             compute_defaults = {
                 "name": alias,
@@ -186,32 +178,18 @@ class Command(BaseCommand):
         return serials_seen
 
     def _sync_compute_sensors(self, comp, dev):
-        """Upsert sensors for a Compute"""
-        # IIO sensors
-        iio_names = dev.get("iio_devices", [])
-        for name in iio_names:
-            hw = ComputeSensor._meta.get_field('hardware').related_model.objects.filter(hardware=name).first()
-            ComputeSensor.objects.update_or_create(scope=comp, name=name, defaults={'hardware': hw, 'is_active': True})
-        # LoRa gateway sensors
-        lorawan_names = []
-        if dev.get("lora_gws"):
-            for lname, lhw in [("lorawan", "lorawan"), ("Lorawan Antenna", "LoRa Fiber Glass Antenna")]:
-                hw = ComputeSensor._meta.get_field('hardware').related_model.objects.filter(hardware=lhw).first()
-                ComputeSensor.objects.update_or_create(scope=comp, name=lname, defaults={'hardware': hw, 'is_active': True})
-                lorawan_names.append(lname)
+        """Upsert sensors for a Compute using abstracted mappings."""
+        for mapper in sm.COMPUTE_SENSOR_MAPPERS:
+            for name in mapper["sensor_names"](dev):
+                hw = mapper["resolve_hardware"](name)
+                ComputeSensor.objects.update_or_create(
+                    scope=comp,
+                    name=name,
+                    defaults={"hardware": hw, "is_active": True}
+                )
 
     def _deactivate_missing_computes(self, node, saw):
         """Mark computes not in manifest as inactive"""
         for serial in Compute.objects.filter(node=node).values_list('serial_no', flat=True):
             if serial not in saw:
                 Compute.objects.filter(node=node, serial_no=serial).update(is_active=False)
-
-    def _resolve_compute_alias(self, hostname, device):
-        for alias, config in COMPUTE_ALIAS_MAP.items():
-            if config["pattern"] in hostname and config.get("condition", lambda d: True)(device):
-                return alias
-        return DEFAULT_COMPUTE_ALIAS
-    
-    def _get_hardware_for_alias(self, alias):
-        hardware_name = COMPUTE_ALIAS_MAP.get(alias, {}).get("hardware")
-        return ComputeHardware.objects.get_or_create(hardware=hardware_name)[0]
