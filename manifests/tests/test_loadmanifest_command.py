@@ -157,7 +157,7 @@ class LoadManifestCommandTestCase(TestCase):
         # run command
         call_command('loadmanifest', '--repo', self.tmpdir, '--vsns', vsn2)
         # lookup and assert each alias
-        expected = {'S1': 'nxcore', 'S2': 'sbcore', 'S3': 'nxagent', 'S4': 'rpi', 'S5': 'rpi.lorawan', 'S6': 'Custom'}
+        expected = {'S1': 'nxcore', 'S2': 'sbcore', 'S3': 'nxagent', 'S4': 'rpi', 'S5': 'rpi.lorawan', 'S6': 'custom'}
         for serial, alias in expected.items():
             comp = Compute.objects.get(serial_no=serial)
             self.assertEqual(comp.name, alias, f"Serial {serial} should map to {alias}")
@@ -172,7 +172,7 @@ class LoadManifestCommandTestCase(TestCase):
         extra = Compute.objects.create(
             node=nd,
             serial_no='EXTRA',
-            name='Custom',
+            name='custom',
             zone='z',
             is_active=True,
             hardware=extra_hw,
