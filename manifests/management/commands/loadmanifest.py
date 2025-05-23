@@ -6,7 +6,17 @@ from datetime import datetime
 from environ import Env
 from django.core.management.base import BaseCommand
 from manifests.models import NodeData, Modem, Compute, ComputeSensor, ComputeHardware
-from app.models import Node  
+from app.models import Node 
+
+COMPUTE_ALIAS_MAP = {
+    "nxcore": {"pattern": "nxcore", "hardware": "xaviernx"},
+    "sbcore": {"pattern": "sb-core", "hardware": "dell-xr2"},
+    "nxagent": {"pattern": "nxagent", "hardware": "xaviernx-poe"},
+    "rpi.lorawan": {"pattern": "ws-rpi", "hardware": "rpi-4gb", "condition": lambda d: bool(d.get("lora_gws"))},
+    "rpi": {"pattern": "ws-rpi", "hardware": "rpi-8gb"},
+    "custom": {"pattern": "custom", "hardware": "custom"},
+}
+DEFAULT_COMPUTE_ALIAS = "custom"
 
 class Command(BaseCommand):
     help = """
@@ -151,33 +161,29 @@ class Command(BaseCommand):
 
     def _sync_computes(self, node, data):
         """Upsert Compute and ComputeSensor entries; return seen serials."""
-        HARDWARE = {
-            "rpi.lorawan": "rpi-4gb", "rpi": "rpi-8gb",
-            "nxcore": "xaviernx", "sbcore": "dell-xr2",
-            "nxagent": "xaviernx-poe", "Custom": "custom",
-        }
-        saw = []
+        serials_seen = []
         for _, dev in data.get("devices", {}).items():
             serial = dev.get("serial")
-            saw.append(serial)
-            # determine compute type
-            host = dev.get("Static hostname", "")
-            alias = "Custom"
-            if "nxcore" in host: alias = "nxcore"
-            elif "sb-core" in host: alias = "sbcore"
-            elif "nxagent" in host: alias = "nxagent"
-            elif "ws-rpi" in host:
-                alias = "rpi.lorawan" if dev.get("lora_gws") else "rpi"
-            comp, _ = Compute.objects.update_or_create(
-                node=node, serial_no=serial,
-                defaults={
-                    "name": alias, "zone": dev.get("k8s", {}).get("labels", {}).get("zone"),
-                    "is_active": True, "hardware": ComputeHardware.objects.get_or_create(hardware=HARDWARE.get(alias))[0],
-                }
+            serials_seen.append(serial)
+
+            hostname = dev.get("Static hostname", "")
+            alias = self._resolve_compute_alias(hostname, dev)
+            hardware = self._get_hardware_for_alias(alias)
+
+            compute_defaults = {
+                "name": alias,
+                "zone": dev.get("k8s", {}).get("labels", {}).get("zone"),
+                "is_active": True,
+                "hardware": hardware,
+            }
+
+            compute, _ = Compute.objects.update_or_create(
+                node=node, serial_no=serial, defaults=compute_defaults
             )
-            # sync sensors
-            self._sync_compute_sensors(comp, dev)
-        return saw
+
+            self._sync_compute_sensors(compute, dev)
+
+        return serials_seen
 
     def _sync_compute_sensors(self, comp, dev):
         """Upsert sensors for a Compute"""
@@ -199,3 +205,13 @@ class Command(BaseCommand):
         for serial in Compute.objects.filter(node=node).values_list('serial_no', flat=True):
             if serial not in saw:
                 Compute.objects.filter(node=node, serial_no=serial).update(is_active=False)
+
+    def _resolve_compute_alias(self, hostname, device):
+        for alias, config in COMPUTE_ALIAS_MAP.items():
+            if config["pattern"] in hostname and config.get("condition", lambda d: True)(device):
+                return alias
+        return DEFAULT_COMPUTE_ALIAS
+    
+    def _get_hardware_for_alias(self, alias):
+        hardware_name = COMPUTE_ALIAS_MAP.get(alias, {}).get("hardware")
+        return ComputeHardware.objects.get_or_create(hardware=hardware_name)[0]
