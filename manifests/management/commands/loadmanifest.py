@@ -158,6 +158,9 @@ class Command(BaseCommand):
             serial = dev.get("serial")
             serials_seen.append(serial)
 
+            if str(dev.get("reachable", "no")).lower() == "no":
+                continue  # Skip unreachable devices
+            
             hostname = dev.get("Static hostname", "")
             alias = cm.Resolve_compute_alias(hostname, dev)
             hardware = cm.Get_hardware_for_alias(alias)
