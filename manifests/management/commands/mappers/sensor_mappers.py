@@ -1,16 +1,21 @@
-from manifests.models import ComputeSensor
+from manifests.models import SensorHardware
 
 COMPUTE_SENSOR_MAPPERS = [
     {
         "source": "iio_devices",
         "sensor_names": lambda dev: dev.get("iio_devices", []),
-        "resolve_hardware": lambda name: ComputeSensor._meta.get_field("hardware").related_model.objects.filter(hardware=name).first(),
+        "resolve_hardware": lambda name: SensorHardware.objects.get_or_create(hardware=name)[0],
     },
     {
         "source": "lora_gws",
         "sensor_names": lambda dev: ["lorawan", "Lorawan Antenna"] if dev.get("lora_gws") else [],
-        "resolve_hardware": lambda name: ComputeSensor._meta.get_field("hardware").related_model.objects.filter(
+        "resolve_hardware": lambda name: SensorHardware.objects.get_or_create(
             hardware="lorawan" if "lorawan" in name.lower() else "LoRa Fiber Glass Antenna"
-        ).first(),
+        )[0],
+    },
+    {
+        "source": "waggle_devices",
+        "sensor_names": lambda dev: ["gps"] if any(d.get("id") == "waggle-core-gps" for d in dev.get("waggle_devices", [])) else [],
+        "resolve_hardware": lambda name: SensorHardware.objects.get_or_create(hardware="gps")[0],
     }
 ]
