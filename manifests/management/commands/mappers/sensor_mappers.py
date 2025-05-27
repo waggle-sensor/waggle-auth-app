@@ -17,6 +17,16 @@ COMPUTE_SENSOR_MAPPERS = [
     {
         "source": "waggle_devices",
         "sensor_names": lambda dev: ["gps"] if any(d.get("id") == "waggle-core-gps" for d in dev.get("waggle_devices", [])) else [],
-        "resolve_hardware": lambda name: SensorHardware.objects.get_or_create(hardware="gps")[0],
+        "resolve_hardware": lambda name: SensorHardware.objects.get_or_create(hardware=name)[0],
+    },
+    {
+        "source": "k8s",
+        "sensor_names": lambda dev: [
+            name for name in ["raingauge", "microphone"]
+            if dev.get("k8s", {}).get("labels", {}).get(f"resource.{name}", "") == "true"
+        ],
+        "resolve_hardware": lambda name: SensorHardware.objects.get_or_create(
+            hardware=name.lower()
+        )[0],
     }
 ]
