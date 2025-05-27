@@ -1,5 +1,7 @@
 from manifests.models import ComputeHardware
 
+# NOTE: add your compute mappers here
+# example: "nxcore": {"pattern": "nxcore", "hardware": "xavieragx", "condition": lambda d: d.get("model", "") == "NVIDIA Jetson AGX Orin"},
 COMPUTE_ALIAS_MAP = {
     "nxcore": {"pattern": "nxcore", "hardware": "xaviernx"},
     "sbcore": {"pattern": "sb-core", "hardware": "dell-xr2"},

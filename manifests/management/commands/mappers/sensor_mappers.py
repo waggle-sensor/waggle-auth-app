@@ -1,5 +1,6 @@
 from manifests.models import SensorHardware
 
+#NOTE: add your sensor mappers here
 COMPUTE_SENSOR_MAPPERS = [
     {
         "source": "iio_devices",
