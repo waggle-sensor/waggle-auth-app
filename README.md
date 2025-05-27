@@ -118,6 +118,8 @@ or to run for one node
 W08E
 ```
 
+>TODO: add docs on how to add mappers for computes and sensors
+
 ## Running a local production server
 
 To stand up the prod environment in docker compose, simply run:
