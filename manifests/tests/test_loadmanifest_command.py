@@ -33,6 +33,7 @@ class LoadManifestCommandTestCase(TestCase):
         os.makedirs(vsn_dir)
         manifest = {
             "vsn": self.vsn,
+            "reachable": "yes",
             "node_id": "MAC123",
             "network": {
                 "modem": {"3gpp": {"imei": "111222333444555", "operator_id": "310410"}},
@@ -40,6 +41,7 @@ class LoadManifestCommandTestCase(TestCase):
             },
             "devices": {
                 "dev1": {
+                    "reachable": "yes",
                     "serial": "SERIAL1",
                     "Static hostname": "ws-nxcore-foo",
                     "k8s": {"labels": {"zone": "core"}},
@@ -144,12 +146,12 @@ class LoadManifestCommandTestCase(TestCase):
             'node_id': 'MAC456',
             'network': {'modem': {}, 'sim': {}},
             'devices': {
-                'd_nxcore': {'serial': 'S1', 'Static hostname': 'ws-nxcore-abc', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_sb': {'serial': 'S2', 'Static hostname': 'host-sb-core-01', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_agent': {'serial': 'S3', 'Static hostname': 'x-nxagent-x', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_rpi': {'serial': 'S4', 'Static hostname': 'foo-ws-rpi-bar', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_lora': {'serial': 'S5', 'Static hostname': 'xx-ws-rpi-yy', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': ['gw']},
-                'd_custom': {'serial': 'S6', 'Static hostname': 'some-host', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_nxcore': {'reachable': 'yes', 'serial': 'S1', 'Static hostname': 'ws-nxcore-abc', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_sb': {'reachable': 'yes', 'serial': 'S2', 'Static hostname': 'host-sb-core-01', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_agent': {'reachable': 'yes', 'serial': 'S3', 'Static hostname': 'x-nxagent-x', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_rpi': {'reachable': 'yes', 'serial': 'S4', 'Static hostname': 'foo-ws-rpi-bar', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_lora': {'reachable': 'yes', 'serial': 'S5', 'Static hostname': 'xx-ws-rpi-yy', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': ['gw']},
+                'd_custom': {'reachable': 'yes', 'serial': 'S6', 'Static hostname': 'some-host', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
             }
         }
         with open(os.path.join(v2_dir, 'manifest.json'), 'w') as f:
@@ -185,3 +187,32 @@ class LoadManifestCommandTestCase(TestCase):
         # original compute remains active
         comp = Compute.objects.get(node=nd, serial_no='SERIAL1')
         self.assertTrue(comp.is_active)
+    
+    def test_unreachable_devices_skipped(self):
+        """Ensure unreachable devices are skipped."""
+        # prepare manifest with an unreachable device
+        vsn3 = 'V3'
+        v3_dir = os.path.join(self.tmpdir, 'data', vsn3)
+        os.makedirs(v3_dir)
+        manifest = {
+            "vsn": vsn3,
+            "reachable": "yes",
+            "node_id": "MAC789",
+            "network": {"modem": {}, "sim": {}},
+            "devices": {
+                "dev1": {
+                    "reachable": "no",  # this device should be skipped
+                    "serial": "SERIAL2",
+                    "Static hostname": "ws-nxcore-unreachable",
+                    "k8s": {"labels": {"zone": "core"}},
+                    "iio_devices": [],
+                    "lora_gws": []
+                }
+            }
+        }
+        with open(os.path.join(v3_dir, 'manifest.json'), 'w') as f:
+            json.dump(manifest, f)
+        # run command
+        call_command('loadmanifest', '--repo', self.tmpdir, '--vsns', vsn3)
+        # no Compute should be created for unreachable device
+        self.assertFalse(Compute.objects.filter(node__vsn=vsn3).exists())
