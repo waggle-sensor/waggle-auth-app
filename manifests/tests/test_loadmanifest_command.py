@@ -6,7 +6,7 @@ import subprocess
 from io import StringIO
 from django.test import TestCase
 from django.core.management import call_command
-from manifests.models import NodeData, Modem, Compute, ComputeSensor, ComputeHardware
+from manifests.models import NodeData, Modem, Compute, ComputeSensor, ComputeHardware, Resource
 from app.models import Node as AppNode
 from manifests.models import SensorHardware
 from unittest.mock import patch, MagicMock
@@ -46,7 +46,19 @@ class LoadManifestCommandTestCase(TestCase):
                     "Static hostname": "ws-nxcore-foo",
                     "k8s": {"labels": {"zone": "core"}},
                     "iio_devices": ["sensor1"],
-                    "lora_gws": ["gw1"]
+                    "lora_gws": ["gw1"],
+                    "waggle_devices": [
+                        {
+                        "id": "waggle-core-switchconsole",
+                        "path": "/dev/waggle-core-switchconsole",
+                        "target": "ttyUSB0",
+                        "permissions": "lrwxrwxrwx",
+                        "owner": "root",
+                        "group": "root",
+                        "timestamp": "May 13 18:26",
+                        "timestamp_iso": "2025-05-13T18:26:00"
+                        }
+                    ]
                 }
             }
         }
@@ -82,6 +94,9 @@ class LoadManifestCommandTestCase(TestCase):
         ant = ComputeSensor.objects.get(scope=comp, name='Lorawan Antenna')
         self.assertTrue(lor.is_active)
         self.assertTrue(ant.is_active)
+        # Resource created
+        switch = Resource.objects.get(node=nd, name='switch')
+        self.assertEqual(switch.name, 'switch')
 
     def test_missing_manifest_skips(self):
         """Test that missing manifest.json files are skipped without error."""

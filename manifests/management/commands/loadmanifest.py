@@ -5,10 +5,11 @@ import json
 from datetime import datetime
 from environ import Env
 from django.core.management.base import BaseCommand
-from manifests.models import NodeData, Modem, Compute, ComputeSensor
+from manifests.models import NodeData, Modem, Compute, ComputeSensor, Resource
 from app.models import Node 
 import manifests.management.commands.mappers.compute_mappers as cm
 import manifests.management.commands.mappers.sensor_mappers as sm
+import manifests.management.commands.mappers.resource_mappers as rm
 
 class Command(BaseCommand):
     help = """
@@ -152,7 +153,7 @@ class Command(BaseCommand):
             )
 
     def _sync_computes(self, node, data):
-        """Upsert Compute and ComputeSensor entries; return seen serials."""
+        """Upsert Compute, ComputeSensor, and Resource entries; return seen serials."""
         serials_seen = []
         for _, dev in data.get("devices", {}).items():
             serial = dev.get("serial")
@@ -177,6 +178,7 @@ class Command(BaseCommand):
             )
 
             self._sync_compute_sensors(compute, dev)
+            self._sync_node_resources(node, dev)
 
         return serials_seen
 
@@ -189,6 +191,17 @@ class Command(BaseCommand):
                     scope=comp,
                     name=name,
                     defaults={"hardware": hw, "is_active": True}
+                )
+    
+    def _sync_node_resources(self, node, dev):
+        """Upsert resources for a node using abstracted mappings."""
+        for mapper in rm.RESOURCE_MAPPERS:
+            for name in mapper["resouce_names"](dev):
+                hw = mapper["resolve_hardware"](name)
+                Resource.objects.update_or_create(
+                    node=node,
+                    name=name,
+                    defaults={"hardware": hw}
                 )
 
     def _deactivate_missing_computes(self, node, saw):
