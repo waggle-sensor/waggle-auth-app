@@ -26,7 +26,7 @@ class Command(LoadManifestCommand):
             return
 
         self.log("Starting manifest loading process...")
-        # os.chdir(self.WORKDIR)
+        os.chdir(self.WORKDIR)
 
         # Set up SSH and clone the repo
         self.set_ssh()
