@@ -35,7 +35,7 @@ services:
       - "PELICAN_LIFETIME=60"
       - "PELICAN_ROOT_URL=https://nrdstor.nationalresearchplatform.org:8443/sage"
       - "PELICAN_ROOT_FOLDER=/node-data"
-      - "INV_TOOLS_REPO=/root/waggle-inventory-tools"
+      - "INV_TOOLS_REPO=/app/waggle-inventory-tools"
       #NOTE: uncomment these lines for automatic updates of the inventory tools repo
       # - "INV_TOOLS_REPO=https://github.com/waggle-sensor/waggle-inventory-tools.git"
       # - "INV_TOOLS_TOKEN=${INV_TOOLS_TOKEN}" 
@@ -48,5 +48,4 @@ services:
       - ../../:/app:rw
       - /Users/franciscolozano/waggle_inv_tools/git:/root/git #TODO: change this to another path not Users
       - /Users/franciscolozano/waggle_inv_tools/ssh:/root/ssh #TODO: change this to another path not Users
-      - /Users/franciscolozano/Documents/Github/waggle-auth-app/waggle-inventory-tools:/root/waggle-inventory-tools #TODO: change this to another path not Users
-      #TODO: add volume for scrape node data to be accessible outside of container
+      - /Users/franciscolozano/waggle_inv_tools/waggle-inventory-tools:/app/waggle-inventory-tools #TODO: change this to another path not Users
