@@ -26,11 +26,11 @@ class Command(LoadManifestCommand):
             return
 
         self.log("Starting manifest loading process...")
-        os.chdir(self.WORKDIR)
+        # os.chdir(self.WORKDIR)
 
         # Set up SSH and clone the repo
         self.set_ssh()
-        self.get_repo()
+        self.get_repo(options)
 
         # Get the list of VSNs to scrape/load
         vsns = self.get_vsns(options)
@@ -51,20 +51,20 @@ class Command(LoadManifestCommand):
         parser.add_argument("--ssh-pw", type=str, default=self.env("INV_TOOLS_SSH_TOOLS_PW", str, None), help="Password for SSH IdentityFile")
         parser.add_argument("--vsns", nargs="+", type=str, default=None, help="Optional list of VSNs to scrape/load. If not provided, all from DB will be used.")
 
-    def check_required_options(self, options):
+    def check_required_options(self, options, required=None):
         """
         Check if required options are set. If not, log a message and return False.
         """
-        required = {
-            "repo": "INV_TOOLS_REPO",
-            "token": "INV_TOOLS_TOKEN",
-            "ssh_tools": "INV_TOOLS_SSH_TOOLS",
-            "ssh_config": "INV_TOOLS_SSH_CONFIG",
-            "ssh_pw": "INV_TOOLS_SSH_TOOLS_PW",
-        }
+        if required is None:
+            required = {
+                "repo": "INV_TOOLS_REPO",
+                "ssh_tools": "INV_TOOLS_SSH_TOOLS",
+                "ssh_config": "INV_TOOLS_SSH_CONFIG",
+                "ssh_pw": "INV_TOOLS_SSH_TOOLS_PW",
+            }
         for opt_key, setting_name in required.items():
             if not options.get(opt_key):
-                self.log(f"{setting_name} is not set (add arg --{opt_key} or env variable {setting_name}). Manifest loading will not proceed.")
+                self.log(f"{setting_name} is not set (add arg --{opt_key} or env variable {setting_name}). Manifest loading will fail.")
                 return False
         return True
 
@@ -101,7 +101,7 @@ class Command(LoadManifestCommand):
         """Return True if ref looks like a git commit SHA."""
         return len(ref) >= 7 and all(c in "0123456789abcdef" for c in ref.lower())
 
-    def get_repo(self):
+    def get_repo(self, options):
         """
         Clone the inventory tools repository if it doesn't exist, or use the cached one.
         Then checkout the specified version (branch, tag, or commit SHA).
@@ -110,6 +110,10 @@ class Command(LoadManifestCommand):
             self.log(f"Using local repo directory: {self.REPO}")
             self.REPO_DIR = self.REPO  # Override default REPO_DIR
         else:
+            # Check if required options are set for remote repo
+            required = {"repo": "INV_TOOLS_REPO", "token": "INV_TOOLS_TOKEN",}
+            if not self.check_required_options(options, required):
+                return
             # Remote repo URL (e.g., https://...)
             auth_repo_url = self.REPO.replace("https://", f"https://{self.REPO_TOKEN}@")
             if not os.path.exists(self.REPO_DIR):
