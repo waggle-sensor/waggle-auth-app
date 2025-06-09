@@ -7,5 +7,5 @@ fixtures/
 .coverage
 .DS_Store
 .coverage.*
-issuer-key.pem
 data/
+*.pem

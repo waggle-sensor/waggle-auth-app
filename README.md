@@ -15,19 +15,21 @@ There are two development / deployment configurations both in `env` folder:
 * prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
 
 Optionally, for either of these environments you can configure...
-- user login via Globus OIDC 
-- http redirect to files captured by nodes (`downloads` app)
-- Automatic updates of node manifests (`INVENTORY_TOOLS`)
+* user login via Globus OIDC 
+* http redirect to files captured by nodes (`downloads` app)
+* Automatic updates of node manifests (`INVENTORY_TOOLS`)
+
+Optionally, you can configure user login via Globus OIDC for either of these environments.
 
 ### Keys
 For both environments, you will have to set up these keys in `env/<environment>/.env` so that the `downloads` app can work. 
 
-- S3_ACCESS_KEY: This is the access key for your S3 storage
-- S3_SECRET_KEY: This is the secret key for your S3 storage
-- PELICAN_KEY_PATH: This is the path to the .pem file for Pelican in the docker container
-- PELICAN_KEY_ID: The id for the jwt public key used for Pelican found in `jwks.json` (https://sagecontinuum.org/.well-known/openid-configuration)
+- `S3_ACCESS_KEY`: This is the access key for your S3 storage
+- `S3_SECRET_KEY`: This is the secret key for your S3 storage
+- `PELICAN_KEY_PATH`: This is the path to the .pem file for Pelican in the docker container
+- `PELICAN_KEY_ID`: The id for the jwt public key used for Pelican found in `jwks.json` (https://sagecontinuum.org/.well-known/openid-configuration)
 
->NOTE: If you are not working on the `downloads` app this can be ignored.
+> NOTE: If you are not working on the `downloads` app this can be ignored.
 
 You will also have to set up these keys in `env/<environment>/.env` so that `INVENTORY_TOOLS` can work. `INVENTORY_TOOLS` is used to update the manifest automatically.
 
@@ -121,6 +123,7 @@ W08E
 >TODO: add docs on how to add mappers for computes and sensors
 
 ## Running a local production server
+### Running a local production server
 
 To stand up the prod environment in docker compose, simply run:
 
