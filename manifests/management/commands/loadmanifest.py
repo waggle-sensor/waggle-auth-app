@@ -1,5 +1,6 @@
 """Custom Django command to load manifest data using data scraped from nodes into the database."""
 import os
+from pathlib import Path
 import subprocess
 import json
 from datetime import datetime
@@ -31,7 +32,10 @@ class Command(BaseCommand):
 
         # Scrape nodes and load manifests
         os.chdir(self.REPO_DIR)
-        self.scrape_nodes(vsns)
+
+        if not options["no_scrape"]:
+            self.scrape_nodes(vsns)
+
         self.load_manifests(vsns)
 
         self.log("Manifest loading process completed.")
@@ -49,13 +53,14 @@ class Command(BaseCommand):
         """
         parser.add_argument("--repo", type=str, default=self.env("INV_TOOLS_REPO", str, None), help="Inventory Tools Repository local path", required=True)
         parser.add_argument("--vsns", nargs="+", type=str, default=None, help="Optional list of VSNs to scrape/load. If not provided, all from DB will be used.")
+        parser.add_argument("--no-scrape", action="store_true", default=False, help="If provided, will use existing manifest data and will not scrape nodes.")
 
     def set_constants(self, options):
         """
         Set constants for the Command.
         """
-        self.REPO_DIR = options["repo"]
-        self.DATA_DIR = os.path.join(self.REPO_DIR, "data")
+        self.REPO_DIR = Path(options["repo"])
+        self.DATA_DIR = Path(self.REPO_DIR, "data")
 
     def run_subprocess(self, cmd, cwd=None, input_data=None, shell=False):
         """
@@ -98,15 +103,16 @@ class Command(BaseCommand):
             return options["vsns"]
         else:
             self.log("Fetching all VSNs from database...")
-            return NodeData.objects.values_list("vsn", flat=True)
+            vsns = [p.parent.name for p in Path(options["repo"], "data").glob("*/manifest.json")]
+            return vsns
 
     def scrape_nodes(self, vsns):
         """
         Scrape node data using the scrape-nodes script.
         """
-        script = os.path.join(self.REPO_DIR, "scrape-nodes")
+        script = Path(self.REPO_DIR, "scrape-nodes")
         try:
-            self.run_subprocess(["xargs", "-n1", "-P4", script], input_data="\n".join(vsns))
+            self.run_subprocess(["xargs", "-n1", "-P4", str(script)], input_data="\n".join(vsns))
         except subprocess.CalledProcessError as e:
             self.log(f"Error running scrape-nodes: {e}")
 
@@ -115,11 +121,11 @@ class Command(BaseCommand):
         Load manifests into the database.
         """
         for vsn in vsns:
-            manifest_path = os.path.join(self.DATA_DIR, vsn, "manifest.json")
-            if not os.path.exists(manifest_path):
+            manifest_path = Path(self.DATA_DIR, vsn, "manifest.json")
+            if not manifest_path.exists():
                 self.log(f"Missing manifest.json for {vsn}, skipping.")
                 continue
-            scraped = json.load(open(manifest_path))
+            scraped = json.loads(manifest_path.read_text())
             node, _ = NodeData.objects.get_or_create(vsn=vsn)
             # update node and app-node
             self._sync_node_record(node, scraped)
@@ -131,11 +137,14 @@ class Command(BaseCommand):
 
     def _sync_node_record(self, node, data):
         """Sync base NodeData fields and app Node mac."""
-        node.name = data.get("node_id")
-        node.save()
         app_node, _ = Node.objects.get_or_create(vsn=node.vsn)
-        app_node.mac = node.name
-        app_node.save()
+        # Update name (~node ID) for both the app and manifest node models, if exists in manifest.
+        name = data.get("node_id")
+        if name is not None:
+            node.name = name
+            node.save()
+            app_node.mac = node.name
+            app_node.save()
 
     def _sync_modem(self, node, data):
         """Create or update Modem from manifest"""
@@ -161,7 +170,7 @@ class Command(BaseCommand):
 
             if str(dev.get("reachable", "no")).lower() == "no":
                 continue  # Skip unreachable devices
-            
+
             hostname = dev.get("Static hostname", "")
             alias = cm.Resolve_compute_alias(hostname, dev)
             hardware = cm.Get_hardware_for_alias(alias)
@@ -192,7 +201,7 @@ class Command(BaseCommand):
                     name=name,
                     defaults={"hardware": hw, "is_active": True}
                 )
-    
+
     def _sync_node_resources(self, node, dev):
         """Upsert resources for a node using abstracted mappings."""
         for mapper in rm.RESOURCE_MAPPERS:
