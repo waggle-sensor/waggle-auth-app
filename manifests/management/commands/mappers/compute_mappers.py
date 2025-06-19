@@ -42,9 +42,10 @@ def Resolve_compute_alias(hostname, device):
 def Get_hardware_for_alias(alias, dev):
     hardware_name = COMPUTE_ALIAS_MAP.get(alias, {}).get("hardware")
 
+    model = dev.get("model", "")
     memory_gb = parse_memory(dev["k8s"]["resources"]["memory"]["capacity"]) / 1024**3
 
-    if "Raspberry Pi" in dev["model"]:
+    if "Raspberry Pi" in model:
         if memory_gb < 6:
             hardware_name = "rpi-4gb"
         else:
