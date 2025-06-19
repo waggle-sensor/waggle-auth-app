@@ -1,4 +1,5 @@
 """Custom Django command to load manifest data using data scraped from nodes into the database."""
+
 import os
 from pathlib import Path
 import subprocess
@@ -7,10 +8,11 @@ from datetime import datetime
 from environ import Env
 from django.core.management.base import BaseCommand
 from manifests.models import NodeData, Modem, Compute, ComputeSensor, Resource
-from app.models import Node 
+from app.models import Node
 import manifests.management.commands.mappers.compute_mappers as cm
 import manifests.management.commands.mappers.sensor_mappers as sm
 import manifests.management.commands.mappers.resource_mappers as rm
+
 
 class Command(BaseCommand):
     help = """
@@ -51,9 +53,26 @@ class Command(BaseCommand):
         """
         Add command line arguments for the command.
         """
-        parser.add_argument("--repo", type=str, default=self.env("INV_TOOLS_REPO", str, None), help="Inventory Tools Repository local path", required=True)
-        parser.add_argument("--vsns", nargs="+", type=str, default=None, help="Optional list of VSNs to scrape/load. If not provided, all from DB will be used.")
-        parser.add_argument("--no-scrape", action="store_true", default=False, help="If provided, will use existing manifest data and will not scrape nodes.")
+        parser.add_argument(
+            "--repo",
+            type=str,
+            default=self.env("INV_TOOLS_REPO", str, None),
+            help="Inventory Tools Repository local path",
+            required=True,
+        )
+        parser.add_argument(
+            "--vsns",
+            nargs="+",
+            type=str,
+            default=None,
+            help="Optional list of VSNs to scrape/load. If not provided, all from DB will be used.",
+        )
+        parser.add_argument(
+            "--no-scrape",
+            action="store_true",
+            default=False,
+            help="If provided, will use existing manifest data and will not scrape nodes.",
+        )
 
     def set_constants(self, options):
         """
@@ -103,7 +122,10 @@ class Command(BaseCommand):
             return options["vsns"]
         else:
             self.log("Fetching all VSNs from database...")
-            vsns = [p.parent.name for p in Path(options["repo"], "data").glob("*/manifest.json")]
+            vsns = [
+                p.parent.name
+                for p in Path(options["repo"], "data").glob("*/manifest.json")
+            ]
             return vsns
 
     def scrape_nodes(self, vsns):
@@ -112,7 +134,9 @@ class Command(BaseCommand):
         """
         script = Path(self.REPO_DIR, "scrape-nodes")
         try:
-            self.run_subprocess(["xargs", "-n1", "-P4", str(script)], input_data="\n".join(vsns))
+            self.run_subprocess(
+                ["xargs", "-n1", "-P4", str(script)], input_data="\n".join(vsns)
+            )
         except subprocess.CalledProcessError as e:
             self.log(f"Error running scrape-nodes: {e}")
 
@@ -132,7 +156,8 @@ class Command(BaseCommand):
             # update related models
             self._sync_modem(node, scraped)
             serials = self._sync_computes(node, scraped)
-            self._deactivate_missing_computes(node, serials)
+            # TODO Review whether we want to automatically deactivate computes.
+            # self._deactivate_missing_computes(node, serials)
             self.log(f"Loaded manifest for {vsn}.")
 
     def _sync_node_record(self, node, data):
@@ -148,18 +173,23 @@ class Command(BaseCommand):
 
     def _sync_modem(self, node, data):
         """Create or update Modem from manifest"""
-        md = data.get("network", {}).get("modem", {}).get("3gpp", {})
-        sd = data.get("network", {}).get("sim", {}).get("properties", {})
-        if md and sd:
-            Modem.objects.update_or_create(
-                node=node,
-                defaults={
-                    "imei": md.get("imei"),
-                    "imsi": sd.get("imsi"),
-                    "iccid": sd.get("iccid"),
-                    "carrier": md.get("operator_id"),
-                },
-            )
+        modem = data.get("network", {}).get("modem", {}).get("3gpp", {})
+        if not modem:
+            return
+
+        sim = data.get("network", {}).get("sim", {}).get("properties", {})
+        if not sim:
+            return
+
+        Modem.objects.update_or_create(
+            node=node,
+            defaults={
+                "imei": modem.get("imei"),
+                "imsi": sim.get("imsi"),
+                "iccid": sim.get("iccid"),
+                "carrier": modem.get("operator_id", ""),
+            },
+        )
 
     def _sync_computes(self, node, data):
         """Upsert Compute, ComputeSensor, and Resource entries; return seen serials."""
@@ -173,7 +203,7 @@ class Command(BaseCommand):
 
             hostname = dev.get("Static hostname", "")
             alias = cm.Resolve_compute_alias(hostname, dev)
-            hardware = cm.Get_hardware_for_alias(alias)
+            hardware = cm.Get_hardware_for_alias(alias, dev)
 
             compute_defaults = {
                 "name": alias,
@@ -197,9 +227,7 @@ class Command(BaseCommand):
             for name in mapper["sensor_names"](dev):
                 hw = mapper["resolve_hardware"](name)
                 ComputeSensor.objects.update_or_create(
-                    scope=comp,
-                    name=name,
-                    defaults={"hardware": hw, "is_active": True}
+                    scope=comp, name=name, defaults={"hardware": hw, "is_active": True}
                 )
 
     def _sync_node_resources(self, node, dev):
@@ -208,13 +236,15 @@ class Command(BaseCommand):
             for name in mapper["resouce_names"](dev):
                 hw = mapper["resolve_hardware"](name)
                 Resource.objects.update_or_create(
-                    node=node,
-                    name=name,
-                    defaults={"hardware": hw}
+                    node=node, name=name, defaults={"hardware": hw}
                 )
 
     def _deactivate_missing_computes(self, node, saw):
         """Mark computes not in manifest as inactive"""
-        for serial in Compute.objects.filter(node=node).values_list('serial_no', flat=True):
+        for serial in Compute.objects.filter(node=node).values_list(
+            "serial_no", flat=True
+        ):
             if serial not in saw:
-                Compute.objects.filter(node=node, serial_no=serial).update(is_active=False)
+                Compute.objects.filter(node=node, serial_no=serial).update(
+                    is_active=False
+                )
