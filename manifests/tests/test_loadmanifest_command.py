@@ -161,12 +161,12 @@ class LoadManifestCommandTestCase(TestCase):
             'node_id': 'MAC456',
             'network': {'modem': {}, 'sim': {}},
             'devices': {
-                'd_nxcore': {'reachable': 'yes', 'serial': 'S1', 'Static hostname': 'ws-nxcore-abc', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_sb': {'reachable': 'yes', 'serial': 'S2', 'Static hostname': 'host-sb-core-01', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_agent': {'reachable': 'yes', 'serial': 'S3', 'Static hostname': 'x-nxagent-x', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_rpi': {'reachable': 'yes', 'serial': 'S4', 'Static hostname': 'foo-ws-rpi-bar', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
-                'd_lora': {'reachable': 'yes', 'serial': 'S5', 'Static hostname': 'xx-ws-rpi-yy', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': ['gw']},
-                'd_custom': {'reachable': 'yes', 'serial': 'S6', 'Static hostname': 'some-host', 'k8s': {'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_nxcore': {'reachable': 'yes', 'serial': 'S1', 'Static hostname': 'ws-nxcore-abc', 'k8s': {'resources': {'memory': {'capacity': '7433228Ki'}}}, 'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_sb': {'reachable': 'yes', 'serial': 'S2', 'Static hostname': 'host-sb-core-01', 'k8s': {'resources': {'memory': {'capacity': '3200000000Ki'}}, 'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_agent': {'reachable': 'yes', 'serial': 'S3', 'Static hostname': 'x-nxagent-x', 'k8s': {'resources': {'memory': {'capacity': '7433228Ki'}}, 'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_rpi': {'reachable': 'yes', 'serial': 'S4', 'Static hostname': 'foo-ws-rpi-bar', 'k8s': {'resources': {'memory': {'capacity': '7433228Ki'}}, 'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
+                'd_lora': {'reachable': 'yes', 'serial': 'S5', 'Static hostname': 'xx-ws-rpi-yy', 'k8s': {'resources': {'memory': {'capacity': '7433228Ki'}}, 'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': ['gw']},
+                'd_custom': {'reachable': 'yes', 'serial': 'S6', 'Static hostname': 'some-host', 'k8s': {'resources': {'memory': {'capacity': '7433228Ki'}}, 'labels': {'zone': 'z'}}, 'iio_devices': [], 'lora_gws': []},
             }
         }
         with open(os.path.join(v2_dir, 'manifest.json'), 'w') as f:
