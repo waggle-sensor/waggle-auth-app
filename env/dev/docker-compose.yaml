@@ -33,7 +33,12 @@ services:
       - "PELICAN_LIFETIME=60"
       - "PELICAN_ROOT_URL=https://nrdstor.nationalresearchplatform.org:8443/sage"
       - "PELICAN_ROOT_FOLDER=/node-data"
-    env_file:
-      - .env
+      - "INV_TOOLS_REPO=/app/waggle-inventory-tools"
+      #NOTE: uncomment these lines for automatic updates of the inventory tools repo
+      # - "INV_TOOLS_REPO=https://github.com/waggle-sensor/waggle-inventory-tools.git"
+      # - "INV_TOOLS_TOKEN=${INV_TOOLS_TOKEN}" 
+      - "INV_TOOLS_SSH_TOOLS=/root/git"
+      - "INV_TOOLS_SSH_CONFIG=/root/ssh"
+      - "INV_TOOLS_SSH_TOOLS_PW=${INV_TOOLS_SSH_TOOLS_PW}" 
     volumes:
       - ../../:/app:rw

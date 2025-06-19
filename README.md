@@ -14,18 +14,43 @@ There are two development / deployment configurations both in `env` folder:
 * dev: intended for fast, local dev on host machine. debug flags are enabled.
 * prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
 
-For both environments, you will have to set up the keys in `env/<environment>/.env` so that the `downloads` app can work. 
-
-- S3_ACCESS_KEY: This is the access key for your S3 storage
-- S3_SECRET_KEY: This is the secret key for your S3 storage
-- PELICAN_KEY_PATH: This is the path to the .pem file for Pelican in the docker container
-- PELICAN_KEY_ID: The id for the jwt public key used for Pelican found in `jwks.json` (https://sagecontinuum.org/.well-known/openid-configuration)
-
->NOTE: If you are not working on the `downloads` app this can be ignored.
+Optionally, for either of these environments you can configure...
+* user login via Globus OIDC 
+* http redirect to files captured by nodes (`downloads` app)
+* Automatic updates of node manifests (`INVENTORY_TOOLS`)
 
 Optionally, you can configure user login via Globus OIDC for either of these environments.
 
-### Local development using dev configuration
+### Keys
+For both environments, you will have to set up these keys in `env/<environment>/.env` so that the `downloads` app can work. 
+
+- `S3_ACCESS_KEY`: This is the access key for your S3 storage
+- `S3_SECRET_KEY`: This is the secret key for your S3 storage
+- `PELICAN_KEY_PATH`: This is the path to the .pem file for Pelican in the docker container
+- `PELICAN_KEY_ID`: The id for the jwt public key used for Pelican found in `jwks.json` (https://sagecontinuum.org/.well-known/openid-configuration)
+
+> NOTE: If you are not working on the `downloads` app this can be ignored.
+
+You will also have to set up these keys in `env/<environment>/.env` so that `INVENTORY_TOOLS` can work. `INVENTORY_TOOLS` is used to update the manifest automatically.
+
+- INV_TOOLS_TOKEN: This is a github token with clone/pull access to our [inventory tools repo](https://github.com/waggle-sensor/waggle-inventory-tools)
+- INV_TOOLS_SSH_TOOLS_PW: This is the passphrase for our ecdsa-sage-waggle SSH IdentityFile
+
+>NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
+
+### Environment Variables
+
+>TODO: add instructions for INVENTORY_TOOLS env variables and how to set them up
+
+### Volumes
+
+>TODO: Add instructions in setting up waggle_inv_tools for ssh access to nodes within the django container
+
+>TODO: Add a make command to set up INVENTORY_TOOLS ssh and ssh tools volume. aka clone repos and set up ssh config 
+
+>NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
+
+## Local development using dev configuration
 
 _I highly recommend creating a virtual env when working on the app. I typically use:_
 
@@ -79,6 +104,25 @@ To implement the model edits to the server run:
 make migrate
 ```
 
+### Local development Inventory Tools
+
+>TODO: add docs on running inventory tools locally
+
+```sh
+./manage.py loadmanifest --repo <inventory_tools_local_path> --vsns 
+W08E
+```
+
+or to run for one node
+
+```sh
+./manage.py loadmanifest --repo <inventory_tools_local_path> --vsns 
+W08E
+```
+
+>TODO: add docs on how to add mappers for computes and sensors
+
+## Running a local production server
 ### Running a local production server
 
 To stand up the prod environment in docker compose, simply run:
@@ -105,7 +149,7 @@ Finally, when you're done working, you can stop everything using:
 make stop ENV=prod
 ```
 
-### Enable user login via Globus OIDC
+## Enable user login via Globus OIDC
 
 You can configure user login via Globus OIDC by performing the following _one time_ setup:
 
