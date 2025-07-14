@@ -311,11 +311,11 @@ class DownloadsView(APIView):
 
         if self.file_is_public or has_object_permission(request.user, self.node):
             logger.info(
-                f"file download permitted: username={username} path={request.path} is_public={self.file_is_public}"
+                f"{datetime.now(timezone.utc).isoformat()} file download allowed: username={username} path={request.path} is_public={self.file_is_public}"
             )
             return HttpResponseRedirect(get_redirect_url(item))
 
         logger.warning(
-            f"file download denied: username={username} path={request.path} is_public={self.file_is_public}"
+            f"{datetime.now(timezone.utc).isoformat()} file download denied: username={username} path={request.path} is_public={self.file_is_public}"
         )
         return HttpResponse("Permission denied", status=status.HTTP_403_FORBIDDEN)
