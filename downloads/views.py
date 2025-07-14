@@ -31,6 +31,10 @@ from rest_framework.authentication import (
 from app.authentication import TokenAuthentication as SageTokenAuthentication
 import time
 from unittest.mock import patch
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -299,6 +303,19 @@ class DownloadsView(APIView):
             node_id,
             timestamp_and_filename,
         )
+
+        # Log the access attempt
+        username = (
+            request.user.username if request.user.is_authenticated else "anonymous"
+        )
+
         if self.file_is_public or has_object_permission(request.user, self.node):
+            logger.info(
+                f"file download permitted: username={username} path={request.path} is_public={self.file_is_public}"
+            )
             return HttpResponseRedirect(get_redirect_url(item))
+
+        logger.warning(
+            f"file download denied: username={username} path={request.path} is_public={self.file_is_public}"
+        )
         return HttpResponse("Permission denied", status=status.HTTP_403_FORBIDDEN)
