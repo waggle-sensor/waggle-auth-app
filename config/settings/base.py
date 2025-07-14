@@ -179,6 +179,11 @@ LOGGING = {
             "level": "INFO",
             "handlers": ["console", "slack_admins"],
         },
+        "downloads": {
+            "level": "INFO",
+            "handlers": ["console"],
+            "propagate": False,
+        },
     },
 }
 
