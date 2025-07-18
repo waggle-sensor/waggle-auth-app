@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "downloads",
     "address",
     "django_filters",
+    "import_export",
 ]
 
 # Enable to add google address completion
