@@ -35,6 +35,7 @@ class UserResource(ModelResource):
             "is_active",
             "is_approved",
             "date_joined",
+            "last_login",
         )
         skip_unchanged = True
         report_skipped = True
