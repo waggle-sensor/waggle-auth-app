@@ -49,8 +49,16 @@ class UserAdmin(auth_admin.UserAdmin):
         ),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
-    list_display = ("username", "name", "email", "is_superuser", "is_approved")
-    list_filter = ("is_superuser", "is_approved")
+    list_display = (
+        "username",
+        "name",
+        "email",
+        "is_superuser",
+        "is_approved",
+        "date_joined",
+        "last_login",
+    )
+    list_filter = ("is_superuser", "is_approved", "date_joined", "last_login")
     search_fields = ("username", "name")
     inlines = (UserMembershipInline,)
 
