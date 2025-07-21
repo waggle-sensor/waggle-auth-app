@@ -1,23 +1,22 @@
-django==4.2.7
-djangorestframework==3.14.0
-requests==2.31.0
-django-prometheus==2.3.1
-globus-sdk==3.31.0
-django-cors-headers==4.0.0
+django==4.2.23
+djangorestframework==3.16.0
+requests==2.32.4
+django-prometheus==2.4.1
+globus-sdk==3.60.0
+django-cors-headers==4.7.0
 django-slack==5.19.0
-django-nested-admin==4.0.2
-django-environ==0.10.0
-whitenoise==6.4.0
-pandas==2.2.1
-sage-data-client==0.7.1
-ipython==8.13.2
-minio==7.2.3
-django-filter==23.5
+django-nested-admin==4.1.1
+django-environ==0.12.0
+whitenoise==6.9.0
+pandas==2.3.1
+sage-data-client==0.9.0
+minio==7.2.15
+django-filter==25.1
 git+https://github.com/waggle-sensor/django-address
 # setuptools needed for python 3.12+
-setuptools==69.2.0
+setuptools==80.9.0
 # NOTE(sean) I'm installing django-debug-toolbar in base to make the collectstatic step work
 # when building the image. We can revisit this later if we want to move it to just prod.
-django-debug-toolbar==4.3.0 # enables a debug toolbar, helps with debugging api endpoints
+django-debug-toolbar==5.2.0 # enables a debug toolbar, helps with debugging api endpoints
 scitokens==1.8.1
 django-import-export==4.3.8
