@@ -20,3 +20,5 @@ setuptools==80.9.0
 django-debug-toolbar==5.2.0 # enables a debug toolbar, helps with debugging api endpoints
 scitokens==1.8.1
 django-import-export==4.3.8
+python_wireguard==0.2.2
+pyroute2==0.9.4
