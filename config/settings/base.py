@@ -234,3 +234,12 @@ if PELICAN_ROOT_FOLDER and not PELICAN_ROOT_FOLDER.startswith("/"):
     raise ValueError("Setting PELICAN_ROOT_FOLDER must start with /")
 
 TIME_ZONE = "UTC"
+
+WG_IFACE = env("WG_IFACE", str, "wg0")
+WG_PRIV_KEY = env("WG_PRIV_KEY", str, "")
+WG_PUB_KEY = env("WG_PUB_KEY", str, "")
+WG_NETWORK = env("WG_NETWORK", str, "10.0.0.1/22")
+WG_SERVER_ADDRESS = env("WG_SERVER_ADDRESS", str, "10.0.0.1/32")
+WG_PORT = env("WG_PORT", int, 51820)
+WG_BROADCAST = env("WG_BROADCAST", str, "10.0.3.255")
+WG_RESERVED_IPS = [WG_SERVER_ADDRESS, WG_BROADCAST]
