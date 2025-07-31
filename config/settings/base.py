@@ -185,6 +185,10 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
+        "node_auth": {
+            "level": "INFO",
+            "handlers": ["console"],
+        },
     },
 }
 
@@ -235,11 +239,13 @@ if PELICAN_ROOT_FOLDER and not PELICAN_ROOT_FOLDER.startswith("/"):
 
 TIME_ZONE = "UTC"
 
+# WireGuard settings
+WG_ENABLED = env("WG_ENABLED", bool, False)
 WG_IFACE = env("WG_IFACE", str, "wg0")
 WG_PRIV_KEY = env("WG_PRIV_KEY", str, "")
 WG_PUB_KEY = env("WG_PUB_KEY", str, "")
-WG_NETWORK = env("WG_NETWORK", str, "10.0.0.1/22")
-WG_SERVER_ADDRESS = env("WG_SERVER_ADDRESS", str, "10.0.0.1/32")
+WG_SERVER_ADDRESS = env("WG_SERVER_ADDRESS", str, "192.168.0.1/22")
+WG_NETWORK = env("WG_NETWORK", str, "192.168.0.0/22")
 WG_PORT = env("WG_PORT", int, 51820)
-WG_BROADCAST = env("WG_BROADCAST", str, "10.0.3.255")
-WG_RESERVED_IPS = [WG_SERVER_ADDRESS, WG_BROADCAST]
+WG_PUBLIC_IP = env("WG_PUBLIC_IP", str, "") # This is the public IP of the server running WireGuard
+# TODO: ^I need to set this up in the setup_wireguard.py command as a arg or env variable
