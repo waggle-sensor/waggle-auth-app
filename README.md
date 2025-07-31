@@ -50,6 +50,10 @@ You will also have to set up these keys in `env/<environment>/.env` so that `INV
 
 >NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
 
+
+>TODO: Add instructions for setting up chirpstack-wireguard stuff
+
+
 ## Local development using dev configuration
 
 _I highly recommend creating a virtual env when working on the app. I typically use:_
