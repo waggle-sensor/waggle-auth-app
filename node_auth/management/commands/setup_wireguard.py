@@ -1,122 +1,125 @@
-import base64
 from datetime import datetime
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from pyroute2 import IPRoute
-from pyroute2.netlink.rtnl.ifinfmsg import IFF_UP
-from app.models import Token
+import subprocess
+import tempfile
+import os
 import ipaddress
+from app.models import Token
+from node_auth.utils import wireguard as wg
 
 class Command(BaseCommand):
-    help = "Set up WireGuard interface and reattach all peers from the Token model."
+    help = """
+    Set up WireGuard interface and reattach all peers from the Token model.
+
+    Examples:
+    python manage.py setup_wireguard
+    python manage.py setup_wireguard --migrate
+    python manage.py setup_wireguard --iface wg0 --port 51820 --wg-server-addr 10.0.0.1/22
+    """
 
     def log(self, message):
         """
         Log messages.
         """
         timestamp = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
-        self.stdout.write(f"{timestamp} [WIREGUARD]: {message}")
+        self.stdout.write(f"{timestamp} [WIREGUARD] setup_wireguard(): {message}")
+
+    def run(self, cmd, check=True, **kwargs):
+        """Run shell command and log output/errors."""
+        try:
+            subprocess.run(cmd, shell=True, check=check, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+        except subprocess.CalledProcessError as e:
+            self.log(f"Command failed: {e.cmd}\n{e.stderr.decode().strip()}")
+            raise
     
     def add_arguments(self, parser):
-        parser.add_argument('--iface', 
-                            type=str, 
-                            help='WireGuard interface name (default from settings)',
-                            default=settings.WG_IFACE)
-        parser.add_argument('--priv-key', 
-                            type=str, 
-                            help='Server\'s Base64-encoded private key (default from settings)',
-                            default=settings.WG_PRIV_KEY)
-        parser.add_argument('--pub-key', 
-                            type=str, 
-                            help='Server\'s Base64-encoded public key (default from settings)',
-                            default=settings.WG_PUB_KEY)
-        parser.add_argument('--server-addr', 
-                            type=str, 
-                            help='Server IP/CIDR (default from settings)',
-                            default=settings.WG_SERVER_ADDRESS)
-        parser.add_argument('--port', 
-                            type=int, 
-                            help='Listen port (default from settings)',
-                            default=settings.WG_PORT)
+        """
+        Add command line arguments for WireGuard setup.
+        """
+        parser.add_argument('--iface', type=str, default=settings.WG_IFACE,
+                            help='WireGuard interface name (default from settings)')
+        parser.add_argument('--priv-key', type=str, default=settings.WG_PRIV_KEY,
+                            help='Server\'s Base64-encoded private key (default from settings)')
+        parser.add_argument('--pub-key', type=str, default=settings.WG_PUB_KEY,
+                            help='Server\'s Base64-encoded public key (default from settings)')
+        parser.add_argument('--wg-server-addr', type=str, default=settings.WG_SERVER_ADDRESS,
+                            help='WireGuard server address with CIDR (default from settings)')
+        parser.add_argument('--port', type=int, default=settings.WG_PORT,
+                            help='Listen port (default from settings)')
+        parser.add_argument('--migrate', action='store_true',
+                            help='Generate missing WireGuard key pairs for Node tokens')
 
     def handle(self, *args, **options):
+        """
+        Handle the command to set up WireGuard.
+        """
+        if not wg.wg_enabled():
+            return
         iface = options['iface']
+        settings.WG_IFACE = iface
         priv_key_b64 = options['priv_key']
+        settings.WG_PRIV_KEY = priv_key_b64
         pub_key_b64 = options['pub_key']
-        server_addr = options['server_addr']
+        settings.WG_PUB_KEY = pub_key_b64
+        wg_server_addr = options['wg_server_addr']
+        settings.WG_SERVER_ADDRESS = wg_server_addr
+        settings.WG_NETWORK = ipaddress.ip_network(wg_server_addr, strict=False)
         listen_port = options['port']
-
-        ipr = IPRoute()
+        settings.WG_PORT = listen_port
+        do_migrate = options['migrate']
 
         try:
-            # Create interface if missing
-            links = ipr.link_lookup(ifname=iface)
-            if not links:
-                self.log(f"Creating interface {iface}...")
-                ipr.link("add", ifname=iface, kind="wireguard")
-            idx = ipr.link_lookup(ifname=iface)[0]
 
-            # Set private key and port
-            ipr.link("set",
-                index=idx,
-                kind="wireguard",
-                wireguard_private_key=base64.b64decode(priv_key_b64),
-                wireguard_listen_port=listen_port,
-            )
+            # Place private key in a temporary file
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_key_file:
+                temp_key_file.write(priv_key_b64.strip())
+                temp_key_file.flush()
+                key_file_path = temp_key_file.name
 
-            # Assign address if missing
-            addr, prefixlen = server_addr.split("/")
-            prefixlen = int(prefixlen)
-            assigned = [
-                a.get_attr("IFA_ADDRESS")
-                for a in ipr.get_addr(index=idx)
-                if a.get_attr("IFA_ADDRESS") is not None
-            ]
-            if addr not in assigned:
-                self.log(f"Assigning IP {server_addr} to server...")
-                ipr.addr("add", index=idx, address=addr, mask=prefixlen)
+            # Create WireGuard interface
+            self.run(f"ip link add dev {iface} type wireguard", check=False)
+            self.run(f"ip address add dev {iface} {wg_server_addr}")
+            self.run(f"wg set {iface} private-key {key_file_path}")
+            self.run(f"ip link set up dev {iface}")
+            self.run(f"wg set {iface} listen-port {listen_port}")
+            os.remove(key_file_path)
 
-            # Bring up the interface
-            ipr.link("set", index=idx, state="up", flags=IFF_UP)
+            # get server ip address
+            server_addr = wg.get_interface_ip(iface)
+            if server_addr:
+                self.log(f"Server IP on {iface}: {server_addr}")
+            else:
+                self.log("Failed to determine server IP")
+                return
             self.log(f"{iface} is up at {server_addr}:{listen_port}")
+            settings.WG_SERVER_ADDRESS = server_addr
 
-            # Reattach all peers from the Token model
-            tokens = Token.objects.select_related("node").exclude(wg_pub_key__isnull=True, node__vpn_ip__isnull=True)
+            # Optional migration
+            if do_migrate:
+                migrated = 0
+                tokens = Token.objects.select_related("node").filter(wg_priv_key__isnull=True) | Token.objects.filter(wg_pub_key__isnull=True)
+                self.log(f"Found {tokens.count()} Node Token(s) with missing keys, generating new keys...")
+                for token in tokens:
+                    priv, pub = wg.gen_keys()
+                    token.wg_priv_key = priv
+                    token.wg_pub_key = pub
+                    token.save(update_fields=["wg_priv_key", "wg_pub_key"])
+                    if wg.create_peer(token.key):
+                        migrated += 1
+                self.log(f"Migrated {migrated} Node Token(s) with missing keys")
+
+            # Reattach peers
             added = 0
-            peer_configs = []
+            tokens = Token.objects.select_related("node").exclude(wg_pub_key__isnull=True)
+            self.log(f"Attempting to reattach {tokens.count()} peers to {iface}...")
             for token in tokens:
-                pub_key = token.wg_pub_key
-                vpn_ip = token.node.vpn_ip
-                if not pub_key or not vpn_ip:
-                    continue
-                try:
-                    interface = ipaddress.ip_interface(vpn_ip)
-                    peer_configs.append({
-                        'public_key': base64.b64decode(pub_key),
-                        'allowed_ips': [(str(interface.ip), interface.network.prefixlen)],
-                        'persistent_keepalive': 25,
-                    })
+                if wg.create_peer(token.pk):
                     added += 1
-                except Exception as e:
-                    self.log(f"Failed to add peer for node {token.node_id}: {e}")
-
-            try:
-                if peer_configs:
-                    ipr.link("set",
-                        index=idx,
-                        kind="wireguard",
-                        wireguard_peers=peer_configs
-                    )
-            except Exception as e:
-                self.log(f"Failed to set peers for {iface}: {e}")
-
             self.log(f"Added {added} peer(s) to {iface}")
 
-            # Set the server's public key in settings
-            settings.WG_PUB_KEY = pub_key_b64
-            self.log(f"Server Public key: {pub_key_b64}")
+            # Finalize setup
+            self.log(f"WireGuard setup complete on {iface}: network={settings.WG_NETWORK}, server_address={settings.WG_SERVER_ADDRESS}, port={settings.WG_PORT}, public_key={settings.WG_PUB_KEY}")
 
         except Exception as e:
             self.log(f"WireGuard setup failed: {e}")
-        finally:
-            ipr.close()
