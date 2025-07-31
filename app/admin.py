@@ -95,6 +95,7 @@ class NodeAdmin(admin.ModelAdmin):
     search_fields = ("vsn", "mac")
     ordering = ("vsn",)
     inlines = (NodeMembershipInline,)
+    readonly_fields = ("vpn_ip",)
 
 
 @admin.register(Project)

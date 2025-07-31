@@ -25,7 +25,8 @@ from .models import Token
 
 class TokenAdmin(admin.ModelAdmin):
     list_display = ("key", "node", "created")
-    fields = ("node",)
+    fields = ("node", "key", "wg_pub_key", "wg_priv_key", "created")
+    readonly_fields = ("key", "wg_pub_key", "wg_priv_key", "created")
     ordering = ("-created",)
 
 
