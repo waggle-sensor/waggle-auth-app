@@ -55,7 +55,7 @@ class Node(AbstractNode):
     mac = models.CharField("MAC", max_length=16, unique=True, null=True, blank=True)
     files_public = models.BooleanField(default=False)
     commissioning_date = models.DateTimeField(null=True, blank=True)
-    vpn_ip = models.GenericIPAddressField("VPN IP", null=True, blank=True)
+    vpn_ip = models.GenericIPAddressField("Wireguard IP", null=True, blank=True)
 
 
 @receiver(post_save, sender=Node)
