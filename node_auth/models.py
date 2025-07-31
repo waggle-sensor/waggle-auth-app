@@ -1,7 +1,5 @@
 import binascii
 import os
-from python_wireguard import Key
-from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -27,20 +25,20 @@ class Token(models.Model):
         if not self.key:
             self.key = self.generate_key()
 
-        if not self.wg_priv_key or not self.wg_pub_key:
-            priv, pub = Key.key_pair()
-            self.wg_priv_key = priv.key
-            self.wg_pub_key = pub.key
+        if not wg.wg_enabled():
+            priv, pub = wg.gen_keys()
+            self.wg_priv_key = priv
+            self.wg_pub_key = pub
 
         super().save(*args, **kwargs)
 
-        if creating:
+        if creating and not wg.wg_enabled():
             wg.create_peer(self.pk)
 
     def delete(self, *args, **kwargs):
         from node_auth.utils import wireguard as wg
-        
-        wg.delete_peer(self.pk)
+        if not wg.wg_enabled():
+            wg.delete_peer(self.pk)
         super().delete(*args, **kwargs)
 
     @classmethod
