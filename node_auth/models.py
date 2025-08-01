@@ -19,27 +19,10 @@ class Token(models.Model):
     created = models.DateTimeField(_("Created"), auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        from node_auth.utils import wireguard as wg
-
-        creating = self._state.adding
+        # Generate django token
         if not self.key:
             self.key = self.generate_key()
-
-        if not wg.wg_enabled():
-            priv, pub = wg.gen_keys()
-            self.wg_priv_key = priv
-            self.wg_pub_key = pub
-
         super().save(*args, **kwargs)
-
-        if creating and not wg.wg_enabled():
-            wg.create_peer(self.pk)
-
-    def delete(self, *args, **kwargs):
-        from node_auth.utils import wireguard as wg
-        if not wg.wg_enabled():
-            wg.delete_peer(self.pk)
-        super().delete(*args, **kwargs)
 
     @classmethod
     def generate_key(cls):
