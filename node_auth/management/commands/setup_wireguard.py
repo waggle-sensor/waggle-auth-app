@@ -103,9 +103,10 @@ class Command(BaseCommand):
 
             # Optional migration
             if do_migrate:
+                self.log("Migrating Node Tokens with missing WireGuard keys...")
                 migrated = 0
                 tokens = Token.objects.select_related("node").filter(wg_priv_key__isnull=True) | Token.objects.filter(wg_pub_key__isnull=True)
-                self.log(f"Found {tokens.count()} Node Token(s) with missing keys, generating new keys...")
+                self.log(f"Found {tokens.count()} Node Token(s) with missing keys")
                 for token in tokens:
                     priv, pub = wg.gen_keys()
                     token.wg_priv_key = priv
@@ -125,13 +126,12 @@ class Command(BaseCommand):
             self.log(f"Added {added} peer(s) to {iface}")
 
             # Finalize setup
-            self.log(f"""
-                     WireGuard setup complete on {iface}: 
-                     public_ip={settings.WG_PUBLIC_IP}, 
-                     network={settings.WG_NETWORK}, 
-                     server_address={settings.WG_SERVER_ADDRESS}, 
-                     port={settings.WG_PORT}, 
-                     public_key={settings.WG_PUB_KEY}
+            self.log(f"""WireGuard setup complete on {iface} 
+                     - public_ip={settings.WG_PUBLIC_IP}
+                     - network={settings.WG_NETWORK}
+                     - server_address={settings.WG_SERVER_ADDRESS}
+                     - port={settings.WG_PORT}
+                     - public_key={settings.WG_PUB_KEY}
                     """)
 
         except Exception as e:
