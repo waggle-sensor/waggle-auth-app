@@ -46,3 +46,8 @@ if settings.DEBUG:
     urlpatterns += [
         path("_debug/", include("debug_toolbar.urls")),
     ]
+
+if settings.WG_ENABLED:
+    urlpatterns += [
+        path("node_auth/", include("node_auth.urls")),
+    ]

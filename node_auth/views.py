@@ -1,9 +1,15 @@
 # from rest_framework import parsers, renderers
-# from .models import Token
 # from .serializers import AuthTokenSerializer
 # from rest_framework.permissions import IsAdminUser
 # from rest_framework.response import Response
 # from rest_framework.views import APIView
+from node_auth.mixins import NodeOwnedObjectsMixin
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from node_auth.serializers import WireGuardSerializer
+
+class WireGuardView(NodeOwnedObjectsMixin, ReadOnlyModelViewSet):
+    serializer_class = WireGuardSerializer
+    vsn_field = "node__vsn"
 
 # class ObtainAuthToken(APIView):
 #     throttle_classes = ()
