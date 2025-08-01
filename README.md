@@ -52,6 +52,7 @@ You will also have to set up these keys in `env/<environment>/.env` so that `INV
 
 
 >TODO: Add instructions for setting up chirpstack-wireguard stuff
+>NOTE: chirpstack-wireguard does not work with non-linux systems because of port forwarding issues.
 
 
 ## Local development using dev configuration
