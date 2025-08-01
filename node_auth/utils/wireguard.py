@@ -6,6 +6,7 @@ import logging
 import subprocess
 import shutil
 import json
+import requests
 from app.models import Token
 from django.conf import settings
 from app.models import Node
@@ -126,6 +127,20 @@ def gen_keys():
     pub_key = pub_proc.stdout.decode().strip()
 
     return priv_key, pub_key
+
+def get_public_ip():
+    """
+    Get the public ipv4 IP address of the server running WireGuard.
+
+    Returns:
+        str: Public IP address as a string, or None if not available.
+    """
+    try:
+        response = requests.get("https://ipv4.icanhazip.com", timeout=5)
+        response.raise_for_status()
+        return response.text.strip()
+    except requests.RequestException:
+        return None
 
 def create_peer(token_id):
     """

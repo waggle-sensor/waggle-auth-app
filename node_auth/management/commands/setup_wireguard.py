@@ -44,7 +44,7 @@ class Command(BaseCommand):
         parser.add_argument('--pub-key', type=str, default=settings.WG_PUB_KEY,
                             help='Server\'s Base64-encoded public key (default from settings)')
         parser.add_argument('--wg-server-addr', type=str, default=settings.WG_SERVER_ADDRESS,
-                            help='WireGuard server address with CIDR (default from settings)')
+                            help='WireGuard server address using CIDR (default from settings)')
         parser.add_argument('--port', type=int, default=settings.WG_PORT,
                             help='Listen port (default from settings)')
         parser.add_argument('--migrate', action='store_true',
@@ -56,6 +56,7 @@ class Command(BaseCommand):
         """
         if not wg.wg_enabled():
             return
+        self.log("Starting WireGuard setup...")
         iface = options['iface']
         settings.WG_IFACE = iface
         priv_key_b64 = options['priv_key']
@@ -68,6 +69,11 @@ class Command(BaseCommand):
         listen_port = options['port']
         settings.WG_PORT = listen_port
         do_migrate = options['migrate']
+
+        # If public IP is not set, fetch it
+        if not settings.WG_PUBLIC_IP:
+            self.log("Fetching public IP address for WireGuard server...")
+            settings.WG_PUBLIC_IP = wg.get_public_ip()
 
         try:
 
@@ -119,7 +125,14 @@ class Command(BaseCommand):
             self.log(f"Added {added} peer(s) to {iface}")
 
             # Finalize setup
-            self.log(f"WireGuard setup complete on {iface}: network={settings.WG_NETWORK}, server_address={settings.WG_SERVER_ADDRESS}, port={settings.WG_PORT}, public_key={settings.WG_PUB_KEY}")
+            self.log(f"""
+                     WireGuard setup complete on {iface}: 
+                     public_ip={settings.WG_PUBLIC_IP}, 
+                     network={settings.WG_NETWORK}, 
+                     server_address={settings.WG_SERVER_ADDRESS}, 
+                     port={settings.WG_PORT}, 
+                     public_key={settings.WG_PUB_KEY}
+                    """)
 
         except Exception as e:
             self.log(f"WireGuard setup failed: {e}")

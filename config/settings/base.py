@@ -247,5 +247,4 @@ WG_PUB_KEY = env("WG_PUB_KEY", str, "")
 WG_SERVER_ADDRESS = env("WG_SERVER_ADDRESS", str, "192.168.0.1/22")
 WG_NETWORK = env("WG_NETWORK", str, "192.168.0.0/22")
 WG_PORT = env("WG_PORT", int, 51820)
-WG_PUBLIC_IP = env("WG_PUBLIC_IP", str, "") # This is the public IP of the server running WireGuard
-# TODO: ^I need to set this up in the setup_wireguard.py command as a arg or env variable
+WG_PUBLIC_IP = env("WG_PUBLIC_IP", str, "")
