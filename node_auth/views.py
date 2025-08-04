@@ -6,10 +6,15 @@
 from node_auth.mixins import NodeOwnedObjectsMixin
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from node_auth.serializers import WireGuardSerializer
+from node_auth.models import Token
 
 class WireGuardView(NodeOwnedObjectsMixin, ReadOnlyModelViewSet):
     serializer_class = WireGuardSerializer
     vsn_field = "node__vsn"
+    queryset = (
+        Token.objects.all()
+        .prefetch_related("node")
+    )
 
 # class ObtainAuthToken(APIView):
 #     throttle_classes = ()
