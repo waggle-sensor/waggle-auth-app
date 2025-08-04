@@ -239,12 +239,15 @@ if PELICAN_ROOT_FOLDER and not PELICAN_ROOT_FOLDER.startswith("/"):
 
 TIME_ZONE = "UTC"
 
-# WireGuard settings
+# enable WireGuard support
 WG_ENABLED = env("WG_ENABLED", bool, False)
+
+# WireGuard environment variables
+WG_VAR_FILE = env("WG_VAR_FILE", str, "/var/lib/wireguard/.env")
+
+# defaults for setup_wireguard command
 WG_IFACE = env("WG_IFACE", str, "wg0")
 WG_PRIV_KEY = env("WG_PRIV_KEY", str, "")
 WG_PUB_KEY = env("WG_PUB_KEY", str, "")
-WG_SERVER_ADDRESS = env("WG_SERVER_ADDRESS", str, "192.168.0.1/22")
-WG_NETWORK = env("WG_NETWORK", str, "192.168.0.0/22")
+WG_SERVER_ADDRESS_WITH_CIDR = env("WG_SERVER_ADDRESS_WITH_CIDR", str, "192.168.0.1/22")
 WG_PORT = env("WG_PORT", int, 51820)
-WG_PUBLIC_IP = env("WG_PUBLIC_IP", str, "")

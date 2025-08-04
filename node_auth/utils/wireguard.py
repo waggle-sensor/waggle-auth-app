@@ -7,6 +7,7 @@ import subprocess
 import shutil
 import json
 import requests
+import os
 from app.models import Token
 from django.conf import settings
 from app.models import Node
@@ -14,7 +15,7 @@ from pyroute2 import IPRoute
 
 logger = logging.getLogger(__name__)
 
-def allocate_next_ip(node: Node, subnet: str = "10.0.0.0/24") -> str:
+def allocate_next_ip(node: Node, subnet: str = "10.0.0.0/24", wg_iface: str = "wg0") -> str:
     """
     Allocates a /32 VPN IP for the given node.
     Reuses existing IP if valid; otherwise finds a new one.
@@ -46,7 +47,7 @@ def allocate_next_ip(node: Node, subnet: str = "10.0.0.0/24") -> str:
     # Collect VPN IPs from running WireGuard config
     try:
         ipr = IPRoute()
-        idx = ipr.link_lookup(ifname=settings.WG_IFACE)[0]
+        idx = ipr.link_lookup(ifname=wg_iface)[0]
         info = ipr.get_links(idx)[0].get_attr('IFLA_LINKINFO')
         peers = info.get('data', {}).get('peers', [])
         for peer in peers:
@@ -142,7 +143,7 @@ def get_public_ip():
     except requests.RequestException:
         return None
 
-def create_peer(token_id):
+def create_peer(token_id: int, wg_network: str = "10.0.0.0/24", wg_iface: str = "wg0") -> bool:
     """
     Create a WireGuard peer for the given token ID.
 
@@ -161,7 +162,7 @@ def create_peer(token_id):
         return False
 
     # Allocate or reuse VPN IP
-    vpn_ip = allocate_next_ip(token.node, subnet=settings.WG_NETWORK)
+    vpn_ip = allocate_next_ip(token.node, subnet=wg_network, wg_iface=wg_iface)
     if vpn_ip != token.node.vpn_ip:
         token.node.vpn_ip = vpn_ip
         token.node.save(update_fields=["vpn_ip"])
@@ -174,7 +175,7 @@ def create_peer(token_id):
 
     try:
         subprocess.run([
-            "wg", "set", settings.WG_IFACE,
+            "wg", "set", wg_iface,
             "peer", pubkey.strip(),
             "allowed-ips", vpn_ip,
             "persistent-keepalive", "25"
@@ -186,7 +187,7 @@ def create_peer(token_id):
 
     return True
 
-def delete_peer(token_id):
+def delete_peer(token_id: int, wg_iface: str = "wg0") -> bool:
     """
     Remove a WireGuard peer from the server config and release its VPN IP.
 
@@ -209,7 +210,7 @@ def delete_peer(token_id):
 
     try:
         subprocess.run([
-            "wg", "set", settings.WG_IFACE,
+            "wg", "set", wg_iface,
             "peer", pubkey.strip(),
             "remove"
         ], check=True)
@@ -225,3 +226,31 @@ def delete_peer(token_id):
         logger.info(f"[WIREGUARD] delete_peer(): Could not release IP for node {token.node.pk} in db: {e}")
 
     return True
+
+def save_env_vars(env_vars, filepath=settings.WG_VAR_FILE):
+    """
+    Save environment variables to a file in KEY=value format.
+    Overwrites existing keys in the file while preserving others.
+    """
+    existing_vars = {}
+
+    # Read existing file if it exists
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            for line in f:
+                if '=' in line:
+                    k, v = line.strip().split('=', 1)
+                    existing_vars[k] = v
+
+    # Update with new vars
+    existing_vars.update(env_vars)
+
+    # create directory if it doesn't exist
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+    # Write back all vars
+    with open(filepath, "w") as f:
+        for k, v in existing_vars.items():
+            f.write(f"{k}={v}\n")
+
+    logger.info(f"[WIREGUARD] save_env_vars(): Saved env vars to {filepath}")

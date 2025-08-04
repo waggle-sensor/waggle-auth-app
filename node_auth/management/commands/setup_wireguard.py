@@ -43,7 +43,7 @@ class Command(BaseCommand):
                             help='Server\'s Base64-encoded private key (default from settings)')
         parser.add_argument('--pub-key', type=str, default=settings.WG_PUB_KEY,
                             help='Server\'s Base64-encoded public key (default from settings)')
-        parser.add_argument('--wg-server-addr', type=str, default=settings.WG_SERVER_ADDRESS,
+        parser.add_argument('--wg-server-addr-cidr', type=str, default=settings.WG_SERVER_ADDRESS_WITH_CIDR,
                             help='WireGuard server address using CIDR (default from settings)')
         parser.add_argument('--port', type=int, default=settings.WG_PORT,
                             help='Listen port (default from settings)')
@@ -58,22 +58,13 @@ class Command(BaseCommand):
             return
         self.log("Starting WireGuard setup...")
         iface = options['iface']
-        settings.WG_IFACE = iface
         priv_key_b64 = options['priv_key']
-        settings.WG_PRIV_KEY = priv_key_b64
         pub_key_b64 = options['pub_key']
-        settings.WG_PUB_KEY = pub_key_b64
-        wg_server_addr = options['wg_server_addr']
-        settings.WG_SERVER_ADDRESS = wg_server_addr
-        settings.WG_NETWORK = ipaddress.ip_network(wg_server_addr, strict=False)
+        wg_server_addr_with_cidr = options['wg_server_addr_cidr']
+        wg_network = str(ipaddress.ip_network(wg_server_addr_with_cidr, strict=False))
         listen_port = options['port']
-        settings.WG_PORT = listen_port
         do_migrate = options['migrate']
-
-        # If public IP is not set, fetch it
-        if not settings.WG_PUBLIC_IP:
-            self.log("Fetching public IP address for WireGuard server...")
-            settings.WG_PUBLIC_IP = wg.get_public_ip()
+        wg_pub_ip = wg.get_public_ip()            
 
         try:
 
@@ -85,21 +76,20 @@ class Command(BaseCommand):
 
             # Create WireGuard interface
             self.run(f"ip link add dev {iface} type wireguard", check=False)
-            self.run(f"ip address add dev {iface} {wg_server_addr}")
+            self.run(f"ip address add dev {iface} {wg_server_addr_with_cidr}")
             self.run(f"wg set {iface} private-key {key_file_path}")
             self.run(f"ip link set up dev {iface}")
             self.run(f"wg set {iface} listen-port {listen_port}")
             os.remove(key_file_path)
 
             # get server ip address
-            server_addr = wg.get_interface_ip(iface)
-            if server_addr:
-                self.log(f"Server IP on {iface}: {server_addr}")
+            wg_server_addr = wg.get_interface_ip(iface)
+            if wg_server_addr:
+                self.log(f"Server IP on {iface}: {wg_server_addr}")
             else:
                 self.log("Failed to determine server IP")
                 return
-            self.log(f"{iface} is up at {server_addr}:{listen_port}")
-            settings.WG_SERVER_ADDRESS = server_addr
+            self.log(f"{iface} is up at {wg_server_addr}:{listen_port}")
 
             # Optional migration
             if do_migrate:
@@ -112,7 +102,7 @@ class Command(BaseCommand):
                     token.wg_priv_key = priv
                     token.wg_pub_key = pub
                     token.save(update_fields=["wg_priv_key", "wg_pub_key"])
-                    if wg.create_peer(token.key):
+                    if wg.create_peer(token.key, wg_network=wg_network, wg_iface=iface):
                         migrated += 1
                 self.log(f"Migrated {migrated} Node Token(s) with missing keys")
 
@@ -121,18 +111,30 @@ class Command(BaseCommand):
             tokens = Token.objects.select_related("node").exclude(wg_pub_key__isnull=True)
             self.log(f"Attempting to reattach {tokens.count()} peers to {iface}...")
             for token in tokens:
-                if wg.create_peer(token.pk):
+                if wg.create_peer(token.pk, wg_network=wg_network, wg_iface=iface):
                     added += 1
             self.log(f"Added {added} peer(s) to {iface}")
 
             # Finalize setup
             self.log(f"""WireGuard setup complete on {iface} 
-                     - public_ip={settings.WG_PUBLIC_IP}
-                     - network={settings.WG_NETWORK}
-                     - server_address={settings.WG_SERVER_ADDRESS}
-                     - port={settings.WG_PORT}
-                     - public_key={settings.WG_PUB_KEY}
+                     - public_ip={wg_pub_ip}
+                     - network={wg_network}
+                     - server_address={wg_server_addr}
+                     - port={str(listen_port)}
+                     - public_key={pub_key_b64}
                     """)
+            
+            # Save environment variables
+            wg.save_env_vars({
+                "WG_IFACE": iface,
+                "WG_PRIV_KEY": priv_key_b64,
+                "WG_PUB_KEY": pub_key_b64,
+                "WG_SERVER_ADDRESS": wg_server_addr,
+                "WG_SERVER_ADDRESS_WITH_CIDR": wg_server_addr_with_cidr,
+                "WG_PORT": str(listen_port),
+                "WG_PUBLIC_IP": wg_pub_ip,
+                "WG_NETWORK": wg_network,
+            }, filepath=settings.WG_VAR_FILE)
 
         except Exception as e:
             self.log(f"WireGuard setup failed: {e}")
