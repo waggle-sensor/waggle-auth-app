@@ -49,5 +49,5 @@ if settings.DEBUG:
 
 if settings.WG_ENABLED:
     urlpatterns += [
-        path("node_auth/", include("node_auth.urls")),
+        path("node-auth/", include("node_auth.urls")),
     ]
