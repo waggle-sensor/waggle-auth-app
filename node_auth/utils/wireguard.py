@@ -1,5 +1,5 @@
 """
-WireGuard utility functions for managing WireGuard VPN.
+Utility functions for managing WireGuard VPN.
 """
 import ipaddress
 import logging
