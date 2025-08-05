@@ -12,7 +12,8 @@ services:
     restart: always
     command: >
       sh -c "env/wait-for-it.sh mysql:3306 -- python manage.py migrate && 
-             python manage.py createsuperuser --noinput || true && 
+             python manage.py createsuperuser --noinput || true &&
+             python manage.py setup_wireguard --migrate && 
              gunicorn config.wsgi:application --bind 0.0.0.0:80 --reload --workers=3"
     ports:
       - 127.0.0.1:8000:80
@@ -51,7 +52,20 @@ services:
       - "PELICAN_LIFETIME=60"
       - "PELICAN_ROOT_URL=https://nrdstor.nationalresearchplatform.org:8443/sage"
       - "PELICAN_ROOT_FOLDER=/node-data"
+      # WireGuard settings
+      - "WG_ENABLED=True"
+      - "WG_PRIV_KEY=${WG_PRIV_KEY}"
+      - "WG_PUB_KEY=${WG_PUB_KEY}"
     env_file:
       - .env
     volumes:
       - ../../:/app:ro
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun
+    sysctls:
+      net.ipv4.ip_forward: 1
+      net.ipv6.conf.all.disable_ipv6: 0
