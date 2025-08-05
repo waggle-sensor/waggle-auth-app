@@ -1,5 +1,5 @@
 """
-WireGuard utility functions for managing VPN IP allocation and peer creation/deletion.
+WireGuard utility functions for managing WireGuard VPN.
 """
 import ipaddress
 import logging
@@ -71,7 +71,7 @@ def allocate_next_ip(node: Node, subnet: str = "10.0.0.0/24", wg_iface: str = "w
     )
     return None
 
-def wg_enabled():
+def wg_enabled() -> bool:
     """
     Check if WireGuard is enabled in settings and if the `wg` command is available.
     """
@@ -83,7 +83,7 @@ def wg_enabled():
         return False
     return True
 
-def get_interface_ip(iface):
+def get_interface_ip(iface: str) -> str | None:
     """
     Get the IP address of the server's network interface.
     """
@@ -101,7 +101,7 @@ def get_interface_ip(iface):
     except Exception as e:
         logger.error(f"[WIREGUARD] get_interface_ip(): Failed to get IP for {iface}: {e}")
 
-def gen_keys():
+def gen_keys() -> tuple[str, str]:
     """
     Generate a WireGuard private and public key pair.
     
@@ -129,7 +129,7 @@ def gen_keys():
 
     return priv_key, pub_key
 
-def get_public_ip():
+def get_public_ip() -> str | None:
     """
     Get the public ipv4 IP address of the server running WireGuard.
 
@@ -227,7 +227,7 @@ def delete_peer(token_id: int, wg_iface: str = "wg0") -> bool:
 
     return True
 
-def save_env_vars(env_vars, filepath=settings.WG_VAR_FILE):
+def save_env_vars(env_vars, filepath=settings.WG_VAR_FILE) -> None:
     """
     Save environment variables to a file in KEY=value format.
     Overwrites existing keys in the file while preserving others.
