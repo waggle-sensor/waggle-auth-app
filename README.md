@@ -1,196 +1,297 @@
 # Waggle Site Backend (Previously Auth App)
 
-This Django project provides a few different APIs and services for Waggle. They are roughly broken down into the following apps:
+A Django project providing APIs and services for Waggle, including user authentication, node manifest management, and more.
 
-* `app (to be renamed to something more descriptive)`. Manages user accounts, authentication through Globus, and their permissions across the site. Specifically, scheduler and dev node access is managed by this.
-* `manifests`. Manages data for nodes, hardware and sensors and provides our manifest API.
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Environment Variables](#environment-variables)
+- [Local Development](#local-development)
+- [Production Deployment](#production-deployment)
+- [Object Storage](#object-storage)
+- [INVENTORY_TOOLS: Manifest Automation](#inventory_tools-manifest-automation)
+- [WireGuard Integration](#wireguard-integration)
+- [Globus OIDC Login](#globus-oidc-login)
+- [Make Commands for Docker Deployment](#make-commands-for-docker-deployment)
+- [Test Data & Running Tests](#test-data--running-tests)
 
-This list may be expanded upon in the future.
+---
 
-## Configurations
+## Project Overview
 
-There are two development / deployment configurations both in `env` folder:
+The project is broken down into the following apps:
 
-* dev: intended for fast, local dev on host machine. debug flags are enabled.
-* prod: intended for testing in docker compose prior to deploying to production cluster. debug flags are disabled and more security settings are enabled.
+- **`app`**: Manages user accounts, Globus authentication, and permissions (e.g. scheduling, dev, node access).
+- **`manifests`**: Handles node, hardware, and sensor data; provides the manifest API.
+- **`downloads`**: Handles HTTP redirects to files captured by nodes.
+- **`node_auth`**: Handles node authentication.
 
-Optionally, for either of these environments you can configure...
-* user login via Globus OIDC 
-* http redirect to files captured by nodes (`downloads` app)
-* Automatic updates of node manifests (`INVENTORY_TOOLS`)
+---
 
-Optionally, you can configure user login via Globus OIDC for either of these environments.
+## Environment Variables
 
-### Keys
-For both environments, you will have to set up these keys in `env/<environment>/.env` so that the `downloads` app can work. 
+Set these variables as needed:
 
-- `S3_ACCESS_KEY`: This is the access key for your S3 storage
-- `S3_SECRET_KEY`: This is the secret key for your S3 storage
-- `PELICAN_KEY_PATH`: This is the path to the .pem file for Pelican in the docker container
-- `PELICAN_KEY_ID`: The id for the jwt public key used for Pelican found in `jwks.json` (https://sagecontinuum.org/.well-known/openid-configuration)
+>NOTE: If you are not working on any of the extensions, you can ignore the environment variables for them.
 
-> NOTE: If you are not working on the `downloads` app this can be ignored.
+### Core
+- `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, `DJANGO_SUPERUSER_PASSWORD`: Superuser credentials.
+- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts.
 
-You will also have to set up these keys in `env/<environment>/.env` so that `INVENTORY_TOOLS` can work. `INVENTORY_TOOLS` is used to update the manifest automatically.
+### Object Storage (Downloads)
+- `S3_ACCESS_KEY`, `S3_SECRET_KEY`: S3 credentials.
+- `S3_ENDPOINT`, `S3_BUCKET_NAME`, `S3_ROOT_FOLDER`, `S3_REGION`: S3 config.
+- `PELICAN_KEY_PATH`: Path to Pelican .pem file (in container).
+- `PELICAN_KEY_ID`: JWT public key ID for Pelican.
+- `PELICAN_ALGORITHM`, `PELICAN_ISSUER`, `PELICAN_LIFETIME`, `PELICAN_ROOT_URL`, `PELICAN_ROOT_FOLDER`: Pelican config.
 
-- INV_TOOLS_TOKEN: This is a github token with clone/pull access to our [inventory tools repo](https://github.com/waggle-sensor/waggle-inventory-tools)
-- INV_TOOLS_SSH_TOOLS_PW: This is the passphrase for our ecdsa-sage-waggle SSH IdentityFile
+### INVENTORY_TOOLS (Manifests Automation)
+- `INV_TOOLS_REPO`: Path or URL to the inventory tools repo (e.g., `/app/waggle-inventory-tools` or the GitHub URL).
+- `INV_TOOLS_TOKEN`: GitHub token for private repo access (if cloning via HTTPS).
+- `INV_TOOLS_SSH_TOOLS`: Path to SSH tools directory (e.g., `/root/git`).
+- `INV_TOOLS_SSH_CONFIG`: Path to SSH config directory (e.g., `/root/ssh`).
+- `INV_TOOLS_SSH_TOOLS_PW`: Passphrase for the SSH identity file.
+
+### WireGuard
+- `WG_ENABLED`: Set to `True` to enable WireGuard.
+- `WG_PRIV_KEY`, `WG_PUB_KEY`: WireGuard server's private/public keys.
+- `WG_VAR_FILE`: File path in container to store Wireguard variables.
+- `WG_IFACE`: Wireguard interface name.
+- `WG_SERVER_ADDRESS_WITH_CIDR`: Wireguard server address with CIDR.
+- `WG_PORT`: Wireguard server port.
+
+### OIDC/Globus
+- `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`: Globus OIDC credentials (see [Globus OIDC Login](#globus-oidc-login)).
+
+---
+
+## Local Development
+
+I highly recommend using local python by creating a virtual environment for fast development, but you can also use docker for an easier startup of the server.
+
+### Using Docker
+
+Using Docker is the easiest way to get started, but developing is slower than using local python.
+
+1. **Start the dev server (in Docker):**
+   ```sh
+   make up # foreground with logs
+   # or
+   make start # background
+   ```
+1. **Access the admin site:**
+   - [http://localhost:8000/admin/](http://localhost:8000/admin/)
+   - Username: `admin`, Password: `admin`
+
+#### Configurations & Environments
+
+Located in the `env/` folder are the Docker Compose configurations for the dev and prod environments:
+- **dev**: For local development (debug enabled).
+- **prod**: For production-like testing in Docker Compose (debug disabled, secure settings).
+
+#### Additional Commands for Docker
+
+1. **Run tests:**
+   ```sh
+   make test
+   ```
+1. **Load test data:**
+   ```sh
+   make loaddata DATA_FILE=<path_to_data.json>
+   # Default: ../waggle-auth-app-fixtures/data.json
+   ```
+
+1. **Apply model changes:**
+   ```sh
+   make migrate
+   ```
+>NOTE: See [Make Commands](#make-commands-for-docker-deployment) for more commands.
+
+### Using Local Python
+
+Using local python is faster than using Docker, but requires more setup and knowledge of the project.
+
+1. **Create and activate a virtual environment:**
+   ```sh
+   python3 -m venv venv
+   . venv/bin/activate
+   ```
+1. **Install dependencies:**
+   ```sh
+   pip install -r requirements/dev.txt
+   ```
+
+1. **Apply model changes:**
+   ```sh
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+  
+1. **Create a superuser:**
+   ```sh
+   python manage.py createsuperuser
+   ```
+
+1. **Start the dev server:**
+   ```sh
+   python manage.py runserver
+   ```
+
+1. **Access the admin site:**
+   - [http://localhost:8000/admin/](http://localhost:8000/admin/)
+
+#### Additional Commands for Local Python
+
+1. **Run tests:**
+   ```sh
+   pytest
+   ```
+
+---
+
+## Production Deployment
+
+1. **Start the production server:**
+   ```sh
+   make start ENV=prod
+   ```
+2. **Access admin:**
+   - [http://localhost:8000/admin/](http://localhost:8000/admin/)
+   - Username: `admin`, Password: `admin`
+3. **Stop the server:**
+   ```sh
+   make stop ENV=prod
+   ```
+
+---
+
+## Object Storage
+
+The `downloads` app handles HTTP redirects to the files captured by nodes sitting in the object storage.
+
+There are two ways to handle object storage:
+- Using a S3 server
+- Using [Pelican](https://pelicanplatform.org/)
+
+---
+
+## INVENTORY_TOOLS: Manifest Automation
+
+**Purpose:** Automatically update node manifests from the inventory tools repo.
 
 >NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
 
-### Environment Variables
+### Environment Setup
+- See [Environment Variables](#environment-variables) for the required environment variables.
 
->TODO: add instructions for INVENTORY_TOOLS env variables and how to set them up
+### Volumes & SSH Setup
 
-### Volumes
+**INVENTORY_TOOLS requires SSH access to nodes.**
 
->TODO: Add instructions in setting up waggle_inv_tools for ssh access to nodes within the django container
+1. **Clone the inventory tools repo** (if not using a pre-mounted path):
+   ```sh
+   git clone git@github.com:waggle-sensor/waggle-inventory-tools.git
+   # or use HTTPS with INV_TOOLS_TOKEN
+   ```
+2. **Prepare SSH keys/config:**
+   - Place your SSH private key (e.g., `ecdsa-sage-waggle`) in a directory (e.g., `~/waggle-ssh`).
+   - Create an SSH config file if needed.
+3. **Mount volumes in Docker Compose:**
+   - Add to your `docker-compose.yaml`:
+     ```yaml
+     volumes:
+       - /path/to/waggle-inventory-tools:/app/waggle-inventory-tools:rw
+       - /path/to/waggle-ssh:/root/git:ro
+       - /path/to/ssh-config:/root/ssh:ro
+     ```
+   - Set corresponding env vars in `.env`:
+     ```env
+     INV_TOOLS_REPO=/app/waggle-inventory-tools
+     INV_TOOLS_SSH_TOOLS=/root/git
+     INV_TOOLS_SSH_CONFIG=/root/ssh
+     INV_TOOLS_SSH_TOOLS_PW=<your_ssh_key_passphrase>
+     ```
 
->TODO: Add a make command to set up INVENTORY_TOOLS ssh and ssh tools volume. aka clone repos and set up ssh config 
+>TODO Add a Makefile target to automate this setup.
 
->NOTE: If you are not working on `INVENTORY_TOOLS` this can be ignored.
+### Running Locally
+- To load manifests for all nodes:
+  ```sh
+  ./manage.py loadmanifest --repo <inventory_tools_local_path>
+  ```
+- To load for specific nodes:
+  ```sh
+  ./manage.py loadmanifest --repo <inventory_tools_local_path> --vsns W08E
+  ```
+- You can also use the `autoloadmanifest` command for automated/periodic updates.
 
+### Adding Mappers for Computes & Sensors
 
->TODO: Add instructions for setting up chirpstack-wireguard stuff
->NOTE: chirpstack-wireguard does not work with non-linux systems because of port forwarding issues.
+To extend manifest parsing for new compute or sensor types:
+- **Compute mappers:** Edit `manifests/management/commands/mappers/compute_mappers.py`.
+- **Sensor mappers:** Edit `manifests/management/commands/mappers/sensor_mappers.py`.
+- **Resource mappers:** Edit `manifests/management/commands/mappers/resource_mappers.py`.
 
+**Example:**
+```python
+# In compute_mappers.py
+COMPUTE_MAPPERS.append({
+    "match": lambda dev: dev.get("type") == "new_compute_type",
+    "resolve_hardware": lambda name: ...,
+    # ...
+})
+```
+---
 
-## Local development using dev configuration
+## WireGuard Integration
 
-_I highly recommend creating a virtual env when working on the app. I typically use:_
+The `node_auth` app handles the wireguard integration for nodes.
 
+- **Enable by setting `WG_ENABLED=True`.**
+- Requires Linux for port forwarding (does not work on macOS/Windows).
+- The Docker image installs `wireguard-tools` and `iproute2` for this purpose.
+
+>NOTE: If you are not working on `node_auth` this can be ignored by setting `WG_ENABLED=False`.
+
+### Environment Setup
+- See [Environment Variables](#environment-variables) for the required environment variables.
+
+### WireGuard Setup
+
+A Management Command is provided to setup the WireGuard server and clients.
 ```sh
-# create venv
-python3 -m venv venv
-
-# activate for bash (or, if you use fish, . venv/bin/activate.fish)
-. venv/bin/activate
+# see the help for all the arguments
+python manage.py setup_wireguard --<argument>
 ```
 
-After activating your venv, install the dev requirements:
+---
 
-```sh
-pip install -r requirements/dev.txt
-```
+## Globus OIDC Login
 
-You can also start a dev server. The server will start in a docker container first running `migrate`, `createsuperuser`, and then `runserver`:
-```sh
-make up #to run and see logs or...
-make start #to run in the background
-```
+1. **Register your app at [Globus Developers](https://developers.globus.org):**
+   - Set redirect URL: `http://localhost:8000/globus-auth-redirect/`
+2. **Create a client secret and save to `~/waggle-auth-oidc.env`:**
+   ```sh
+   export OIDC_CLIENT_ID="Your Client UUID!"
+   export OIDC_CLIENT_SECRET="Your Client Secret!"
+   ```
+3. **Source the env file before starting the server:**
+   ```sh
+   . ~/waggle-auth-oidc.env
+   ```
+4. **Promote your user to superuser:**
+   ```sh
+   python manage.py shell
+   >>> from django.contrib.auth import get_user_model
+   >>> User = get_user_model()
+   >>> user = User.objects.get(username="MY USERNAME")
+   >>> user.is_staff = True
+   >>> user.is_superuser = True
+   >>> user.save()
+   ```
 
-To access the server once it's running visit [http://localhost:8000/admin/](http://localhost:8000/admin/) and log in using:
+---
 
-- Username: `admin`
-- Password: `admin`
-
-You can run the test suite using the following [pytest](https://docs.pytest.org/) command:
-
-```sh
-# This must be done after one time setup, otherwise some tests will fail!
-pytest
-```
-
-If you want to load test data run: (Our test data is hosted in this [repo](https://github.com/waggle-sensor/waggle-auth-app-fixtures))
-
-```sh
-make loaddata DATA_FILE=<path_to_data.json> #default is ../waggle-auth-app-fixtures/data.json
-```
-
-After, making some edits to the models you can run:
-
-```sh
-python manage.py makemigrations
-```
-
-To implement the model edits to the server run:
-
-```sh
-make migrate
-```
-
-### Local development Inventory Tools
-
->TODO: add docs on running inventory tools locally
-
-```sh
-./manage.py loadmanifest --repo <inventory_tools_local_path> --vsns 
-W08E
-```
-
-or to run for one node
-
-```sh
-./manage.py loadmanifest --repo <inventory_tools_local_path> --vsns 
-W08E
-```
-
->TODO: add docs on how to add mappers for computes and sensors
-
-## Running a local production server
-### Running a local production server
-
-To stand up the prod environment in docker compose, simply run:
-
-```sh
-make start ENV=prod #to run in the background
-```
-
-This will perform the one time database migrations, compilation of all static assets and creation of a super user.
-To access the server once it's running visit [http://localhost:8000/admin/](http://localhost:8000/admin/) and log in using:
-
-- Username: `admin`
-- Password: `admin`
-
-The test suite can be run using:
-
-```sh
-make test ENV=prod
-```
-
-Finally, when you're done working, you can stop everything using:
-
-```sh
-make stop ENV=prod
-```
-
-## Enable user login via Globus OIDC
-
-You can configure user login via Globus OIDC by performing the following _one time_ setup:
-
-1. Go to [https://developers.globus.org](https://developers.globus.org)
-2. Go to Register your app with Globus
-3. Create an app using `Register a portal, science gateway, or other application you host` with a name like "Test App"
-  * Set redirect URL to: `http://localhost:8000/globus-auth-redirect/`.
-4. Create a client secret using your new app's dashboard
-  * Copy the following template to `~/waggle-auth-oidc.env` and fill in your Client UUID and client secret:
-
-```sh
-export OIDC_CLIENT_ID="Your Client UUID!"
-export OIDC_CLIENT_SECRET="Your Client Secret!"
-```
-
-You can enable Globus OIDC login by sourcing the env file _before_ running either one of the development environments:
-
-```sh
-. ~/waggle-auth-oidc.env
-```
-5. Run your django server `python manage.py runserver` and log in by creating a new account. **Keep note of your username**
-6. On first run of your server, you will get an error as your account is not a *Superuser*. To fix this, open the django shell and run these commands
-```sh
-python3 manage.py shell
-```
-```py
-from django.contrib.auth import get_user_model
-User = get_user_model()
-user = User.objects.get(username="MY USERNAME")
-user.is_staff = True
-user.is_superuser = True
-user.save()
-```
-7. You should now be able to run your django server and log in to the admin site succesfully
-
-## Make Commands
+## Make Commands for Docker Deployment
 
 | Command                | Description                                                                                   |
 |------------------------|-----------------------------------------------------------------------------------------------|
@@ -199,10 +300,28 @@ user.save()
 | `make migrate ENV=<env>` | Applies database migrations (`dev` by default).                                            |
 | `make collectstatic ENV=<env>` | Collects static files (`dev` by default).                                          |
 | `make createsuperuser ENV=<env>` | Creates a superuser (`dev` by default).                                        |
-| `make loaddata DATA_FILE=<path> ENV=<env>` | Loads fixture data (`dev` and `../waggle-auth-app-fixtures/data.json` by default).                  |
+| `make loaddata DATA_FILE=<path> ENV=<env>` | Loads fixture data (`dev` and `../waggle-auth-app-fixtures/data.json` by default). |
 | `make test ENV=<env>`  | Runs tests (`dev` by default).                                                                |
 | `make up ENV=<env>`    | Starts the server and displays logs (`dev` by default).                                      |
 | `make logs ENV=<env>`  | Displays logs for a running server (`dev` by default).                                        |
---- 
 
-> ENV can be `dev` or `prod`
+> ENV can be `dev` or `prod`.
+
+---
+
+## Test Data & Running Tests
+
+- **Run all tests:**
+  ```sh
+  pytest
+  # or
+  make test
+  ```
+- **Load test data:**
+  ```sh
+  make loaddata DATA_FILE=<path_to_data.json> # Default: ../waggle-auth-app-fixtures/data.json
+  # or
+  python manage.py loaddata <path_to_data.json>
+  ```
+
+---
