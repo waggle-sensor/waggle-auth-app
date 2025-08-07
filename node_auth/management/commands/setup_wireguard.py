@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import os
 import ipaddress
+import time
 from app.models import Token
 from node_auth.utils import wireguard as wg
 
@@ -32,7 +33,18 @@ class Command(BaseCommand):
         except subprocess.CalledProcessError as e:
             self.log(f"Command failed: {e.cmd}\n{e.stderr.decode().strip()}")
             raise
-    
+
+    def is_wireguard_go_running(self, iface):
+        """Check if wireguard-go is running for the specified interface."""
+        try:
+            out = subprocess.check_output(['pgrep', '-af', 'wireguard-go']).decode()
+            for line in out.strip().split('\n'):
+                if f"wireguard-go {iface}" in line:
+                    return int(line.split()[0])  # Return PID
+        except subprocess.CalledProcessError:
+            pass
+        return None
+
     def add_arguments(self, parser):
         """
         Add command line arguments for WireGuard setup.
@@ -49,6 +61,8 @@ class Command(BaseCommand):
                             help='Listen port (default from settings)')
         parser.add_argument('--migrate', action='store_true',
                             help='Generate missing WireGuard key pairs for Node tokens')
+        parser.add_argument('--restart', action='store_true',
+                            help='Restart wireguard-go if it is already running')
 
     def handle(self, *args, **options):
         """
@@ -56,7 +70,9 @@ class Command(BaseCommand):
         """
         if not wg.wg_enabled():
             return
+
         self.log("Starting WireGuard setup...")
+
         iface = options['iface']
         priv_key_b64 = options['priv_key']
         pub_key_b64 = options['pub_key']
@@ -64,19 +80,37 @@ class Command(BaseCommand):
         wg_network = str(ipaddress.ip_network(wg_server_addr_with_cidr, strict=False))
         listen_port = options['port']
         do_migrate = options['migrate']
-        wg_pub_ip = wg.get_public_ip()            
+        do_restart = options['restart']
+        wg_pub_ip = wg.get_public_ip()
 
         try:
+            # Kill existing wireguard-go if running and --restart specified
+            existing_pid = self.is_wireguard_go_running(iface)
+            if existing_pid:
+                if do_restart:
+                    self.log(f"wireguard-go already running for {iface} (pid={existing_pid}), restarting...")
+                    try:
+                        os.kill(existing_pid, 15)
+                        time.sleep(1)
+                    except Exception as e:
+                        self.log(f"Failed to terminate existing wireguard-go process: {e}")
+                else:
+                    self.log(f"wireguard-go already running for {iface} (pid={existing_pid}), skipping restart.")
+                    return
 
-            # Place private key in a temporary file
+            # Start wireguard-go
+            self.log(f"Launching wireguard-go for {iface}...")
+            subprocess.Popen(["wireguard-go", iface])
+            time.sleep(10)  # Wait for wireguard-go to initialize
+
+            # Write private key to temp file
             with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_key_file:
                 temp_key_file.write(priv_key_b64.strip())
                 temp_key_file.flush()
                 key_file_path = temp_key_file.name
 
-            # Create WireGuard interface
-            self.run(f"ip link add dev {iface} type wireguard", check=False)
-            self.run(f"ip address add dev {iface} {wg_server_addr_with_cidr}")
+            # Interface setup
+            self.run(f"ip address add {wg_server_addr_with_cidr} dev {iface} ")
             self.run(f"wg set {iface} private-key {key_file_path}")
             self.run(f"ip link set up dev {iface}")
             self.run(f"wg set {iface} listen-port {listen_port}")

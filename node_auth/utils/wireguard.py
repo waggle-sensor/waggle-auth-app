@@ -73,13 +73,13 @@ def allocate_next_ip(node: Node, subnet: str = "10.0.0.0/24", wg_iface: str = "w
 
 def wg_enabled() -> bool:
     """
-    Check if WireGuard is enabled in settings and if the `wg` command is available.
+    Check if WireGuard is enabled in settings and if either `wg` or `wireguard-go` is available.
     """
     if not settings.WG_ENABLED:
         logger.info("[WIREGUARD] wg_enabled(): WireGuard is not enabled in settings.")
         return False
-    if shutil.which("wg") is None:
-        logger.info("[WIREGUARD] wg_enabled(): 'wg' command is not available so WireGuard will be disabled.")
+    if shutil.which("wg") is None and shutil.which("wireguard-go") is None:
+        logger.info("[WIREGUARD] Neither 'wg' nor 'wireguard-go' available — disabling WireGuard.")
         return False
     return True
 
