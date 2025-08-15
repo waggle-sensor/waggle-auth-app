@@ -251,3 +251,12 @@ WG_PRIV_KEY = env("WG_PRIV_KEY", str, "")
 WG_PUB_KEY = env("WG_PUB_KEY", str, "")
 WG_SERVER_ADDRESS_WITH_CIDR = env("WG_SERVER_ADDRESS_WITH_CIDR", str, "192.168.0.1/22")
 WG_PORT = env("WG_PORT", int, 51820)
+
+# Chirpstack Orchestrator settings
+CHIRPSTACK_EMAIL = env("CHIRPSTACK_EMAIL", str, "admin")
+CHIRPSTACK_PASSWORD = env("CHIRPSTACK_PASSWORD", str, "admin")
+CHIRPSTACK_PORT = env("CHIRPSTACK_PORT", int, 8080)
+
+# Add chirpstack_orchestrator if WG is enabled
+if WG_ENABLED:
+    INSTALLED_APPS.append("chirpstack_orchestrator")

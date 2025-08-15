@@ -51,3 +51,6 @@ if settings.WG_ENABLED:
     urlpatterns += [
         path("node-auth/", include("node_auth.urls")),
     ]
+    urlpatterns += [
+        path("chirpstack/", include("chirpstack_orchestrator.urls")),
+    ]
