@@ -217,6 +217,21 @@ class NodeUsersView(APIView):
         return Response(results)
 
 
+# ServiceNodeUsersListView provides a list of "node users" which should be active in
+# services such as RabbitMQ and the upload server.
+class ServiceNodeUsersListView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self, req: HttpRequest) -> Response:
+        data = [
+            f"node-{node.mac.lower()}"
+            for node in Node.objects.all()
+            if node.mac and node.is_active
+        ]
+        return Response(data)
+
+
 class UpdateSSHPublicKeysView(LoginRequiredMixin, FormView):
     form_class = UpdateSSHPublicKeysForm
     template_name = "update-my-keys.html"

@@ -27,6 +27,7 @@ urlpatterns = [
     ),  # for portal compatibility
     path("nodes/<str:vsn>/authorized_keys", views.NodeAuthorizedKeysView.as_view()),
     path("nodes/<str:vsn>/users", views.NodeUsersView.as_view()),
+    path("service-node-users", views.ServiceNodeUsersListView.as_view()),
 ] + format_suffix_patterns(
     [
         # token views
