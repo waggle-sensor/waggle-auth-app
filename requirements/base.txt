@@ -21,3 +21,4 @@ django-debug-toolbar==5.2.0 # enables a debug toolbar, helps with debugging api 
 scitokens==1.8.1
 django-import-export==4.3.8
 pyroute2==0.9.4
+git+https://github.com/waggle-sensor/chirpstack_api_wrapper@0.1.1
