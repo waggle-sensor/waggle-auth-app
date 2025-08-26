@@ -225,9 +225,12 @@ class ServiceNodeUsersListView(APIView):
 
     def get(self, req: HttpRequest) -> Response:
         data = [
-            f"node-{node.mac.lower()}"
+            {
+                "user": f"node-{node.mac.lower()}",
+                "active": node.is_active,
+            }
             for node in Node.objects.all()
-            if node.mac and node.is_active
+            if node.mac
         ]
         return Response(data)
 
