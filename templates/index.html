@@ -12,10 +12,10 @@
     {% endif %}
     <p><a href="{% url 'app:my-token' %}">View token</a></p>
     <p><a href="{% url 'app:update-my-keys' %}">Update SSH public keys</a></p>
-    <p><a href="{% url 'app:logout' %}">Log out</a></p>
+    <p><a href="{% url 'account_logout' %}">Log out</a></p>
 {% else %}
     <p>Welcome!</p>
-    <p><a href="{% url 'app:login' %}">Log in</a></p>
+    <p><a href="{% url 'account_login' %}">Log in</a></p>
 {% endif %}
 
 {% endblock %}

@@ -28,27 +28,27 @@ def get_auth_client():
     )
 
 
-class LoginView(View):
-    complete_login_url = None
+# class LoginView(View):
+#     complete_login_url = None
 
-    def get(self, request: HttpRequest) -> HttpResponse:
-        next_url = request.GET.get("next", settings.LOGIN_REDIRECT_URL)
-        request.session["oidc_auth_next"] = next_url
+#     def get(self, request: HttpRequest) -> HttpResponse:
+#         next_url = request.GET.get("next", settings.LOGIN_REDIRECT_URL)
+#         request.session["oidc_auth_next"] = next_url
 
-        if request.user.is_authenticated:
-            logger.info(
-                "user %s attempted to login but was already logged in", request.user
-            )
-            return redirect(self.complete_login_url)
+#         if request.user.is_authenticated:
+#             logger.info(
+#                 "user %s attempted to login but was already logged in", request.user
+#             )
+#             return redirect(self.complete_login_url)
 
-        state = token_urlsafe(32)
-        request.session["oidc_auth_state"] = state
+#         state = token_urlsafe(32)
+#         request.session["oidc_auth_state"] = state
 
-        client = get_auth_client()
-        client.oauth2_start_flow(
-            get_redirect_uri(request), "openid profile email", state=state
-        )
-        return redirect(client.oauth2_get_authorize_url())
+#         client = get_auth_client()
+#         client.oauth2_start_flow(
+#             get_redirect_uri(request), "openid profile email", state=state
+#         )
+#         return redirect(client.oauth2_get_authorize_url())
 
 
 class RedirectView(View):
