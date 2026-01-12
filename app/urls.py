@@ -21,6 +21,11 @@ urlpatterns = [
         oidc_views.LoginView.as_view(complete_login_url="app:complete-login"),
         name="login",
     ),
+    path(
+        "password-login/",
+        oidc_views.PasswordLoginView.as_view(),
+        name="password-login",
+    ),
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path(
         "portal-logout/", views.LogoutView.as_view(redirect_field_name="callback")
