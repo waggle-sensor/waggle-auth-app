@@ -6,6 +6,7 @@ from rest_framework import status
 import uuid
 from .models import Project, Node, UserMembership, NodeMembership
 from test_utils import assertDictContainsSubset
+import pytest
 
 User = get_user_model()
 
@@ -543,7 +544,7 @@ class TestAccessView(TestCase):
         r = self.client.get("/profiles/nothere/access")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
 
-
+@pytest.mark.skip(reason="disable when using allauth")
 class TestAuth(TestCase):
     """
     TestAuth tests that our post Globus login, create user and logout flows work as expected.

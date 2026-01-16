@@ -11,16 +11,16 @@ urlpatterns = [
     path(
         "update-my-keys", views.UpdateSSHPublicKeysView.as_view(), name="update-my-keys"
     ),
-    path(
-        "complete-login/",
-        views.CompleteLoginView.as_view(template_name="create-user.html"),
-        name="complete-login",
-    ),
-    path(
-        "login/",
-        oidc_views.LoginView.as_view(complete_login_url="app:complete-login"),
-        name="login",
-    ),
+    # path(
+    #     "complete-login/",
+    #     views.CompleteLoginView.as_view(template_name="create-user.html"),
+    #     name="complete-login",
+    # ),
+    # path(
+    #     "login/",
+    #     oidc_views.LoginView.as_view(complete_login_url="app:complete-login"),
+    #     name="login",
+    # ),
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path(
         "portal-logout/", views.LogoutView.as_view(redirect_field_name="callback")

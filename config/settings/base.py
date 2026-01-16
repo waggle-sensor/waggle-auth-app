@@ -129,18 +129,18 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Login configuration
-LOGIN_URL = "/login"
+LOGIN_URL = "/accounts/account_login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 # Globus OAuth2 and OIDC login settings. See README about one time setup for local use.
 # TODO(sean) eventually move towards using something like django-allauth instead of implementing this on our own
-OAUTH2_AUTHORIZATION_ENDPOINT = "https://auth.globus.org/v2/oauth2/authorize"
-OAUTH2_TOKEN_ENDPOINT = "https://auth.globus.org/v2/oauth2/token"
-OAUTH2_USERINFO_ENDPOINT = "https://auth.globus.org/v2/oauth2/userinfo"
-OIDC_CLIENT_ID = env("OIDC_CLIENT_ID", str, "")
-OIDC_CLIENT_SECRET = env("OIDC_CLIENT_SECRET", str, "")
-OIDC_REDIRECT_PATH = env("OIDC_REDIRECT_PATH", str, "globus-auth-redirect/")
+# OAUTH2_AUTHORIZATION_ENDPOINT = "https://auth.globus.org/v2/oauth2/authorize"
+# OAUTH2_TOKEN_ENDPOINT = "https://auth.globus.org/v2/oauth2/token"
+# OAUTH2_USERINFO_ENDPOINT = "https://auth.globus.org/v2/oauth2/userinfo"
+# OIDC_CLIENT_ID = env("OIDC_CLIENT_ID", str, "")
+# OIDC_CLIENT_SECRET = env("OIDC_CLIENT_SECRET", str, "")
+# OIDC_REDIRECT_PATH = env("OIDC_REDIRECT_PATH", str, "globus-auth-redirect/")
 
 # SAGE_COOKIE_DOMAIN should be set to allow cookies to be shared across subdomains. For example,
 # if you'd use .sagecontinuum.org if you want to share cookies from access.sagecontinuum.org with
