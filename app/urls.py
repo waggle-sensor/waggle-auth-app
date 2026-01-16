@@ -46,6 +46,11 @@ urlpatterns = [
             views.UserAccessView.as_view(),
             name="user-access",
         ),
+        path(
+            "users/<str:username>/projects",
+            views.UserProjectsView.as_view(),
+            name="user-projects",
+        ),
         # keeping old profiles/ path for now. replaced by users/.
         path(
             "profiles/<str:username>/access",

@@ -544,6 +544,124 @@ class TestAccessView(TestCase):
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
 
 
+class TestUserProjectsView(TestCase):
+    """
+    tests that user projects endpoint returns projects with nodes and members correctly.
+    """
+
+    def testNeedsAuth(self):
+        user = create_random_user()
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def testUserNotFound(self):
+        user = create_random_user()
+        self.client.force_login(user)
+        r = self.client.get("/users/nonexistentuser/projects")
+        # Permission check happens first, so non-existent users return 403
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    def testUserCanViewOwnProjects(self):
+        user = create_random_user()
+        project = Project.objects.create(name="Test Project")
+        UserMembership.objects.create(project=project, user=user)
+
+        node1 = Node.objects.create(vsn="W001")
+        node2 = Node.objects.create(vsn="W002")
+        NodeMembership.objects.create(project=project, node=node1)
+        NodeMembership.objects.create(project=project, node=node2)
+
+        self.client.force_login(user)
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        self.assertIn("projects", data)
+        self.assertIn("vsns", data)
+        self.assertEqual(len(data["projects"]), 1)
+        self.assertEqual(data["projects"][0]["name"], "Test Project")
+        self.assertEqual(len(data["projects"][0]["nodes"]), 2)
+        self.assertEqual(set(data["vsns"]), {"W001", "W002"})
+
+    def testUserCannotViewOtherUsersProjects(self):
+        user1 = create_random_user()
+        user2 = create_random_user()
+
+        self.client.force_login(user1)
+        r = self.client.get(f"/users/{user2.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    def testAdminCanViewAnyUsersProjects(self):
+        admin = create_random_admin_user()
+        user = create_random_user()
+        project = Project.objects.create(name="User Project")
+        UserMembership.objects.create(project=project, user=user)
+
+        node = Node.objects.create(vsn="W123")
+        NodeMembership.objects.create(project=project, node=node)
+
+        self.client.force_login(admin)
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        self.assertEqual(len(data["projects"]), 1)
+        self.assertEqual(data["projects"][0]["name"], "User Project")
+
+    def testMultipleProjects(self):
+        user = create_random_user()
+
+        project1 = Project.objects.create(name="Project Alpha")
+        project2 = Project.objects.create(name="Project Beta")
+        UserMembership.objects.create(project=project1, user=user)
+        UserMembership.objects.create(project=project2, user=user)
+
+        node1 = Node.objects.create(vsn="W001")
+        node2 = Node.objects.create(vsn="W002")
+        node3 = Node.objects.create(vsn="W003")
+        NodeMembership.objects.create(project=project1, node=node1)
+        NodeMembership.objects.create(project=project1, node=node2)
+        NodeMembership.objects.create(project=project2, node=node3)
+
+        self.client.force_login(user)
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        self.assertEqual(len(data["projects"]), 2)
+        self.assertEqual(set(data["vsns"]), {"W001", "W002", "W003"})
+
+    def testProjectMembers(self):
+        user1 = User.objects.create_user(username="user1", name="User One")
+        user2 = User.objects.create_user(username="user2", name="User Two")
+
+        project = Project.objects.create(name="Shared Project")
+        UserMembership.objects.create(project=project, user=user1)
+        UserMembership.objects.create(project=project, user=user2)
+
+        self.client.force_login(user1)
+        r = self.client.get(f"/users/{user1.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        members = data["projects"][0]["members"]
+        self.assertEqual(len(members), 2)
+
+        usernames = {m["username"] for m in members}
+        self.assertEqual(usernames, {"user1", "user2"})
+
+    def testEmptyProjects(self):
+        user = create_random_user()
+
+        self.client.force_login(user)
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        self.assertEqual(data["projects"], [])
+        self.assertEqual(data["vsns"], [])
+
+
 class TestAuth(TestCase):
     """
     TestAuth tests that our post Globus login, create user and logout flows work as expected.

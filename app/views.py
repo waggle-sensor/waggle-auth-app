@@ -19,10 +19,10 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django_slack import slack_message
-from .serializers import UserSerializer, UserProfileSerializer
+from .serializers import UserSerializer, UserProfileSerializer, ProjectSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
-from .models import Node
+from .models import Node, Project
 import re
 
 User = get_user_model()
@@ -144,6 +144,27 @@ class UserAccessView(APIView):
         ]
 
         return Response(data)
+
+
+class UserProjectsView(APIView):
+    permission_classes = [IsAdminUser | IsMatchingUsername]
+
+    def get(self, request: Request, username: str, format=None) -> Response:
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise Http404
+
+        projects = user.project_set.prefetch_related('nodes').all()
+        serializer = ProjectSerializer(projects, many=True)
+
+        # All VSNs the user has access to
+        vsns = {node.vsn for project in projects for node in project.nodes.all() if node.vsn}
+
+        return Response({
+            "projects": serializer.data,
+            "vsns": sorted(vsns)
+        })
 
 
 class NodeAuthorizedKeysView(APIView):
