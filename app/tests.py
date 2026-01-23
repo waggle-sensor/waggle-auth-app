@@ -543,6 +543,68 @@ class TestAccessView(TestCase):
         r = self.client.get("/profiles/nothere/access")
         self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
 
+    def testFilesAccess(self):
+        # Test that can_access_files permission is correctly returned
+        self.client.force_login(create_random_admin_user())
+
+        # Add files access for ada on sage project
+        user_ada = User.objects.get(username="ada")
+        project_sage = Project.objects.get(name="sage")
+        membership = UserMembership.objects.get(user=user_ada, project=project_sage)
+        membership.can_access_files = True
+        membership.save()
+
+        # Add files access for jed on dawn project
+        user_jed = User.objects.get(username="jed")
+        project_dawn = Project.objects.get(name="dawn")
+        UserMembership.objects.create(
+            user=user_jed,
+            project=project_dawn,
+            can_access_files=True
+        )
+
+        # Ada should now have files access for all sage project nodes (W000, W001, W002, W003)
+        r = self.client.get("/users/ada/access")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W000", "access": ["files"]},
+                {"vsn": "W001", "access": ["develop", "files", "schedule"]},
+                {"vsn": "W002", "access": ["develop", "files"]},
+                {"vsn": "W003", "access": ["develop", "files"]},
+            ],
+        )
+
+        # Jed should have files access for dawn project nodes (W000, W001)
+        r = self.client.get("/users/jed/access")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W000", "access": ["files"]},
+                {"vsn": "W001", "access": ["files", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
+            ],
+        )
+
+        # Tom should NOT have files access (no can_access_files permission set)
+        r = self.client.get("/users/tom/access")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        # Verify "files" is not in any of the access lists
+        for item in r.json():
+            self.assertNotIn("files", item["access"])
+        # Verify the response matches expected (develop/schedule only)
+        self.assertEqual(
+            r.json(),
+            [
+                {"vsn": "W001", "access": ["develop", "schedule"]},
+                {"vsn": "W002", "access": ["develop"]},
+                {"vsn": "W003", "access": ["develop", "schedule"]},
+            ],
+        )
+
 
 class TestUserProjectsView(TestCase):
     """
@@ -578,10 +640,13 @@ class TestUserProjectsView(TestCase):
         data = r.json()
         self.assertIn("projects", data)
         self.assertIn("vsns", data)
+        self.assertIn("access", data)
         self.assertEqual(len(data["projects"]), 1)
         self.assertEqual(data["projects"][0]["name"], "Test Project")
         self.assertEqual(len(data["projects"][0]["nodes"]), 2)
         self.assertEqual(set(data["vsns"]), {"W001", "W002"})
+        # No access permissions set, so access dict should be empty
+        self.assertEqual(data["access"], {})
 
     def testUserCannotViewOtherUsersProjects(self):
         user1 = create_random_user()
@@ -660,6 +725,96 @@ class TestUserProjectsView(TestCase):
         data = r.json()
         self.assertEqual(data["projects"], [])
         self.assertEqual(data["vsns"], [])
+        self.assertEqual(data["access"], {})
+
+    def testAccessTypes(self):
+        user = create_random_user()
+        project = Project.objects.create(name="Test Project")
+
+        # Create user membership with all access types
+        UserMembership.objects.create(
+            project=project,
+            user=user,
+            can_develop=True,
+            can_schedule=True,
+            can_access_files=True
+        )
+
+        node = Node.objects.create(vsn="W001")
+        # Node membership with develop and schedule
+        NodeMembership.objects.create(
+            project=project,
+            node=node,
+            can_develop=True,
+            can_schedule=True
+        )
+
+        self.client.force_login(user)
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        # User should have all three access types for W001
+        self.assertEqual(data["access"], {
+            "W001": ["develop", "files", "schedule"]
+        })
+
+    def testAccessTypesPartial(self):
+        user = create_random_user()
+        project = Project.objects.create(name="Test Project")
+
+        # User has develop and files, but not schedule
+        UserMembership.objects.create(
+            project=project,
+            user=user,
+            can_develop=True,
+            can_schedule=False,
+            can_access_files=True
+        )
+
+        node = Node.objects.create(vsn="W002")
+        # Node allows develop but not schedule
+        NodeMembership.objects.create(
+            project=project,
+            node=node,
+            can_develop=True,
+            can_schedule=False
+        )
+
+        self.client.force_login(user)
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        # User should have develop and files for W002, but not schedule
+        self.assertEqual(data["access"], {
+            "W002": ["develop", "files"]
+        })
+
+    def testAccessFilesOnly(self):
+        user = create_random_user()
+        project = Project.objects.create(name="Test Project")
+
+        # User only has files access
+        UserMembership.objects.create(
+            project=project,
+            user=user,
+            can_access_files=True
+        )
+
+        node = Node.objects.create(vsn="W003")
+        # Node has no permissions
+        NodeMembership.objects.create(project=project, node=node)
+
+        self.client.force_login(user)
+        r = self.client.get(f"/users/{user.username}/projects")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        # User should only have files access for W003
+        self.assertEqual(data["access"], {
+            "W003": ["files"]
+        })
 
 
 class TestAuth(TestCase):
