@@ -23,9 +23,40 @@ from .serializers import UserSerializer, UserProfileSerializer, ProjectSerialize
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
 from .models import Node, Project
+from collections import defaultdict
 import re
 
 User = get_user_model()
+
+
+def get_user_access_by_vsn(user):
+    """
+    Calculate user's access permissions per VSN.
+    Returns a defaultdict mapping VSN to set of access types.
+    """
+    access_by_vsn = defaultdict(set)
+
+    # develop and schedule require both user and node membership permissions
+    for access_type in ["develop", "schedule"]:
+        vsns = user.project_set.filter(
+            **{
+                f"usermembership__can_{access_type}": True,
+                f"nodemembership__can_{access_type}": True,
+            }
+        ).values_list("nodes__vsn", flat=True)
+
+        for vsn in vsns:
+            access_by_vsn[vsn].add(access_type)
+
+    # files only requires user membership permission
+    vsns = user.project_set.filter(
+        usermembership__can_access_files=True,
+    ).values_list("nodes__vsn", flat=True)
+
+    for vsn in vsns:
+        access_by_vsn[vsn].add("files")
+
+    return access_by_vsn
 
 
 class HomeView(TemplateView):
@@ -123,20 +154,7 @@ class UserAccessView(APIView):
         if not user.is_approved:
             return Response([])
 
-        access_by_vsn = {}
-
-        for access in ["develop", "schedule"]:
-            vsns = user.project_set.filter(
-                **{
-                    f"usermembership__can_{access}": True,
-                    f"nodemembership__can_{access}": True,
-                }
-            ).values_list("nodes__vsn", flat=True)
-
-            for vsn in vsns:
-                if vsn not in access_by_vsn:
-                    access_by_vsn[vsn] = set()
-                access_by_vsn[vsn].add(access)
+        access_by_vsn = get_user_access_by_vsn(user)
 
         data = [
             {"vsn": vsn, "access": sorted(access)}
@@ -161,9 +179,14 @@ class UserProjectsView(APIView):
         # All VSNs the user has access to
         vsns = {node.vsn for project in projects for node in project.nodes.all() if node.vsn}
 
+        # Get access per VSN
+        access_by_vsn = get_user_access_by_vsn(user)
+        access_dict = {vsn: sorted(access) for vsn, access in access_by_vsn.items()}
+
         return Response({
             "projects": serializer.data,
-            "vsns": sorted(vsns)
+            "vsns": sorted(vsns),
+            "access": access_dict
         })
 
 
