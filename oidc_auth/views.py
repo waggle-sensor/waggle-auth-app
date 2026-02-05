@@ -1,14 +1,16 @@
 import logging
 from secrets import token_urlsafe, compare_digest
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, resolve_url
 from django.views import View
+from django.views.generic.edit import FormView
 from rest_framework import status
 import requests
 import globus_sdk
 from contextlib import ExitStack
+from .forms import PasswordLoginForm
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -49,6 +51,27 @@ class LoginView(View):
             get_redirect_uri(request), "openid profile email", state=state
         )
         return redirect(client.oauth2_get_authorize_url())
+
+
+class PasswordLoginView(FormView):
+    template_name = 'password-login.html'
+    form_class = PasswordLoginForm
+    success_url = "/"
+
+    def form_valid(self, form) -> HttpResponse:
+        # Retrieve the cleaned username and password from the form
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+
+        # Authenticate the user
+        user = authenticate(self.request, username=username, password=password)
+
+        if user is not None:
+            # If authentication is successful, log the user in
+            login(self.request, user)
+
+        # Call the superclass method to handle the response (usually a redirect to success_url)
+        return super().form_valid(form)
 
 
 class RedirectView(View):

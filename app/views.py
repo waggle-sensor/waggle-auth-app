@@ -334,6 +334,7 @@ class CompleteLoginView(FormView):
             email=user_info.get("email"),
             organization=user_info.get("organization"),
         )
+        user.set_unusable_password()
 
         # notify channel of new user
         slack_message(
