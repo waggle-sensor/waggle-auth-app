@@ -118,6 +118,13 @@ class Modem(models.Model):
         max_length=64,
         validators=[RegexValidator("^[0-9]{,20}$")],
     )
+    smsc = models.CharField(
+        "SMSC",
+        max_length=64,
+        blank=True,
+        default="",
+        validators=[RegexValidator("^[0-9]{10,12}$")],
+    )
     model = models.CharField(
         "Model", max_length=64, choices=ModemModels, default="mtcm2"
     )
