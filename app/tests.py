@@ -246,8 +246,13 @@ class TestUserListView(TestCase):
         self.client.force_login(self.admin)
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(r.json()), len(self.users))
-        # TODO actually check the content
+        data = r.json()
+        self.assertEqual(len(data), len(self.users))
+
+        # Check that date_joined and last_login are present in response
+        for user_data in data:
+            self.assertIn("date_joined", user_data)
+            self.assertIn("last_login", user_data)
 
     def testGetAsUser(self):
         self.client.force_login(create_random_user())
@@ -262,6 +267,11 @@ class TestUserDetailView(TestCase):
         self.want = {
             "username": self.user.username,
             "name": self.user.name,
+            "email": self.user.email,
+            "is_staff": self.user.is_staff,
+            "is_superuser": self.user.is_superuser,
+            "is_approved": self.user.is_approved,
+            "ssh_public_keys": self.user.ssh_public_keys,
         }
 
     def testGetAsAnon(self):
@@ -272,13 +282,21 @@ class TestUserDetailView(TestCase):
         self.client.force_login(create_random_admin_user())
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        assertDictContainsSubset(self.want, r.json())
+        data = r.json()
+        assertDictContainsSubset(self.want, data)
+        self.assertIn("url", data)
+        self.assertIn("date_joined", data)
+        self.assertIn("last_login", data)
 
     def testGetAsSelf(self):
         self.client.force_login(self.user)
         r = self.client.get(self.url)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
-        assertDictContainsSubset(self.want, r.json())
+        data = r.json()
+        assertDictContainsSubset(self.want, data)
+        self.assertIn("url", data)
+        self.assertIn("date_joined", data)
+        self.assertIn("last_login", data)
 
     def testGetAsOther(self):
         self.client.force_login(create_random_user())
@@ -296,16 +314,22 @@ class TestUserSelfDetailView(TestCase):
         self.client.force_login(user)
         r = self.client.get("/users/~self")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
+        data = r.json()
         assertDictContainsSubset(
             {
                 "username": user.username,
                 "name": user.name,
+                "email": user.email,
                 "is_staff": user.is_staff,
                 "is_superuser": user.is_superuser,
                 "is_approved": user.is_approved,
+                "ssh_public_keys": user.ssh_public_keys,
             },
-            r.json(),
+            data,
         )
+        self.assertIn("url", data)
+        self.assertIn("date_joined", data)
+        self.assertIn("last_login", data)
 
 
 class TestUserProfileView(TestCase):
