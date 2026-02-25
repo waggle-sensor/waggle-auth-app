@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 import uuid
+from unittest.mock import patch, MagicMock
+from io import BytesIO
 from .models import Project, Node, UserMembership, NodeMembership
 from test_utils import assertDictContainsSubset
 
@@ -1102,6 +1104,147 @@ class TestPortalCompatibility(TestCase):
             r.url,
             "https://auth.globus.org/v2/web/logout?redirect_uri=http://testserver/",
         )
+
+
+
+
+class TestSendFeedbackView(TestCase):
+    """
+    TestSendFeedbackView tests that users can submit feedback as GitHub issues.
+    """
+
+    def testNeedsAuth(self):
+        r = self.client.post("/send-feedback/")
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('app.views.requests.post')
+    def testSendFeedbackSuccess(self, mock_post):
+        user = create_random_user(email="testuser@example.com", name="Test User")
+        self.client.force_login(user)
+
+        # Mock successful GitHub API response
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.json.return_value = {"html_url": "https://github.com/waggle-sensor/tickets/issues/123"}
+        mock_post.return_value = mock_response
+
+        data = {
+            "subject": "Test Feedback",
+            "message": "This is a test feedback message.",
+        }
+
+        r = self.client.post("/send-feedback/", data, content_type="application/json")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertIn("message", r.json())
+        self.assertIn("issue_url", r.json())
+
+        # Verify GitHub API was called
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+
+        # Verify the URL
+        self.assertIn("github.com", call_args[0][0])
+        self.assertIn("waggle-sensor", call_args[0][0])
+        self.assertIn("tickets", call_args[0][0])
+
+        # Verify the payload
+        payload = call_args[1]['json']
+        self.assertIn("[Feedback]", payload['title'])
+        self.assertIn("Test Feedback", payload['title'])
+        self.assertIn(user.username, payload['body'])
+        self.assertIn(user.email, payload['body'])
+        self.assertIn("This is a test feedback message.", payload['body'])
+        self.assertIn("feedback", payload['labels'])
+
+    @patch('app.views.requests.post')
+    def testSendFeedbackWithAttachment(self, mock_post):
+        user = create_random_user(email="testuser@example.com", name="Test User")
+        self.client.force_login(user)
+
+        # Mock successful GitHub API responses for issue creation and comment
+        mock_issue_response = MagicMock()
+        mock_issue_response.status_code = 201
+        mock_issue_response.json.return_value = {
+            "number": 124,
+            "html_url": "https://github.com/waggle-sensor/tickets/issues/124"
+        }
+
+        mock_comment_response = MagicMock()
+        mock_comment_response.status_code = 201
+
+        # First call returns issue response, second call returns comment response
+        mock_post.side_effect = [mock_issue_response, mock_comment_response]
+
+        # Create a file attachment
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        attachment = SimpleUploadedFile(
+            "test_file.txt",
+            b"This is test file content",
+            content_type="text/plain"
+        )
+
+        data = {
+            "subject": "Feedback with Attachment",
+            "message": "This feedback includes an attachment.",
+            "attachment": attachment,
+        }
+
+        r = self.client.post("/send-feedback/", data)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertIn("issue_url", r.json())
+
+        # Verify two API calls were made (issue creation + comment creation)
+        self.assertEqual(mock_post.call_count, 2)
+
+        # Verify first call (issue creation)
+        issue_call = mock_post.call_args_list[0]
+        self.assertIn("issues", issue_call[0][0])
+        issue_payload = issue_call[1]['json']
+        self.assertIn("[Feedback]", issue_payload['title'])
+
+        # Verify second call (comment creation with attachment info)
+        comment_call = mock_post.call_args_list[1]
+        self.assertIn("comments", comment_call[0][0])
+        self.assertIn("124", comment_call[0][0])
+        comment_payload = comment_call[1]['json']
+        self.assertIn("Attachment:", comment_payload['body'])
+        self.assertIn("test_file.txt", comment_payload['body'])
+        mock_response.status_code = 401
+        mock_post.return_value = mock_response
+
+        data = {
+            "subject": "Test Feedback",
+            "message": "This is a test feedback message.",
+        }
+
+        r = self.client.post("/send-feedback/", data, content_type="application/json")
+        self.assertEqual(r.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("error", r.json())
+
+    def testSendFeedbackMissingSubject(self):
+        user = create_random_user()
+        self.client.force_login(user)
+
+        data = {
+            "message": "This feedback is missing a subject.",
+        }
+
+        r = self.client.post("/send-feedback/", data, content_type="application/json")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("subject", r.json())
+
+    def testSendFeedbackMissingMessage(self):
+        user = create_random_user()
+        self.client.force_login(user)
+
+        data = {
+            "subject": "Test Subject",
+        }
+
+        r = self.client.post("/send-feedback/", data, content_type="application/json")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("message", r.json())
+
 
 
 def create_random_user(**kwargs) -> User:

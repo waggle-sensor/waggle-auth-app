@@ -54,3 +54,11 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ["name", "members", "nodes"]
 
+
+class FeedbackSerializer(serializers.Serializer):
+    subject = serializers.CharField(max_length=255, required=True)
+    message = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    request_type = serializers.ChoiceField(choices=['feedback', 'access request'], default='access request', required=False)
+    attachment = serializers.FileField(required=False, allow_null=True)
+

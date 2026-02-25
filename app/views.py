@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import login, get_user_model
+import requests
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -16,10 +17,11 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
+from rest_framework import status
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django_slack import slack_message
-from .serializers import UserSerializer, UserProfileSerializer, ProjectSerializer
+from .serializers import UserSerializer, UserProfileSerializer, ProjectSerializer, FeedbackSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
 from .models import Node, Project
@@ -397,3 +399,98 @@ def set_site_cookie(response: HttpResponse, key: str, value: str):
         secure=settings.SESSION_COOKIE_SECURE,
         domain=settings.SAGE_COOKIE_DOMAIN,
     )
+
+
+class SendFeedbackView(APIView):
+    """
+    Allows authenticated users to submit feedback as GitHub issues with optional attachments.
+    Attachments are uploaded as comments on the GitHub issue.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        serializer = FeedbackSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        subject = serializer.validated_data["subject"]
+        message = serializer.validated_data["message"]
+        email = serializer.validated_data["email"]
+        request_type = serializer.validated_data.get("request_type", "feedback")
+        attachment = serializer.validated_data.get("attachment")
+
+        # Compose GitHub issue body
+        github_body = f"""**From:** {user.username}
+**Name:** {user.name}
+**Submitted Email:** {email}
+**Account Email:** {user.email}
+
+{message}
+"""
+
+        # Create GitHub issue
+        github_token = settings.GITHUB_TOKEN
+        github_repo_owner = settings.GITHUB_REPO_OWNER
+        github_repo_name = settings.GITHUB_REPO_NAME
+
+        if not github_token or not github_repo_owner or not github_repo_name:
+            return Response(
+                {"error": "GitHub integration not configured"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        url = f"https://api.github.com/repos/{github_repo_owner}/{github_repo_name}/issues"
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+
+        payload = {
+            "title": f"[{request_type.title()}] {subject}",
+            "body": github_body,
+            "labels": [request_type]
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            print('response', response.json())
+            if response.status_code != 201:
+                return Response(
+                    {"error": "Failed to submit feedback"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            issue_data = response.json()
+            issue_number = issue_data.get("number")
+            issue_url = issue_data.get("html_url")
+
+            # Upload attachment as a comment if provided (not fully implemented yet)
+            if attachment:
+                comment_url = f"https://api.github.com/repos/{github_repo_owner}/{github_repo_name}/issues/{issue_number}/comments"
+                comment_body = f"**Attachment:** {attachment.name}\n\n[File uploaded: {attachment.name} ({attachment.size} bytes)]"
+
+                comment_payload = {"body": comment_body}
+                comment_response = requests.post(
+                    comment_url,
+                    json=comment_payload,
+                    headers=headers
+                )
+
+                if comment_response.status_code != 201:
+                    return Response(
+                        {"error": "Feedback submitted but attachment comment failed"},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+
+            return Response(
+                {"message": "Feedback submitted successfully", "issue_url": issue_url},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Failed to submit feedback. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+

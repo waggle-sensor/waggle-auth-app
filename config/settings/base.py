@@ -233,4 +233,9 @@ if PELICAN_ROOT_URL and not PELICAN_ROOT_URL.startswith("https://"):
 if PELICAN_ROOT_FOLDER and not PELICAN_ROOT_FOLDER.startswith("/"):
     raise ValueError("Setting PELICAN_ROOT_FOLDER must start with /")
 
+# GitHub feedback configuration
+GITHUB_TOKEN = env("GITHUB_TOKEN", str, "")
+GITHUB_REPO_OWNER = env("GITHUB_REPO_OWNER", str, "")
+GITHUB_REPO_NAME = env("GITHUB_REPO_NAME", str, "")
+
 TIME_ZONE = "UTC"
