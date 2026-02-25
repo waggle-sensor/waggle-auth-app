@@ -17,6 +17,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             "is_superuser",
             "is_approved",
             "ssh_public_keys",
+            "date_joined",
+            "last_login"
         ]
         extra_kwargs = {
             "url": {"lookup_field": "username", "view_name": "app:user-detail"},
