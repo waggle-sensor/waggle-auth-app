@@ -1124,12 +1124,14 @@ class TestSendFeedbackView(TestCase):
         # Mock successful GitHub API response
         mock_response = MagicMock()
         mock_response.status_code = 201
-        mock_response.json.return_value = {"html_url": "https://github.com/waggle-sensor/tickets/issues/123"}
+        mock_response.json.return_value = {"html_url": "https://github.com/waggle-sensor/user-requests/issues/123"}
         mock_post.return_value = mock_response
 
         data = {
             "subject": "Test Feedback",
             "message": "This is a test feedback message.",
+            "email": "submitter@example.com",
+            "request_type": "feedback",
         }
 
         r = self.client.post("/send-request/", data, content_type="application/json")
@@ -1144,7 +1146,7 @@ class TestSendFeedbackView(TestCase):
         # Verify the URL
         self.assertIn("github.com", call_args[0][0])
         self.assertIn("waggle-sensor", call_args[0][0])
-        self.assertIn("tickets", call_args[0][0])
+        self.assertIn("user-requests", call_args[0][0])
 
         # Verify the payload
         payload = call_args[1]['json']
@@ -1165,7 +1167,7 @@ class TestSendFeedbackView(TestCase):
         mock_issue_response.status_code = 201
         mock_issue_response.json.return_value = {
             "number": 124,
-            "html_url": "https://github.com/waggle-sensor/tickets/issues/124"
+            "html_url": "https://github.com/waggle-sensor/user-requests/issues/124"
         }
 
         mock_comment_response = MagicMock()
@@ -1185,6 +1187,8 @@ class TestSendFeedbackView(TestCase):
         data = {
             "subject": "Feedback with Attachment",
             "message": "This feedback includes an attachment.",
+            "email": "submitter@example.com",
+            "request_type": "feedback",
             "attachment": attachment,
         }
 
@@ -1214,6 +1218,7 @@ class TestSendFeedbackView(TestCase):
 
         data = {
             "message": "This feedback is missing a subject.",
+            "email": "submitter@example.com",
         }
 
         r = self.client.post("/send-request/", data, content_type="application/json")
@@ -1226,6 +1231,7 @@ class TestSendFeedbackView(TestCase):
 
         data = {
             "subject": "Test Subject",
+            "email": "submitter@example.com",
         }
 
         r = self.client.post("/send-request/", data, content_type="application/json")
@@ -1238,9 +1244,11 @@ def create_random_user(**kwargs) -> User:
     from random import choice, randint
     from string import ascii_letters, printable
 
+    name = kwargs.pop("name", "".join(choice(printable) for _ in range(randint(4, 24))))
+
     return User.objects.create_user(
         username="".join(choice(ascii_letters) for _ in range(randint(43, 64))),
-        name="".join(choice(printable) for _ in range(randint(4, 24))),
+        name=name,
         **kwargs,
     )
 
