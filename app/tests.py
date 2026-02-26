@@ -5,7 +5,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 import uuid
 from unittest.mock import patch, MagicMock
-from io import BytesIO
 from .models import Project, Node, UserMembership, NodeMembership
 from test_utils import assertDictContainsSubset
 
