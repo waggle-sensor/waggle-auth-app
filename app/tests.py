@@ -1116,6 +1116,11 @@ class TestSendFeedbackView(TestCase):
         r = self.client.post("/send-request/")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    @override_settings(
+        GITHUB_TOKEN='test_token',
+        GITHUB_REPO_OWNER='waggle-sensor',
+        GITHUB_REPO_NAME='user-requests'
+    )
     @patch('app.views.requests.post')
     def testSendFeedbackSuccess(self, mock_post):
         user = create_random_user(email="testuser@example.com", name="Test User")
@@ -1157,6 +1162,11 @@ class TestSendFeedbackView(TestCase):
         self.assertIn("This is a test feedback message.", payload['body'])
         self.assertIn("feedback", payload['labels'])
 
+    @override_settings(
+        GITHUB_TOKEN='test_token',
+        GITHUB_REPO_OWNER='waggle-sensor',
+        GITHUB_REPO_NAME='user-requests'
+    )
     @patch('app.views.requests.post')
     def testSendFeedbackWithAttachment(self, mock_post):
         user = create_random_user(email="testuser@example.com", name="Test User")
@@ -1192,7 +1202,10 @@ class TestSendFeedbackView(TestCase):
             "attachment": attachment,
         }
 
-        r = self.client.post("/send-request/", data)
+        r = self.client.post("/send-request/", data, format='multipart')
+        if r.status_code != status.HTTP_200_OK:
+            print(f"Response status: {r.status_code}")
+            print(f"Response content: {r.content}")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertIn("issue_url", r.json())
 
