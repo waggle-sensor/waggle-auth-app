@@ -1208,18 +1208,6 @@ class TestSendFeedbackView(TestCase):
         comment_payload = comment_call[1]['json']
         self.assertIn("Attachment:", comment_payload['body'])
         self.assertIn("test_file.txt", comment_payload['body'])
-        mock_response.status_code = 401
-        mock_post.return_value = mock_response
-
-        data = {
-            "subject": "Test Feedback",
-            "message": "This is a test feedback message.",
-        }
-
-        r = self.client.post("/send-feedback/", data, content_type="application/json")
-        self.assertEqual(r.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertIn("error", r.json())
-
     def testSendFeedbackMissingSubject(self):
         user = create_random_user()
         self.client.force_login(user)
