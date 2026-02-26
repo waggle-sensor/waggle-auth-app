@@ -1113,7 +1113,7 @@ class TestSendFeedbackView(TestCase):
     """
 
     def testNeedsAuth(self):
-        r = self.client.post("/send-feedback/")
+        r = self.client.post("/send-request/")
         self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @patch('app.views.requests.post')
@@ -1132,7 +1132,7 @@ class TestSendFeedbackView(TestCase):
             "message": "This is a test feedback message.",
         }
 
-        r = self.client.post("/send-feedback/", data, content_type="application/json")
+        r = self.client.post("/send-request/", data, content_type="application/json")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertIn("message", r.json())
         self.assertIn("issue_url", r.json())
@@ -1188,7 +1188,7 @@ class TestSendFeedbackView(TestCase):
             "attachment": attachment,
         }
 
-        r = self.client.post("/send-feedback/", data)
+        r = self.client.post("/send-request/", data)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertIn("issue_url", r.json())
 
@@ -1216,7 +1216,7 @@ class TestSendFeedbackView(TestCase):
             "message": "This feedback is missing a subject.",
         }
 
-        r = self.client.post("/send-feedback/", data, content_type="application/json")
+        r = self.client.post("/send-request/", data, content_type="application/json")
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("subject", r.json())
 
@@ -1228,7 +1228,7 @@ class TestSendFeedbackView(TestCase):
             "subject": "Test Subject",
         }
 
-        r = self.client.post("/send-feedback/", data, content_type="application/json")
+        r = self.client.post("/send-request/", data, content_type="application/json")
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("message", r.json())
 

@@ -456,7 +456,6 @@ class SendFeedbackView(APIView):
 
         try:
             response = requests.post(url, json=payload, headers=headers)
-            print('response', response.json())
             if response.status_code != 201:
                 return Response(
                     {"error": "Failed to submit feedback"},

@@ -60,7 +60,7 @@ urlpatterns = [
         # keeping compatibility with existing portal user profiles
         path("user_profile/<str:username>", views.UserProfileView.as_view()),
         # feedback
-        path("send-feedback/", views.SendFeedbackView.as_view(), name="send-feedback"),
+        path("send-request/", views.SendFeedbackView.as_view(), name="send-request"),
 
     ]
 )
