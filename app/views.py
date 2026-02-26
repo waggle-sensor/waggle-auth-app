@@ -404,7 +404,8 @@ def set_site_cookie(response: HttpResponse, key: str, value: str):
 class SendFeedbackView(APIView):
     """
     Allows authenticated users to submit feedback as GitHub issues with optional attachments.
-    Attachments are uploaded as comments on the GitHub issue.
+    If an attachment is provided, its details (such as name and size) are included in a
+    comment on the GitHub issue, but the file content itself is not uploaded.
     """
     permission_classes = [IsAuthenticated]
 
