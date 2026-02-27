@@ -57,7 +57,10 @@ urlpatterns = [
             views.UserAccessView.as_view(permission_classes=[AllowAny]),
             name="user-access-old",
         ),
-        # keeping compatbility with existing portal user profiles
+        # keeping compatibility with existing portal user profiles
         path("user_profile/<str:username>", views.UserProfileView.as_view()),
+        # feedback
+        path("send-request/", views.SendFeedbackView.as_view(), name="send-request"),
+
     ]
 )

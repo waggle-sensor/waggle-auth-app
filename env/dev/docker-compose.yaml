@@ -2,11 +2,11 @@ services:
   django:
     build:
       context: ../../
-      dockerfile: ./env/dev/Dockerfile 
+      dockerfile: ./env/dev/Dockerfile
     restart: always
     command: >
-      sh -c "python manage.py migrate && 
-             python manage.py createsuperuser --noinput || true && 
+      sh -c "python manage.py migrate &&
+             python manage.py createsuperuser --noinput || true &&
              python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
@@ -36,9 +36,13 @@ services:
       - "INV_TOOLS_REPO=/app/waggle-inventory-tools"
       #NOTE: uncomment these lines for automatic updates of the inventory tools repo
       # - "INV_TOOLS_REPO=https://github.com/waggle-sensor/waggle-inventory-tools.git"
-      # - "INV_TOOLS_TOKEN=${INV_TOOLS_TOKEN}" 
+      # - "INV_TOOLS_TOKEN=${INV_TOOLS_TOKEN}"
       - "INV_TOOLS_SSH_TOOLS=/root/git"
       - "INV_TOOLS_SSH_CONFIG=/root/ssh"
-      - "INV_TOOLS_SSH_TOOLS_PW=${INV_TOOLS_SSH_TOOLS_PW}" 
+      - "INV_TOOLS_SSH_TOOLS_PW=${INV_TOOLS_SSH_TOOLS_PW}"
+      # GitHub feedback settings
+      - "GITHUB_TOKEN=${GITHUB_TOKEN}"
+      - "GITHUB_REPO_OWNER=${GITHUB_REPO_OWNER}"
+      - "GITHUB_REPO_NAME=${GITHUB_REPO_NAME}"
     volumes:
       - ../../:/app:rw
