@@ -18,9 +18,11 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdate
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
 from rest_framework import status
+from django.db.models import Count
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django_slack import slack_message
+from manifests.models import NodeData
 from .serializers import UserSerializer, UserProfileSerializer, ProjectSerializer, FeedbackSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
@@ -190,6 +192,45 @@ class UserProjectsView(APIView):
             "vsns": sorted(vsns),
             "access": access_dict
         })
+
+
+class ProjectsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request, format=None) -> Response:
+        projects = (
+            Project.objects.annotate(member_count=Count("users", distinct=True))
+            .prefetch_related("nodemembership_set__node")
+            .order_by("name")
+        )
+
+        data = []
+        for project in projects:
+            nodes = []
+            for membership in sorted(
+                project.nodemembership_set.all(),
+                key=lambda m: (m.node.vsn or ""),
+            ):
+                if membership.node.vsn:
+                    # Get the NodeData from manifests to access its project
+                    try:
+                        node_data = NodeData.objects.get(vsn=membership.node.vsn)
+                        node_project = node_data.project.name if node_data.project else None
+                    except NodeData.DoesNotExist:
+                        node_project = None
+
+                    nodes.append({
+                        "vsn": membership.node.vsn,
+                        "project": node_project,
+                    })
+
+            data.append({
+                "name": project.name,
+                "nodes": nodes,
+                "member_count": project.member_count,
+            })
+
+        return Response(data)
 
 
 class NodeAuthorizedKeysView(APIView):

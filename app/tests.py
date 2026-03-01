@@ -842,6 +842,61 @@ class TestUserProjectsView(TestCase):
         })
 
 
+class TestProjectsView(TestCase):
+    def testListAllProjectsWithExpectedShape(self):
+        from manifests.models import NodeData, NodeBuildProject
+
+        alpha = Project.objects.create(name="Alpha")
+        beta = Project.objects.create(name="Beta")
+
+        alpha_user_1 = create_random_user()
+        alpha_user_2 = create_random_user()
+        beta_user = create_random_user()
+
+        UserMembership.objects.create(project=alpha, user=alpha_user_1)
+        UserMembership.objects.create(project=alpha, user=alpha_user_2)
+        UserMembership.objects.create(project=beta, user=beta_user)
+
+        alpha_node_1 = Node.objects.create(vsn="W001")
+        alpha_node_2 = Node.objects.create(vsn="W002")
+        beta_node = Node.objects.create(vsn="W010")
+
+        NodeMembership.objects.create(project=alpha, node=alpha_node_1)
+        NodeMembership.objects.create(project=alpha, node=alpha_node_2)
+        NodeMembership.objects.create(project=beta, node=beta_node)
+
+        # Create NodeData with projects from manifests
+        sage_project = NodeBuildProject.objects.create(name="Sage")
+        sgt_project = NodeBuildProject.objects.create(name="SGT")
+
+        NodeData.objects.create(vsn="W001", project=sage_project)
+        NodeData.objects.create(vsn="W002", project=sgt_project)
+        NodeData.objects.create(vsn="W010", project=sage_project)
+
+        # Login a user to access the authenticated endpoint
+        self.client.force_login(alpha_user_1)
+
+        r = self.client.get("/projects/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+        data = r.json()
+        self.assertEqual([item["name"] for item in data], ["Alpha", "Beta"])
+
+        alpha_data = data[0]
+        self.assertEqual(alpha_data["member_count"], 2)
+        self.assertEqual(
+            alpha_data["nodes"],
+            [
+                {"vsn": "W001", "project": "Sage"},
+                {"vsn": "W002", "project": "SGT"},
+            ],
+        )
+
+        beta_data = data[1]
+        self.assertEqual(beta_data["member_count"], 1)
+        self.assertEqual(beta_data["nodes"], [{"vsn": "W010", "project": "Sage"}])
+
+
 class TestAuth(TestCase):
     """
     TestAuth tests that our post Globus login, create user and logout flows work as expected.
