@@ -51,12 +51,14 @@ urlpatterns = [
             views.UserProjectsView.as_view(),
             name="user-projects",
         ),
+        path("projects/", views.ProjectsView.as_view(), name="projects"),
         # keeping old profiles/ path for now. replaced by users/.
         path(
             "profiles/<str:username>/access",
             views.UserAccessView.as_view(permission_classes=[AllowAny]),
             name="user-access-old",
         ),
+
         # keeping compatibility with existing portal user profiles
         path("user_profile/<str:username>", views.UserProfileView.as_view()),
         # feedback
