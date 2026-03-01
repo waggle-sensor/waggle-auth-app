@@ -22,6 +22,7 @@ from django.db.models import Count
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django_slack import slack_message
+from manifests.models import NodeData
 from .serializers import UserSerializer, UserProfileSerializer, ProjectSerializer, FeedbackSerializer
 from .forms import UpdateSSHPublicKeysForm, CompleteLoginForm
 from .permissions import IsSelf, IsMatchingUsername
@@ -197,8 +198,6 @@ class ProjectsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request, format=None) -> Response:
-        from manifests.models import NodeData
-
         projects = (
             Project.objects.annotate(member_count=Count("users", distinct=True))
             .prefetch_related("nodemembership_set__node")
