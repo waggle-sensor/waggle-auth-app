@@ -125,3 +125,32 @@ main .container {
   outline: 1px dashed black;
   opacity: .9;
 }
+
+/**
+ * form errors
+ */
+
+.errorlist {
+  list-style: none;
+  margin: 0 0 1em;
+  padding: 0;
+}
+
+.errorlist li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.75em 1em;
+  margin-bottom: 0.5em;
+  color: #9f1239;
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-left: 4px solid #dc2626;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.errorlist li::before {
+  content: "\26A0";
+  color: #dc2626;
+}
