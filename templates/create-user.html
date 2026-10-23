@@ -5,7 +5,7 @@
 {% block content %}
 <h1>Complete Registration</h1>
 
-<p>You'll need to complete registration! {{ request.session.globus_account_subject }}</p>
+<p>Choose a Sage username to finish registration. This will be public and cannot be changed later without contacting Sage support. {{ request.session.globus_account_subject }}</p>
 
 <form method="post">{% csrf_token %}
     {{ form.as_p }}
