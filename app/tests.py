@@ -975,6 +975,38 @@ class TestAuth(TestCase):
         self.assertEqual(r.cookies.get("sage_username").value, "")
         self.assertEqual(r.cookies.get("sage_token").value, "")
 
+    def testCompleteLoginRejectsInvalidUsernames(self):
+        user_info = {
+            "sub": str(uuid.uuid4()),
+            "name": "Test User",
+            "email": "test@test.com",
+            "preferred_username": "testuser",
+            "organization": "Test Organization",
+        }
+        session = self.client.session
+        session["oidc_auth_user_info"] = user_info
+        session.save()
+
+        invalid_usernames = [
+            "Someuser",  # uppercase
+            "some_user",  # underscore
+            "some user",  # space
+            "1someuser",  # starts with a digit
+            "ab",  # too short
+            "a" * 31,  # too long
+        ]
+        for username in invalid_usernames:
+            r = self.client.post(
+                "/complete-login/",
+                {
+                    "username": username,
+                    "confirm_username": username,
+                },
+            )
+            self.assertEqual(r.status_code, status.HTTP_200_OK)
+            self.assertFalse(r.wsgi_request.user.is_authenticated)
+            self.assertFalse(User.objects.filter(username=username).exists())
+
     def testCompleteLoginWhenAlreadyLoggedIn(self):
         user = User.objects.create_user(username="someuser")
         self.client.force_login(user)
