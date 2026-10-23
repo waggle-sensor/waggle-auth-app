@@ -79,9 +79,9 @@ class RedirectView(View):
             try:
                 tokens = client.oauth2_exchange_code_for_tokens(code)
                 access_token = tokens["access_token"]
-            except Exception:
+            except Exception as e:
                 return JsonResponse(
-                    {"error": "failed to exchange code for access token"},
+                    {"error": "failed to exchange code for access token", "detail": str(e)},
                     status=status.HTTP_502_BAD_GATEWAY,
                 )
 
