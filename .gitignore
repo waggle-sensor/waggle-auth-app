@@ -9,3 +9,4 @@ fixtures/
 .coverage.*
 data/
 *.pem
+*.env
